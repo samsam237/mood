@@ -1,0 +1,23 @@
+.advice-container {
+    background-color: #ffffff;
+    width: 100%;
+    border-radius: 5px; 
+    box-shadow: 0 2px 2px rgba(0, 0, 0, 0.2);
+    grid-column: span 2;
+}
+
+.advice-title{
+    color: #407BFF; text-align: center;
+    padding-bottom: 5px;
+}
+
+.advice-content{
+    padding: 10px;
+    display: flex; flex-direction: row;
+    justify-content: space-around;
+}
+
+.advice-content-text{
+    padding-left: 20px;
+    font-size: 14px;
+}

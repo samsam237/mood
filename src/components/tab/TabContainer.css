@@ -1,0 +1,58 @@
+
+.ion-tab-bar{
+  position: fixed;
+  bottom: 15px;                 /* 5px d'espace au-dessus du bas de la page */
+  left: 0;
+  right: 0;
+  border-radius: 10px 10px 10px 10px; /* Coins arrondis en haut de la barre */
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2); /* Ombre légère pour l'effet de surélévation */
+  z-index: 10;  
+  max-width: 350px;
+  margin: 0 auto;
+  border-radius: 8px;
+}
+.custom-tab-bar {            
+  background-color: #f0f0f0; /* Changer la couleur de fond du TabBar */
+  border-top: 1px solid #ddd; /* Ajouter une bordure au-dessus du TabBar */
+  display: flex;               /* Active le mode Flexbox pour le parent */
+  justify-content: space-around; /* Espace égal entre les boutons */
+  align-items: center;
+  border: 1px solid transparent; 
+}
+  
+.custom-tab-button {
+  --color: #333; /* Couleur de l'icône non sélectionnée */
+  --color-selected: #3880ff; /* Couleur de l'icône sélectionnée */
+  font-size: 14px; /* Taille de la police */
+  display: flex;               /* Active le mode Flexbox pour le bouton */
+  flex-direction: column;      /* Pour que l'icône et le texte soient alignés verticalement */
+  align-items: center;         /* Centre l'icône et le texte à l'intérieur du bouton */
+  height: 25px;
+  justify-content: center;
+}
+
+.custom-tab-button:first-child{
+  height: 30px;
+}
+
+.custom-tab-button:first-child div{
+  display: flex; flex-direction: row;
+  align-items: center;         
+  justify-content: space-between;
+  border: 1px #E85946 solid transparent; border-radius: 10px;
+  background-color: #E85946;
+  padding: 5px;
+}
+.custom-tab-button:first-child div *{
+  color: #fff;
+  padding: 2px;
+}
+
+.custom-tab-button ion-icon {
+  font-size: 24px;
+}
+
+.custom-tab-button:hover {
+  --color: #007bff; 
+}
+  

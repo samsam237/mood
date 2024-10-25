@@ -1,0 +1,16 @@
+.custom-toolbar {
+    --background: white; /* Fond blanc pour l'en-tête */
+    display: flex;
+    justify-content: center; /* Centrer le titre */
+    align-items: center;
+}
+  
+.custom-title {
+    background: linear-gradient(90deg, #00b4d8, #48cae4, #90e0ef, #00FF7F); /* Dégradé bleu à vert */
+    -webkit-background-clip: text; /* Clips le dégradé au texte */
+    -webkit-text-fill-color: transparent; /* Rend le texte transparent pour voir le dégradé */
+    font-size: 1.8rem; /* Taille du texte */
+    font-weight: bold; /* Texte en gras */
+    text-align: center; /* Centrage du texte */
+    padding: 10px; /* Espacement interne pour agrandir le titre */
+}

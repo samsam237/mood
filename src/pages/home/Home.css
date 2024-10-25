@@ -1,0 +1,19 @@
+
+.swiper{
+    background: linear-gradient(to bottom, #6495ED, #fff);;
+    height: 100vh;
+}
+
+.slide-content{
+    text-align: center;
+    margin-bottom: 30px;
+    padding-top: 50%;
+}
+.slide-content h2{
+    font-weight: bold;
+}
+
+.btn-continue{
+    margin-left: 50%;
+    transform: translateX(-50%);
+}

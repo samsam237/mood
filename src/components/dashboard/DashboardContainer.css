@@ -1,0 +1,54 @@
+ 
+.dashboard-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr); 
+    gap: 16px;
+}
+
+.dashboard-card {
+    background: #ffffff;
+    border-radius: 10px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    padding: 5px;
+    text-align: center; 
+}
+
+.card{
+    display: flex; justify-content: space-around;
+}
+
+.card-content{
+    font-size: small;
+}
+  
+.card-content-title{
+    font-size: 15px;
+}
+
+.dashboard-advice {
+    grid-column: span 2; /* Prendre toute la largeur en bas */
+    background: #e7f5ff; /* Couleur de fond différente pour le conseil */
+    border-radius: 10px;
+    padding: 16px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    text-align: center; /* Centrer le texte */
+}
+  
+.circle {
+    width: 20px; /* Taille de la boule */
+    height: 20px;
+    border-radius: 50%; /* Pour faire un cercle */
+    margin-right: 15px; /* Espace entre la boule et le contenu */
+}
+
+.bg-blue {
+    background-color: blue;
+}
+.bg-green {
+    background-color: green;
+}
+
+.green-button *{
+    background-color: green;
+    color: white;
+}

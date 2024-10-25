@@ -1,0 +1,20 @@
+.container h2{
+    font-weight: bold;
+}
+
+.container p{
+    padding: 10px;
+}
+
+.btn-continue{
+    margin-left: 50%;
+    transform: translateX(-50%);
+}
+
+.container{
+    background: linear-gradient(to bottom, #6495ED, #fff);;
+    height: 100vh;
+    text-align: center;
+    margin-bottom: 30px;
+    padding-top: 50%;
+}
