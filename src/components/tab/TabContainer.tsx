@@ -11,7 +11,7 @@ import {TabContainerProps} from './TabContainerProps'
 
 const TabContainer: React.FC<TabContainerProps> = ({ onTabChange }) => {
   return (
-    <IonTabs>
+    <IonTabs className='ion-tab-bar-container'>
         <IonRouterOutlet>
             {/* <Route path="/main" component={MainPage} exact /> */}
         </IonRouterOutlet>    

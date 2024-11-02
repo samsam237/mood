@@ -22,7 +22,7 @@ const Login: React.FC = () => {
     <IonPage>
       <IonContent fullscreen >
         <div className="container">
-            <h2>MOOD</h2>
+            <h2>ACTIPOD</h2>
             <img src="images/data 5.png"></img>
             <p>
                 Rejoignez-nous aujourd’hui !!!

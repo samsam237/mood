@@ -36,7 +36,7 @@ const Home: React.FC = () => {
           <SwiperSlide>
             <div className="slide-content">
               <img src="images/data.png"></img>
-              <h2>MOOD</h2>
+              <h2>ACTIPOD</h2>
               <p>Conseils de santé au quotidien.</p>
             </div>
           </SwiperSlide>
@@ -44,7 +44,7 @@ const Home: React.FC = () => {
           <SwiperSlide>
             <div className="slide-content">
               <img src="images/data 1.png"></img>
-              <h2>MOOD</h2>
+              <h2>ACTIPOD</h2>
               <p>Bouger pour se sentir mieux.</p>
             </div>
           </SwiperSlide>
@@ -52,7 +52,7 @@ const Home: React.FC = () => {
           <SwiperSlide>
             <div className="slide-content">
               <img src="images/data 2.png"></img>
-              <h2>MOOD</h2>
+              <h2>ACTIPOD</h2>
               <p>Penser à s’hydrater constamment.</p>
               <IonButton size="small" color="danger" className='btn-continue' expand="block" onClick={goToNextPage}>
                 Continuer

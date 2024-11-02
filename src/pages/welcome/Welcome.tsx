@@ -22,10 +22,10 @@ const Welcome: React.FC = () => {
     <IonPage>
       <IonContent fullscreen >
         <div className="container">
-            <h2>MOOD</h2>
+            <h2>ACTIPOD</h2>
             <img src="images/data 4.png"></img>
             <p>
-                Bonjour, je suis MOOD, 
+                Bonjour, je suis ACTIPOD, 
                 <br />votre compagnon d’hydratation et qui vous aident à lutter contre la sédentarité.
             </p>
             <IonButton size="small" color="danger" className='btn-continue' expand="block" onClick={goToNextPage}>

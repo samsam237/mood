@@ -8,3 +8,9 @@
     padding-top: 30px;
     max-width: 350px;
 }
+.ion-page{
+    position: relative; min-height: 100vh; background-color: #F0F4F8;
+}
+.tab-container{
+    height: 50px;  position: relative; bottom: 20px;    
+}

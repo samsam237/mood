@@ -1,13 +1,11 @@
 .ion-item {
     display: flex; flex-direction: row;
     justify-content: space-between;
-}
-
-.label{
-    width: 100px;
-    font: Poppins;
+    margin-top: 10px;
 }
 
 .value{
-    width: 200px;
+    width: 100%;
+    font: Poppins;
 }
+

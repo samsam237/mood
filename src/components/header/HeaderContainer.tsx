@@ -6,7 +6,7 @@ const HeaderContainer: React.FC = () => {
   return (
     <IonHeader>
       <IonToolbar className="custom-toolbar">
-        <IonTitle className="custom-title">MOOD</IonTitle>
+        <IonTitle className="custom-title">ACTIPOD</IonTitle>
       </IonToolbar>
     </IonHeader>
   );

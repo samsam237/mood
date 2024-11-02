@@ -9,6 +9,10 @@ import TabContainer from '../../components/tab/TabContainer';
 import HeaderContainer from '../../components/header/HeaderContainer';
 import DashboardContainer from '../../components/dashboard/DashboardContainer';
 import HealthCalculatorComponent from '../../components/healthCalculator/HealthCalculatorComponent'; 
+import ReminderFrequencyComponent from '../../components/ReminderFrequency/ReminderFrequencyComponent';
+import PosturesAndExerciseLocationsComponent from '../../components/PosturesAndExerciseLocations/PosturesAndExerciseLocationsComponent';
+import LinksAndRatingsComponent from '../../components/LinksAndRatings/LinksAndRatingsComponent';
+import DailyTipAndCalendarComponent from '../../components/DailyTipAndCalendar/DailyTipAndCalendarComponent';
 
 /* Core CSS required for Ionic components to work properly */
 import '@ionic/react/css/core.css';
@@ -57,13 +61,21 @@ const MainPage: React.FC = () => {
         return <DashboardContainer />;
       case 'user':
         return <HealthCalculatorComponent />;
+      case 'fitness':
+        return <PosturesAndExerciseLocationsComponent />;
+      case 'calendar':
+        return <DailyTipAndCalendarComponent />;
+      case 'about':
+        return <LinksAndRatingsComponent />;
+      case 'notifications':
+        return <ReminderFrequencyComponent />;
       default:
         return <DashboardContainer />;
     }
   };
 
   return (
-    <IonPage>
+    <IonPage className='ion-page'>
       <HeaderContainer />
       <IonContent >
         <div className='main-content'>
@@ -72,7 +84,9 @@ const MainPage: React.FC = () => {
           </div>
         </div>
       </IonContent>
-      <TabContainer onTabChange={handleTabChange} />
+      <div className='tab-container'>
+        <TabContainer onTabChange={handleTabChange} />
+      </div>
     </IonPage>
   );
 };
