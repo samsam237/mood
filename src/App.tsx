@@ -1,4 +1,6 @@
-import { Redirect, Route } from 'react-router-dom';
+import { useEffect, useState } from 'react';
+import { Redirect, Route  } from 'react-router-dom';
+
 import {
   IonApp,
   IonIcon,
@@ -10,6 +12,8 @@ import {
   setupIonicReact
 } from '@ionic/react';
 import { IonReactRouter } from '@ionic/react-router';
+
+import { getAuth, onAuthStateChanged } from 'firebase/auth';
 
 import Home from './pages/home/Home';
 import MainPage from './pages/main/MainPage';
@@ -44,14 +48,54 @@ import '@ionic/react/css/palettes/dark.system.css';
 
 /* Theme variables */
 import './theme/variables.css';
+import './App.css'
 
 setupIonicReact();
 
-const App: React.FC = () => (
+
+interface User {
+  uid?: string;
+  email?: string | null;
+  displayName?: string;
+  photoURL?: string;
+}
+
+/* const auth = getAuth();
+
+const [user, setUser] = useState<User | null>(null);
+
+const parseUser = (user_: any): User | null => {
+  if (!user_) {
+    return null;
+  }
+
+  return {
+    uid: user_.uid,
+    email: user_.email,
+    displayName: user_.displayName,
+    photoURL: user_.photoURL,
+  };
+};
+
+useEffect(() => {
+  const unsubscribe = onAuthStateChanged(auth, (user_ ) => {
+    if (user_) {
+      setUser(parseUser(user_));
+    } else {
+      setUser(null);
+    }
+    //setUser(user_);
+  });
+
+  return () => unsubscribe();
+}, []);
+ */
+const App: React.FC = () => ( 
+  
   <IonApp>
-    <IonReactRouter>
-      <IonTabs>
-        <IonRouterOutlet>
+    <IonReactRouter >
+      <IonTabs className='ion-tabs'>
+        <IonRouterOutlet className='ion-router-outlet'>
           <Route path="/home" component={Home} exact />
           <Redirect from="/" to="/home" exact />
           <Route path="/main" component={MainPage} exact />

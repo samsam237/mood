@@ -3,6 +3,12 @@ import { IonPage, IonContent, IonButton } from '@ionic/react';
 
 import { useHistory } from 'react-router-dom';
 
+import GoogleLogin from '../../components/authentication/GoogleAuth';
+import FacebookLogin from '../../components/authentication/FacebookAuth';
+import PhoneLogin from '../../components/authentication/PhoneAuth';
+import EmailPasswordLogin from '../../components/authentication/EmailPasswordAuth';
+
+
 import './Login.css'
 
 import 'swiper/css';
@@ -23,14 +29,18 @@ const Login: React.FC = () => {
       <IonContent fullscreen >
         <div className="container">
             <h2>ACTIPOD</h2>
-            <img src="images/data 5.png"></img>
+            {/* <img src="images/data 5.png"></img>
             <p>
                 Rejoignez-nous aujourd’hui !!!
                 <br />Connectez-vous avec
             </p>
             <IonButton size="small" color="danger" className='btn-continue' expand="block" onClick={goToNextPage}>
                 <img src="images/data 3.png"></img>Google
-            </IonButton>
+            </IonButton> */}
+            <EmailPasswordLogin />
+            <PhoneLogin />
+            <GoogleLogin />
+            <FacebookLogin />
         </div>
       </IonContent>
     </IonPage>
