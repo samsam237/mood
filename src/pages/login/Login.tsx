@@ -5,7 +5,7 @@ import 'firebase/auth';
 
 import { useHistory } from 'react-router-dom';
 
-import {initializeStorage} from '../../services/storageService';
+import storageService from '../../services/storageService';
 
 import GoogleLogin from '../../components/authentication/GoogleAuth';
 import FacebookLogin from '../../components/authentication/FacebookAuth';
@@ -28,7 +28,7 @@ const Login: React.FC = () => {
 
   useEffect(() => {
     const fetchUserData = async () => {
-      const storage = await initializeStorage();
+      const storage = await storageService.initializeStorage();
       const storedUser = await storage.get('user');
       if (storedUser) {
         setUser(storedUser);

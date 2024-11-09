@@ -5,7 +5,7 @@ import { Swiper, SwiperSlide } from 'swiper/react';
 import { Navigation, Pagination, Scrollbar, A11y } from 'swiper/modules';
 import type { Swiper as SwiperType } from 'swiper';
 
-import {initializeStorage} from '../../services/storageService';
+import storageService from '../../services/storageService';
 
 import 'swiper/css';
 import 'swiper/css/navigation';
@@ -22,7 +22,7 @@ const Home: React.FC = () => {
   
   useEffect(() => {
     const fetchUserData = async () => {
-      const storage = await initializeStorage();
+      const storage = await storageService.initializeStorage();
       const storedUser = await storage.get('user');
       if (storedUser) {
         setUser(storedUser);

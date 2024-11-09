@@ -45,7 +45,7 @@ import '@ionic/react/css/palettes/dark.system.css';
 import '../../theme/variables.css';
 import './MainPage.css'
 import React, { useEffect, useState }  from 'react';
-import {initializeStorage} from '../../services/storageService';
+import storageService from '../../services/storageService';
 
 setupIonicReact();
 
@@ -54,7 +54,7 @@ const MainPage: React.FC = () => {
 
   useEffect(() => {
     const fetchUserData = async () => {
-      const storage = await initializeStorage();
+      const storage = await storageService.initializeStorage();
       const storedUser = await storage.get('user');
       if (storedUser) {
         setUser(storedUser);
