@@ -44,11 +44,23 @@ import '@ionic/react/css/palettes/dark.system.css';
 /* Theme variables */
 import '../../theme/variables.css';
 import './MainPage.css'
-import React from 'react';
+import React, { useEffect, useState }  from 'react';
+import storage from '../../services/storageService';
 
 setupIonicReact();
 
 const MainPage: React.FC = () => {
+  const [user, setUser] = useState(null);
+
+  useEffect(() => {
+    const fetchUserData = async () => {
+      const storedUser = await storage.get('user');
+      if (storedUser) {
+        setUser(storedUser);
+      }
+    };
+    fetchUserData();
+  }, []);
   const [activeTab, setActiveTab] = React.useState<string>('home'); 
 
   const handleTabChange = (tab: string) => {

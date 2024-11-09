@@ -1,7 +1,7 @@
 // src/components/EmailPasswordLogin.tsx
 
 import React, { useState } from 'react';
-import { signIn, signUp } from '../../services/authServices';
+import { signIn, signUp, saveUserData } from '../../services/authServices';
 
 import './EmailPasswordAuth.css'
 
@@ -13,9 +13,11 @@ const EmailPasswordLogin: React.FC = () => {
   const handleSubmit = async () => {
     try {
       if (isLogin) {
-        await signIn(email, password);
+        const res = await signIn(email, password);
+        await saveUserData(res.user);
       } else {
-        await signUp(email, password);
+        const res = await signUp(email, password);
+        await saveUserData(res.user);
       }
       // Handle successful login/signup (e.g., redirect or show a message)
     } catch (error) {
@@ -40,7 +42,9 @@ const EmailPasswordLogin: React.FC = () => {
       />
       <button className='auth-button' onClick={handleSubmit}>{isLogin ? 'Login' : 'Sign Up'}</button>
       <button className='auth-button-swicth' onClick={() => setIsLogin(!isLogin)}>
-        {isLogin ? 'Switch to Sign Up' : 'Switch to Login'}
+        {isLogin
+          ? `Pas encore de compte ? S'inscrire`
+          : `Déjà un compte ? Se connecter`}
       </button>
     </div>
   );

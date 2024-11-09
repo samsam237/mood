@@ -49,6 +49,9 @@
 }
 
 .green-button *{
-    background-color: green;
+    background-color: #48BB78;
     color: white;
+}
+.green-button img{
+    background-color: transparent;
 }

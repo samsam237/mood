@@ -17,3 +17,8 @@
     margin-left: 50%;
     transform: translateX(-50%);
 }
+
+.swiper-button-prev,
+.swiper-button-next {
+  display: none;
+}

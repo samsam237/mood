@@ -1,5 +1,7 @@
 import React, { useState } from 'react';
-import { IonList, IonItem, IonInput, IonCard, IonCardHeader, IonCardContent, IonLabel } from '@ionic/react';
+import { IonList, IonItem, IonInput, IonCard, IonCardHeader, IonCardContent, IonLabel, IonButton } from '@ionic/react';
+
+import { myScheduleDailyAlarms } from '../../services/notificationService';
 
 import "./ReminderFrequencyComponent.css";
 
@@ -12,19 +14,24 @@ const ReminderFrequencyComponent: React.FC = () => {
       <IonItem>
         <IonCard>
             <IonCardHeader>
-                <div className="circle bg-blue"></div>
-                <IonLabel>Rappel Hydration (en min) </IonLabel>
+              <div className="circle">
+                <img src="images/water-icon.png" alt="water" />
+              </div>
+              <IonLabel>Rappel Hydration (en min) </IonLabel>
             </IonCardHeader>
             <IonCardContent>
-                <IonInput
-                    labelPlacement="stacked"
-                    className="remider-value"
-                    type="number"
-                    value={hydrationFrequency}
-                    placeholder='20 minutes'
-                    onIonChange={(e) => {if(e.detail.value) setHydrationFrequency(e.detail.value)}}
-                    required
-                />
+              <IonInput
+                labelPlacement="stacked"
+                className="remider-value"
+                type="number"
+                value={hydrationFrequency}
+                placeholder='en minutes'
+                onIonChange={(e) => {if(e.detail.value) setHydrationFrequency(e.detail.value)}}
+                required
+              />
+              <IonButton expand="full" onClick={() => myScheduleDailyAlarms(parseInt(hydrationFrequency), "Il faut s'hydrater")}>
+                Sauvegarder
+              </IonButton>
             </IonCardContent>
         </IonCard>       
         {/* <IonSelect value={hydrationFrequency} placeholder="Frequency" onIonChange={(e) => setHydrationFrequency(e.detail.value)}>
@@ -38,19 +45,24 @@ const ReminderFrequencyComponent: React.FC = () => {
         {/* <IonLabel>Movement Reminder</IonLabel> */}
         <IonCard>
             <IonCardHeader>
-                <div className="circle bg-green"></div>
-                <IonLabel>Rappel Mouvement (en min) </IonLabel>
+              <div className="circle">
+              <img src="images/move-icon.png" alt="water" />
+              </div>
+              <IonLabel>Rappel Mouvement (en min) </IonLabel>
             </IonCardHeader>
             <IonCardContent>
-                    <IonInput
-                        labelPlacement="stacked"
-                        className="remider-value"
-                        type="number"
-                        value={movementFrequency}
-                        placeholder='20 minutes'
-                        onIonChange={(e) => {if(e.detail.value) setMovementFrequency(e.detail.value)}}
-                        required
-                    />
+              <IonInput
+                labelPlacement="stacked"
+                className="remider-value"
+                type="number"
+                value={movementFrequency}
+                placeholder='en minutes'
+                onIonChange={(e) => {if(e.detail.value) setMovementFrequency(e.detail.value)}}
+                required
+              />
+              <IonButton expand="full" onClick={() => myScheduleDailyAlarms(parseInt(hydrationFrequency), "Il faut bouger")}>
+                Sauvegarder
+              </IonButton>
             </IonCardContent>
         </IonCard>
         {/* <IonSelect value={movementFrequency} placeholder="Frequency" onIonChange={(e) => setMovementFrequency(e.detail.value)}>

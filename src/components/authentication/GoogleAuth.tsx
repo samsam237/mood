@@ -1,14 +1,15 @@
 // src/components/GoogleLogin.tsx
 
 import React from 'react';
-import { signInWithGoogle } from '../../services/authServices';
+import { signInWithGoogle, saveUserData } from '../../services/authServices';
 
 import './GoogleAuth.css'
 
 const GoogleLogin: React.FC = () => {
   const handleGoogleLogin = async () => {
     try {
-      await signInWithGoogle();
+      const res = await signInWithGoogle();
+      await saveUserData(res.user);
       // Handle successful login (e.g., redirect or show a message)
     } catch (error) {
       console.error("Google login error", error);
@@ -16,7 +17,7 @@ const GoogleLogin: React.FC = () => {
   };
 
   return (
-    <button onClick={handleGoogleLogin} className='google-login-button'>Login with Google</button>
+    <button onClick={handleGoogleLogin} className='google-login-button'>Google</button>
   );
 };
 

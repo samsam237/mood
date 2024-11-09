@@ -9,7 +9,7 @@ const DashboardContainer: React.FC = () => {
     <div className="dashboard-grid">
         <div className="dashboard-card">
           <div className="card">
-            <div className="circle bg-blue"></div>
+            <div className="circle "><img src="images/water-icon.png" alt="water" /></div>
             <div className="card-content">
               <p className='card-content-title'>Hydratation</p>
               <p>
@@ -19,15 +19,16 @@ const DashboardContainer: React.FC = () => {
           </div>
 
           <IonButton
-            color="primary"
+            color="success"
+            className="green-button"
             onClick={() => {}}
           >
-            Ajouter
+            J'ai bu <img src="images/ok-icon.png" alt="" />
           </IonButton>
         </div>
         <div className="dashboard-card">
           <div className="card">
-            <div className="circle bg-green"></div>
+            <div className="circle"><img src="images/move-icon.png" alt="water" /></div>
             <div className="card-content">
               <p className='card-content-title'>Mouvements</p>
               <p>
@@ -41,7 +42,7 @@ const DashboardContainer: React.FC = () => {
             className='green-button'
             onClick={() => {}}
           >
-            Ajouter
+            J'ai bougé <img src="images/ok-icon.png" alt="" />
           </IonButton>
 
         </div>

@@ -4,13 +4,13 @@
     align-items: center;
     padding: 20px;
     border-radius: 5px;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);  
+    /* box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);   */
   
     gap: 10px;
 }
 
 .input-container{
-    display: flex; flex-direction: row;
+    display: flex; flex-direction: column;
 }
   
 .phone-input,
@@ -22,12 +22,23 @@
     border: 1px solid #ccc;
     border-radius: 3px;
 }
+.phone-input{
+    border-radius: 10px;
+    margin-bottom: 5px;
+}
+.phone-input:checked{
+    border: 2px solodi #1d4b53;
+}
   
 .phone-button {
-    background-color: #4CAF50;
+    max-width: 350px;
+    /* background-color: #4CAF50; */
+    background-color: #042f85;
     color: white;
-    padding: 4px 10px; margin-left: 5px;
+    padding: 14px 20px;
     border: none;
     cursor: pointer;
+    width: 100%;
     border-radius: 3px;
+    margin-top: 5px;
 }

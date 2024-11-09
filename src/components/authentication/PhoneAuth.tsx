@@ -1,7 +1,7 @@
 // src/components/PhoneLogin.tsx
 
 import React, { useEffect, useRef, useState } from 'react';
-import { signInWithPhone } from '../../services/authServices';
+import { signInWithPhone, saveUserData } from '../../services/authServices';
 import { getAuth, RecaptchaVerifier } from 'firebase/auth';
 
 import "./PhoneAuth.css"
@@ -32,7 +32,8 @@ const PhoneLogin: React.FC = () => {
   const handleVerifyCode = async () => {
     if (confirmationResult) {
       try {
-        await confirmationResult.confirm(verificationCode);
+        const res = await confirmationResult.confirm(verificationCode);
+        await saveUserData(res.user);
         // Handle successful login
       } catch (error) {
         console.error("Verification code error", error);

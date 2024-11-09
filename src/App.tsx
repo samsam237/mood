@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Redirect, Route  } from 'react-router-dom';
+import { Redirect, Route, useHistory  } from 'react-router-dom';
 
 import {
   IonApp,
@@ -14,6 +14,7 @@ import {
 import { IonReactRouter } from '@ionic/react-router';
 
 import { getAuth, onAuthStateChanged } from 'firebase/auth';
+import storage from './services/storageService';
 
 import Home from './pages/home/Home';
 import MainPage from './pages/main/MainPage';
@@ -53,12 +54,12 @@ import './App.css'
 setupIonicReact();
 
 
-interface User {
+/* interface User {
   uid?: string;
   email?: string | null;
   displayName?: string;
   photoURL?: string;
-}
+} */
 
 /* const auth = getAuth();
 
@@ -90,9 +91,11 @@ useEffect(() => {
   return () => unsubscribe();
 }, []);
  */
-const App: React.FC = () => ( 
+const App: React.FC = () => {
   
-  <IonApp>
+
+  return ( 
+    <IonApp>
     <IonReactRouter >
       <IonTabs className='ion-tabs'>
         <IonRouterOutlet className='ion-router-outlet'>
@@ -105,6 +108,9 @@ const App: React.FC = () => (
       </IonTabs>
     </IonReactRouter>
   </IonApp>
-);
+  );
+
+}
+  
 
 export default App;

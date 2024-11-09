@@ -1,6 +1,7 @@
 
 import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut, GoogleAuthProvider, signInWithPopup, FacebookAuthProvider, signInWithPhoneNumber, RecaptchaVerifier } from 'firebase/auth';
 import app from '../firebaseConfig';
+import storage from './storageService';
 
 const auth = getAuth(app);
 
@@ -13,7 +14,9 @@ export const signUp = async (email: string, password: string) => {
 };
 
 export const logout = async () => {
-  return await signOut(auth);
+  await signOut(auth);
+  await clearUserData();
+  return true;
 };
 
 // Google Authentication
@@ -31,4 +34,21 @@ export const signInWithFacebook = async () => {
 // Phone Authentication
 export const signInWithPhone = async (phoneNumber: string, appVerifier: RecaptchaVerifier) => {
   return await signInWithPhoneNumber(auth, phoneNumber, appVerifier);
+};
+
+// Enregistrer les informations utilisateur dans le stockage
+export const saveUserData = async (user: any) => {
+  const userData = {
+    uid: user.uid,
+    email: user.email,
+    displayName: user.displayName,
+    phoneNumber: user.phoneNumber,
+    photoURL: user.photoURL
+  };
+  await storage.set('user', userData);
+};
+
+// Supprimer les informations utilisateur du stockage
+const clearUserData = async () => {
+  await storage.remove('user');
 };
