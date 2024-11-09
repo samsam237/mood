@@ -4,7 +4,8 @@ const storage = new Storage();
 /* await storage.create();
 
 export default storage; */
-export const initializeStorage = async () => {
+const initializeStorage = async () => {
     await storage.create();
     return storage;
 };
+export default {initializeStorage}
