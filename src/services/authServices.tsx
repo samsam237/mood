@@ -4,7 +4,7 @@ import app from '../firebaseConfig';
 import storageService from './storageService';
 
 const auth = getAuth(app);
-const storage = await storageService.initializeStorage()
+
 
 export const signIn = async (email: string, password: string) => {
   return await signInWithEmailAndPassword(auth, email, password);
@@ -46,10 +46,12 @@ export const saveUserData = async (user: any) => {
     phoneNumber: user.phoneNumber,
     photoURL: user.photoURL
   };
+  const storage = await storageService.initializeStorage()
   await storage.set('user', userData);
 };
 
 // Supprimer les informations utilisateur du stockage
 const clearUserData = async () => {
+  const storage = await storageService.initializeStorage()
   await storage.remove('user');
 };
