@@ -1,9 +1,10 @@
 
 import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut, GoogleAuthProvider, signInWithPopup, FacebookAuthProvider, signInWithPhoneNumber, RecaptchaVerifier } from 'firebase/auth';
 import app from '../firebaseConfig';
-import storage from './storageService';
+import storageService from './storageService';
 
 const auth = getAuth(app);
+const storage = await storageService.initializeStorage()
 
 export const signIn = async (email: string, password: string) => {
   return await signInWithEmailAndPassword(auth, email, password);
