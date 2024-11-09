@@ -13,9 +13,6 @@ import {
 } from '@ionic/react';
 import { IonReactRouter } from '@ionic/react-router';
 
-import { getAuth, onAuthStateChanged } from 'firebase/auth';
-import storage from './services/storageService';
-
 import Home from './pages/home/Home';
 import MainPage from './pages/main/MainPage';
 import Welcome from './pages/welcome/Welcome';
