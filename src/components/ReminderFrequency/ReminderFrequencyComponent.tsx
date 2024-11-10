@@ -1,7 +1,7 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { IonList, IonItem, IonInput, IonCard, IonCardHeader, IonCardContent, IonLabel, IonButton } from '@ionic/react';
 
-import { myScheduleDailyAlarms } from '../../services/notificationService';
+import { myScheduleDailyAlarms, getReminder, setDrinkReminder, setMoveReminder } from '../../services/notificationService';
 
 import "./ReminderFrequencyComponent.css";
 
@@ -9,15 +9,27 @@ const ReminderFrequencyComponent: React.FC = () => {
   const [hydrationFrequency, setHydrationFrequency] = useState<string>('');
   const [movementFrequency, setMovementFrequency] = useState<string>('');
 
+  useEffect( () => {
+    const fetchReminder = async () => {
+      const reminder = await getReminder();  // Appel asynchrone à getReminderComponent
+      setHydrationFrequency(reminder.drinkTime);
+      setMovementFrequency(reminder.moveTime);
+    };
+
+    fetchReminder();  // Appel de la fonction d'initialisation
+  }, []);
+
   return (
     <IonList className='reminders-list'>
       <IonItem>
         <IonCard>
-            <IonCardHeader>
-              <div className="circle">
+            <IonCardHeader className='card-header'>
+              <div className="circle image">
                 <img src="images/water-icon.png" alt="water" />
               </div>
-              <IonLabel>Rappel Hydration (en min) </IonLabel>
+              <div className='label'>
+                <IonLabel>Rappel Hydration (en min) </IonLabel>
+              </div>
             </IonCardHeader>
             <IonCardContent>
               <IonInput
@@ -29,26 +41,21 @@ const ReminderFrequencyComponent: React.FC = () => {
                 onIonChange={(e) => {if(e.detail.value) setHydrationFrequency(e.detail.value)}}
                 required
               />
-              <IonButton expand="full" onClick={() => myScheduleDailyAlarms(parseInt(hydrationFrequency), "Il faut s'hydrater")}>
+              <div className='button button-remider-value-hydratation' onClick={() => {myScheduleDailyAlarms(parseInt(hydrationFrequency), "Il faut s'hydrater"), setDrinkReminder(parseInt(hydrationFrequency))}}>
                 Sauvegarder
-              </IonButton>
+              </div>
             </IonCardContent>
         </IonCard>       
-        {/* <IonSelect value={hydrationFrequency} placeholder="Frequency" onIonChange={(e) => setHydrationFrequency(e.detail.value)}>
-          <IonSelectOption value="30">Every 30 mins</IonSelectOption>
-          <IonSelectOption value="60">Every 1 hour</IonSelectOption>
-          <IonSelectOption value="120">Every 2 hours</IonSelectOption>
-        </IonSelect> */}
       </IonItem>
-
       <IonItem>
-        {/* <IonLabel>Movement Reminder</IonLabel> */}
         <IonCard>
-            <IonCardHeader>
-              <div className="circle">
-              <img src="images/move-icon.png" alt="water" />
+            <IonCardHeader className='card-header'>
+              <div className="circle image">
+                <img src="images/move-icon.png" alt="water" />
               </div>
-              <IonLabel>Rappel Mouvement (en min) </IonLabel>
+              <div className='label'>
+                <IonLabel>Rappel Mouvement (en min) </IonLabel>
+              </div>
             </IonCardHeader>
             <IonCardContent>
               <IonInput
@@ -60,16 +67,11 @@ const ReminderFrequencyComponent: React.FC = () => {
                 onIonChange={(e) => {if(e.detail.value) setMovementFrequency(e.detail.value)}}
                 required
               />
-              <IonButton expand="full" onClick={() => myScheduleDailyAlarms(parseInt(hydrationFrequency), "Il faut bouger")}>
+              <div className='button button-remider-value-move' onClick={() => {myScheduleDailyAlarms(parseInt(movementFrequency), "Il faut bouger"), setMoveReminder(parseInt(movementFrequency))}}>
                 Sauvegarder
-              </IonButton>
+              </div>
             </IonCardContent>
         </IonCard>
-        {/* <IonSelect value={movementFrequency} placeholder="Frequency" onIonChange={(e) => setMovementFrequency(e.detail.value)}>
-          <IonSelectOption value="30">Every 30 mins</IonSelectOption>
-          <IonSelectOption value="60">Every 1 hour</IonSelectOption>
-          <IonSelectOption value="120">Every 2 hours</IonSelectOption>
-        </IonSelect> */}
       </IonItem>
     </IonList>
   );

@@ -1,16 +1,40 @@
-.custom-toolbar {
-    --background: white; /* Fond blanc pour l'en-tête */
+/* .custom-toolbar {
+    --background: white; 
     display: flex;
-    justify-content: center; /* Centrer le titre */
+    justify-content: center; 
     align-items: center;
+    display: flex; flex-direction: row;
 }
   
 .custom-title {
-    background: linear-gradient(90deg, #00b4d8, #48cae4, #90e0ef, #00FF7F); /* Dégradé bleu à vert */
-    -webkit-background-clip: text; /* Clips le dégradé au texte */
-    -webkit-text-fill-color: transparent; /* Rend le texte transparent pour voir le dégradé */
-    font-size: 1.8rem; /* Taille du texte */
-    font-weight: bold; /* Texte en gras */
-    text-align: center; /* Centrage du texte */
-    padding: 10px; /* Espacement interne pour agrandir le titre */
+    background: linear-gradient(90deg, #00b4d8, #48cae4, #90e0ef, #00FF7F); 
+    -webkit-background-clip: text; 
+    -webkit-text-fill-color: transparent; 
+    font-size: 1.8rem;/
+    font-weight: bold; 
+    text-align: center; 
+    padding: 10px;
+} */
+
+.custom-toolbar {
+    display: flex; flex-direction: row; 
+    align-items: center;
+    position: relative;
+}
+.custom-user-photoURL,
+.custom-user-name{
+    position: absolute;
+}
+.custom-user-photoURL{
+    right: 10px;
+    padding: auto;
+    color: #fff;
+    width: 30px !important; height: 30px !important;
+    background-color: #E85946; border-radius: 40%;
+    text-align: center; font-size: larger;
+}
+.custom-user-name{
+    left: 10px; 
+    color: #E85946;
+    font-weight: bold;
 }

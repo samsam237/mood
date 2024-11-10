@@ -48,6 +48,8 @@ export const saveUserData = async (user: any) => {
   };
   const storage = await storageService.initializeStorage()
   await storage.set('user', userData);
+  await storage.set('drinkReminder', 20);
+  await storage.set('moveReminder', 20);
 };
 
 // Supprimer les informations utilisateur du stockage

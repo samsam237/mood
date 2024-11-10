@@ -1,6 +1,8 @@
 import React, { useState } from 'react';
 import { IonInput, IonSelect, IonSelectOption, IonButton, IonItem, IonList } from '@ionic/react';
 
+import { UserHealthStatusInterface } from '../../interfaces/userHeatlhStatut';
+
 import './HealthCalculatorComponent.css'
 
 const HealthCalculatorComponent: React.FC = () => {

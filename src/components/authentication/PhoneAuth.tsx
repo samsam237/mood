@@ -4,13 +4,21 @@ import React, { useEffect, useRef, useState } from 'react';
 import { signInWithPhone, saveUserData } from '../../services/authServices';
 import { getAuth, RecaptchaVerifier } from 'firebase/auth';
 
+import { IonLoading } from '@ionic/react';
+
+import { useHistory } from 'react-router-dom';
+
 import "./PhoneAuth.css"
 
 const PhoneLogin: React.FC = () => {
+  const [isLoading, setIsLoading] = useState(false);
+
   const [phoneNumber, setPhoneNumber] = useState('');
   const [verificationCode, setVerificationCode] = useState('');
   const [confirmationResult, setConfirmationResult] = useState<any>(null);
+  const [errorMessage, setErrorMessage] = useState('');
   const recaptchaVerifier = useRef<RecaptchaVerifier | null>(null);
+  const history = useHistory();
   const auth = getAuth();
 
   useEffect(() => {
@@ -20,11 +28,23 @@ const PhoneLogin: React.FC = () => {
 
   const handlePhoneLogin = async () => {
     if (!recaptchaVerifier.current) return;
-
+    setIsLoading(true);
     try {
       const confirmation = await signInWithPhone(phoneNumber, recaptchaVerifier.current);
       setConfirmationResult(confirmation);
+      setIsLoading(true);
+      setErrorMessage(''); 
     } catch (error) {
+      setIsLoading(false);
+      const errorMsg = (error as Error).message || "Une erreur est survenue lors de l'envoi du code.";
+      
+      if (errorMsg.includes("auth/invalid-phone-number")) {
+        setErrorMessage("Le numéro de téléphone est invalide.");
+      } else if (errorMsg.includes("auth/too-many-requests")) {
+        setErrorMessage("Trop de tentatives. Veuillez réessayer plus tard.");
+      } else {
+        setErrorMessage("Erreur lors de la connexion par téléphone.");
+      }
       console.error("Phone login error", error);
     }
   };
@@ -34,8 +54,11 @@ const PhoneLogin: React.FC = () => {
       try {
         const res = await confirmationResult.confirm(verificationCode);
         await saveUserData(res.user);
+        setErrorMessage('');
+        history.replace('/main');
         // Handle successful login
       } catch (error) {
+        
         console.error("Verification code error", error);
       }
     }
@@ -66,6 +89,11 @@ const PhoneLogin: React.FC = () => {
           <button onClick={handleVerifyCode} >Verify Code</button>
         </>
       )}
+      <IonLoading
+        isOpen={isLoading}
+        message={'Encours de traitement...'}
+      />
+      {errorMessage && <p className="error-message">{errorMessage}</p>}
     </div>
   );
 };

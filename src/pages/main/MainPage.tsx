@@ -47,10 +47,12 @@ import './MainPage.css'
 import React, { useEffect, useState }  from 'react';
 import storageService from '../../services/storageService';
 
+import { User } from '../../interfaces/userInterface';
+
 setupIonicReact();
 
 const MainPage: React.FC = () => {
-  const [user, setUser] = useState(null);
+  const [user, setUser] = useState<User | null>(null);
 
   useEffect(() => {
     const fetchUserData = async () => {
@@ -86,10 +88,12 @@ const MainPage: React.FC = () => {
         return <DashboardContainer />;
     }
   };
+  const userName = user?.displayName || user?.email.split('@')[0] ||'';
+  const userPhotoURL = user?.photoURL || userName[0]
 
   return (
     <IonPage className='ion-page'>
-      <HeaderContainer />
+      <HeaderContainer userName={userName} userPhoto={userPhotoURL}/>
       <IonContent >
         <div className='main-content'>
           <div className="content">

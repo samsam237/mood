@@ -7,46 +7,52 @@ import AdviceContainer from '../advice/AdviceContainer'
 const DashboardContainer: React.FC = () => {
   return (
     <div className="dashboard-grid">
-        <div className="dashboard-card">
-          <div className="card">
-            <div className="circle "><img src="images/water-icon.png" alt="water" /></div>
-            <div className="card-content">
-              <p className='card-content-title'>Hydratation</p>
-              <p>
-                <span>1.5 L </span> / 2L
-              </p>
-            </div>            
-          </div>
+      <AdviceContainer />
+      <div className="dashboard-card">
+        <div className="card">          
+          <div className="card-content">
 
-          <IonButton
-            color="success"
-            className="green-button"
-            onClick={() => {}}
-          >
-            J'ai bu <img src="images/ok-icon.png" alt="" />
-          </IonButton>
+            <div className='card-content-title'>
+              <div className='card-content-title-content'>Hydratation</div>
+              <div className="circle "><img src="images/water-icon.png" alt="water" /></div>
+            </div>
+            <div className="card-content-main">
+              <div className="user-data">
+                <span className="user-value">1.5</span>litres
+              </div>
+              <div className="user-objectif">
+                objectif : <span className="user-objectif-value">3</span>Litres
+              </div>
+            </div>
+          </div>            
         </div>
-        <div className="dashboard-card">
-          <div className="card">
-            <div className="circle"><img src="images/move-icon.png" alt="water" /></div>
-            <div className="card-content">
-              <p className='card-content-title'>Mouvements</p>
-              <p>
-                <span>120 minutes </span> / 1h
-              </p>
+
+        <div className="button green-button" onClick={() => {}}>
+          J'ai bu <img src="images/ok-icon.png" alt="" />
+        </div>
+      </div>
+      <div className="dashboard-card">
+        <div className="card">
+          
+          <div className="card-content">
+            <div className='card-content-title'>
+              <div className='card-content-title-content'>Mouvements</div>
+              <div className="circle"><img src="images/move-icon.png" alt="water" /></div>
+            </div>
+            <div className="card-content-main">
+              <div className="user-data">
+                <span className="user-value">06</span> Mouvements
+              </div>
+              <div className="user-objectif">
+                objectif : <span className="user-objectif-value">12</span>
+              </div>
             </div>
           </div>
-
-          <IonButton
-            color="success"
-            className='green-button'
-            onClick={() => {}}
-          >
-            J'ai bougé <img src="images/ok-icon.png" alt="" />
-          </IonButton>
-
         </div>
-        <AdviceContainer />
+        <div className="button green-button" onClick={() => {}}>
+          J'ai bougé <img src="images/ok-icon.png" alt="" />
+        </div>
+      </div>
     </div>
   );
 };

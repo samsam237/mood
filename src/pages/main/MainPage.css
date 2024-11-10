@@ -1,6 +1,7 @@
 
 .main-content{    
-    background-color: #F0F4F8;
+    /* background-color: #F0F4F8; */
+    background-color: transparent;
     height: 100vh;
 }
 .content {

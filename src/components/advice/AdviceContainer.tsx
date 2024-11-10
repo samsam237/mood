@@ -1,6 +1,6 @@
 import React from 'react';
 import './AdviceContainer.css'; 
-import myImage from '../../assets/images/favicon.png'; // Importez l'image
+// import myImage from '../../assets/images/favicon.png'; // Importez l'image
 
 
 const AdviceContainer: React.FC = () => {
@@ -9,7 +9,7 @@ const AdviceContainer: React.FC = () => {
       <div className="advice-title">Conseil du jour</div>
       <div className='advice-content'>
         <div className="advice-content-img">
-            <img src={myImage} alt="advice-img" />
+            <img src="images/advice.png" alt="advice-img" />
         </div>
 
         <div className="advice-content-text">

@@ -1,25 +1,41 @@
 import React from 'react';
-import { IonList, IonItem, IonLabel, IonSelect, IonSelectOption, IonButton } from '@ionic/react';
+import { IonList, IonItem, IonLabel, IonSelect, IonSelectOption, IonButton, IonIcon } from '@ionic/react';
+import { logoFacebook, logoYoutube, star } from 'ionicons/icons';
+
+import './LinksAndRatingsComponent.css'
 
 const LinksAndRatingsComponent: React.FC = () => {
   const [rating, setRating] = React.useState<number | null>(null);
 
   return (
-    <IonList>
-      <IonItem>
-        <IonLabel>Nous suivre</IonLabel>
-        <IonButton href="https://youtube.com" target="_blank">Visiter notre site</IonButton>
-      </IonItem>
+    <div className="social-links">
+      <IonList className='social-links-list'>
+        <div>
+          <IonLabel className='label'>
+            Suivez nous 
+          </IonLabel>
+          <div className='content'>
+            <IonButton color="" href="https://facebook.com" target="_blank">
+              <IonIcon icon={logoFacebook} slot="icon-only" />
+            </IonButton>
+            <IonButton color="danger" href="https://youtube.com" target="_blank">
+              <IonIcon icon={logoYoutube} slot="icon-only" />
+            </IonButton>
+          </div>
+        </div>
+        <div>
+          <IonLabel className='label'>
+            Notez nous
+          </IonLabel>
+          <div className="content">
+            <IonButton color="warning" href="https://example.com/rating" target="_blank">
+              <IonIcon icon={star} slot="icon-only" />
+            </IonButton>
+          </div>
+        </div>
+      </IonList>
 
-      <IonItem>
-        <IonLabel>Rate this Resource</IonLabel>
-        <IonSelect value={rating} placeholder="Select Rating" onIonChange={(e) => setRating(e.detail.value)}>
-          {[1, 2, 3, 4, 5].map((star) => (
-            <IonSelectOption key={star} value={star}>{star} Stars</IonSelectOption>
-          ))}
-        </IonSelect>
-      </IonItem>
-    </IonList>
+    </div>
   );
 };
 

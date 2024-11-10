@@ -1,8 +1,33 @@
-.reminders-list{
-    
+.card-header{
+    display: flex; flex-direction: row;
+    align-items: center;
+    position: relative;
+}
+
+.card-header .image, 
+.card-header .label {
+    position: absolute;
+    top : 10px;
+}
+
+.card-header .image{
+    right: 10px; height: 20px; width: 20px; 
+}
+.card-header .label{
+    font-size: 0.8rem;
+    font-weight: bold;
 }
 
 .remider-value{
     margin-top: 10px;
     margin-bottom: 10px;
+}
+.button{
+    margin: auto; color: #fff;
+}
+.button-remider-value-hydratation{
+    background: rgb(70, 70, 255);
+}
+.button-remider-value-move{
+    background: rgb(255, 70, 70);
 }
