@@ -13,6 +13,8 @@ const HealthCalculatorComponent: React.FC = () => {
     const [wakeTime, setWakeTime] = useState<string>('');
     const [sleepTime, setSleepTime] = useState<string>('');
 
+    const [results, setResults] = useState<string | null>(null);
+
     const calculateIdealWeight = () => {
         if (height) {
             const numberOfHeight = parseInt(height);
@@ -43,90 +45,101 @@ const HealthCalculatorComponent: React.FC = () => {
         const waterIntake = calculateWaterIntake();
         const bmi = calculateBMI();
 
-        alert(
+        /* alert(
+            `Poids idéal: ${idealWeight.toFixed(2)} kg\nQuantité d'eau: ${waterIntake} ml\nIMC: ${bmi.toFixed(2)}`
+        ); */
+        setResults(
             `Poids idéal: ${idealWeight.toFixed(2)} kg\nQuantité d'eau: ${waterIntake} ml\nIMC: ${bmi.toFixed(2)}`
         );
     };
 
     return (
-      <form onSubmit={handleSubmit}>
-        <IonList>
-          <IonItem className="ion-item" onClick={() => console.log(`Clicked on`)}>
-              <IonInput
-                  label='Poids (kg)'
-                  labelPlacement="stacked"
-                  className="value"
-                  type="number"
-                  value={weight}
-                  onIonChange={(e) => { if (e.detail.value) setWeight(e.detail.value.toString())}}
-                  required
-              />
-          </IonItem>
-
-          <IonItem className="ion-item" onClick={() => console.log(`Clicked on`)}>
-              <IonInput
-                  label='Taille (cm)'
-                  labelPlacement="stacked"
-                  className="value"
-                  type="number"
-                  value={height}
-                  onIonChange={(e) => {if (e.detail.value) setHeight(e.detail.value)}}
-                  required
-              />
-          </IonItem>
-
-          <IonItem className="ion-item" onClick={() => console.log(`Clicked on`)}>
-              <IonInput
-                  label='Age (années)'
-                  labelPlacement="stacked"
-                  className="value"
-                  type="number"
-                  value={age}
-                  onIonChange={(e) => {if(e.detail.value) setAge(e.detail.value)}}
-                  required
-              />
-          </IonItem>
-
-          <IonItem className="ion-item" onClick={() => console.log(`Clicked on`)}>
-              <IonSelect
-                  label='Sexe'
-                  labelPlacement="stacked"
-                  className="value"
-                  value={sex}
-                  onIonChange={(e) => setSex(e.detail.value)}
-              >
-                  <IonSelectOption value="male">Homme</IonSelectOption>
-                  <IonSelectOption value="female">Femme</IonSelectOption>
-              </IonSelect>
-          </IonItem>
-
-          <IonItem className="ion-item" onClick={() => console.log(`Clicked on`)}>
-              <IonInput
-                  label='Heure de Réveil'
-                  labelPlacement="stacked"
-                  className="value"
-                  type="time"
-                  value={wakeTime}
-                  onIonChange={(e) => setWakeTime(e.detail.value!)}
-              />
-          </IonItem>
-
-          <IonItem className="ion-item" onClick={() => console.log(`Clicked on`)}>
-              <IonInput
-                  label='Heure de Coucher'
-                  labelPlacement="stacked"
-                  className="value"
-                  type="time"
-                  value={sleepTime}
-                  onIonChange={(e) => setSleepTime(e.detail.value!)}
-              />
-          </IonItem>
-        </IonList>
-
-        <IonButton expand="full" type="submit">
-          Calculer
-        </IonButton>
-      </form>
+      <div>
+          <form onSubmit={handleSubmit}>
+            <IonList>
+              <IonItem className="ion-item" onClick={() => console.log(`Clicked on`)}>
+                  <IonInput
+                      label='Poids (kg)'
+                      labelPlacement="stacked"
+                      className="value"
+                      type="number"
+                      value={weight}
+                      onIonChange={(e) => { if (e.detail.value) setWeight(e.detail.value.toString())}}
+                      required
+                  />
+              </IonItem>
+    
+              <IonItem className="ion-item" onClick={() => console.log(`Clicked on`)}>
+                  <IonInput
+                      label='Taille (cm)'
+                      labelPlacement="stacked"
+                      className="value"
+                      type="number"
+                      value={height}
+                      onIonChange={(e) => {if (e.detail.value) setHeight(e.detail.value)}}
+                      required
+                  />
+              </IonItem>
+    
+              <IonItem className="ion-item" onClick={() => console.log(`Clicked on`)}>
+                  <IonInput
+                      label='Age (années)'
+                      labelPlacement="stacked"
+                      className="value"
+                      type="number"
+                      value={age}
+                      onIonChange={(e) => {if(e.detail.value) setAge(e.detail.value)}}
+                      required
+                  />
+              </IonItem>
+    
+              <IonItem className="ion-item" onClick={() => console.log(`Clicked on`)}>
+                  <IonSelect
+                      label='Sexe'
+                      labelPlacement="stacked"
+                      className="value"
+                      value={sex}
+                      onIonChange={(e) => setSex(e.detail.value)}
+                  >
+                      <IonSelectOption value="male">Homme</IonSelectOption>
+                      <IonSelectOption value="female">Femme</IonSelectOption>
+                  </IonSelect>
+              </IonItem>
+    
+              <IonItem className="ion-item" onClick={() => console.log(`Clicked on`)}>
+                  <IonInput
+                      label='Heure de Réveil'
+                      labelPlacement="stacked"
+                      className="value"
+                      type="time"
+                      value={wakeTime}
+                      onIonChange={(e) => setWakeTime(e.detail.value!)}
+                  />
+              </IonItem>
+    
+              <IonItem className="ion-item" onClick={() => console.log(`Clicked on`)}>
+                  <IonInput
+                      label='Heure de Coucher'
+                      labelPlacement="stacked"
+                      className="value"
+                      type="time"
+                      value={sleepTime}
+                      onIonChange={(e) => setSleepTime(e.detail.value!)}
+                  />
+              </IonItem>
+            </IonList>
+    
+            <IonButton expand="full" type="submit">
+              Calculer
+            </IonButton>
+          </form>
+          {results && (
+            <div style={{ marginTop: '20px', padding: '10px', border: '1px solid #ccc', borderRadius: '5px' }}>
+              <h3>Résultats :</h3>
+              <pre>{results}</pre>
+            </div>
+          )}
+      </div>
     );
 };
 
