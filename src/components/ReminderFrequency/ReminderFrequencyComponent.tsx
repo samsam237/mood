@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { IonList, IonItem, IonInput, IonCard, IonCardHeader, IonCardContent, IonLabel, IonButton } from '@ionic/react';
+import { IonList, IonItem, IonInput, IonCard, IonCardHeader, IonCardContent, IonLabel, IonAlert } from '@ionic/react';
 
 import { myScheduleDailyAlarms, getReminder, setDrinkReminder, setMoveReminder } from '../../services/notificationService';
 
@@ -8,6 +8,13 @@ import "./ReminderFrequencyComponent.css";
 const ReminderFrequencyComponent: React.FC = () => {
   const [hydrationFrequency, setHydrationFrequency] = useState<string>('');
   const [movementFrequency, setMovementFrequency] = useState<string>('');
+  const [showAlert, setShowAlert] = useState(false);  
+  const [alertMessage, setAlertMessage] = useState<string>('');
+
+  const showDynamicAlert = (message : string) => {
+    setAlertMessage(message); 
+    setShowAlert(true);  
+  };
 
   useEffect( () => {
     const fetchReminder = async () => {
@@ -22,13 +29,13 @@ const ReminderFrequencyComponent: React.FC = () => {
   return (
     <IonList className='reminders-list'>
       <IonItem>
-        <IonCard>
+        <IonCard className='card-item'>
             <IonCardHeader className='card-header'>
               <div className="circle image">
                 <img src="images/water-icon.png" alt="water" />
               </div>
               <div className='label'>
-                <IonLabel>Rappel Hydration (en min) </IonLabel>
+                <IonLabel>Hydration (en min) </IonLabel>
               </div>
             </IonCardHeader>
             <IonCardContent>
@@ -41,20 +48,20 @@ const ReminderFrequencyComponent: React.FC = () => {
                 onIonChange={(e) => {if(e.detail.value) setHydrationFrequency(e.detail.value)}}
                 required
               />
-              <div className='button button-remider-value-hydratation' onClick={() => {myScheduleDailyAlarms(parseInt(hydrationFrequency), "Il faut s'hydrater"), setDrinkReminder(parseInt(hydrationFrequency))}}>
+              <div className='button button-remider-value-hydratation' onClick={() => {myScheduleDailyAlarms(parseInt(hydrationFrequency), "Il faut s'hydrater"), setDrinkReminder(parseInt(hydrationFrequency)), showDynamicAlert('Ajustement effectué') }}>
                 Sauvegarder
               </div>
             </IonCardContent>
         </IonCard>       
       </IonItem>
       <IonItem>
-        <IonCard>
+        <IonCard className='card-item'>
             <IonCardHeader className='card-header'>
               <div className="circle image">
                 <img src="images/move-icon.png" alt="water" />
               </div>
               <div className='label'>
-                <IonLabel>Rappel Mouvement (en min) </IonLabel>
+                <IonLabel>Mouvement (en min) </IonLabel>
               </div>
             </IonCardHeader>
             <IonCardContent>
@@ -67,11 +74,19 @@ const ReminderFrequencyComponent: React.FC = () => {
                 onIonChange={(e) => {if(e.detail.value) setMovementFrequency(e.detail.value)}}
                 required
               />
-              <div className='button button-remider-value-move' onClick={() => {myScheduleDailyAlarms(parseInt(movementFrequency), "Il faut bouger"), setMoveReminder(parseInt(movementFrequency))}}>
+              <div className='button button-remider-value-move' onClick={() => {myScheduleDailyAlarms(parseInt(movementFrequency), "Il faut bouger"), setMoveReminder(parseInt(movementFrequency)), showDynamicAlert('Ajustement effectué')}}>
                 Sauvegarder
               </div>
             </IonCardContent>
         </IonCard>
+        {/* Alerte avec le message dynamique */}
+        <IonAlert
+          isOpen={showAlert}  // Affiche ou cache l'alerte
+          onDidDismiss={() => setShowAlert(false)}  // Ferme l'alerte lorsqu'on clique en dehors ou sur "OK"
+          header="Alerte"
+          message={alertMessage}  // Le message dynamique
+          buttons={['OK']}  // Affiche un bouton "OK" pour fermer l'alerte
+        />
       </IonItem>
     </IonList>
   );

@@ -93,18 +93,18 @@ const App: React.FC = () => {
 
   return ( 
     <IonApp>
-    <IonReactRouter >
-      <IonTabs className='ion-tabs'>
-        <IonRouterOutlet className='ion-router-outlet'>
-          <Route path="/home" component={Home} exact />
-          <Redirect from="/" to="/home" exact />
-          <Route path="/main" component={MainPage} exact />
-          <Route path="/welcome" component={Welcome} exact />
-          <Route path="/login" component={Login} exact />
-        </IonRouterOutlet>        
-      </IonTabs>
-    </IonReactRouter>
-  </IonApp>
+      <IonReactRouter >
+        <IonTabs className='ion-tabs'>
+          <IonRouterOutlet className='ion-router-outlet'>
+            <Route path="/home" component={Home} exact />
+            <Redirect from="/" to="/home" exact />
+            <Route path="/main" component={MainPage} exact />
+            <Route path="/welcome" component={Welcome} exact />
+            <Route path="/login" component={Login} exact />
+          </IonRouterOutlet>        
+        </IonTabs>
+      </IonReactRouter>
+    </IonApp>
   );
 
 }

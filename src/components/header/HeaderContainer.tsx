@@ -14,7 +14,12 @@ const HeaderContainer: React.FC<HeaderContainerProps> = ({userName, userPhoto}) 
         <div className="custom-toolbar">
           <div className='custom-user-name'>ACTIPOD</div>
           <div className="custom-user-photoURL">
-            <img src={userPhoto} alt={userPhoto} />
+            {userPhoto && userPhoto.includes("http") ? (
+              <img src={userPhoto} alt="U" />
+            ) : (
+              // Si ce n'est pas une URL, afficher la première lettre du nom de l'utilisateur
+              <div className="user-initial">{userPhoto ? userPhoto.charAt(0).toUpperCase() : 'A'}</div>
+            )}
           </div>
         </div>
       </IonToolbar>

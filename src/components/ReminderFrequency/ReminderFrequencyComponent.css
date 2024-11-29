@@ -1,13 +1,32 @@
+.reminders-list{
+    display: flex;
+    flex-direction: column;
+    justify-content: center; /* Centre horizontalement */
+    align-items: center;     /* Centre verticalement */
+    width: 100%;  
+}
+
+
 .card-header{
     display: flex; flex-direction: row;
-    align-items: center;
+    align-items: center;  justify-content: space-between;
     position: relative;
+    font-size: 13px;
+    padding: 0%;
 }
 
 .card-header .image, 
 .card-header .label {
     position: absolute;
     top : 10px;
+}
+
+.card-header .image{ 
+    right: 5px;
+}
+.card-header .label {
+    left: 5px;
+    font-weight: bold;
 }
 
 .card-header .image{

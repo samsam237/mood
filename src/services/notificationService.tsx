@@ -25,7 +25,7 @@ export const scheduleDailyAlarms = async (startHour : number, startMinute : numb
     await LocalNotifications.schedule({ notifications });
 };
 export const myScheduleDailyAlarms = async ( intervalMinutes : number, body : string) => {
-  console.log(body);
+  //console.log(body);
   cancelAllDailyAlarmsByBody(body);
   scheduleDailyAlarms (8, 0, 18, 0, intervalMinutes, body);    
 }
@@ -48,7 +48,7 @@ const cancelAllDailyAlarmsByBody = async (specificBody:string) => {
     notifications: notificationsToCancel.map((notification) => ({ id: notification.id }))
   });
 
-  console.log(`${notificationsToCancel.length} notifications annulées.`);
+  //console.log(`${notificationsToCancel.length} notifications annulées.`);
 };
 
 export const getReminder = async () => {
@@ -70,4 +70,20 @@ export const setDrinkReminder = async ( value:number) => {
 
 export const setMoveReminder = async (value:number) => {
   await setReminder('moveReminder', value)
+};
+
+const checkPendingNotifications = async () => {
+  const pending = await LocalNotifications.getPending();
+  console.log('Notifications en attente:', pending);
+};
+const requestPermissions = async () => {
+  const permissionStatus = await LocalNotifications.requestPermissions();
+  
+  // Vérifie si la permission de notification a été accordée
+  /* if (permissionStatus.status !== 'granted') {
+    console.log('Permission denied for notifications');
+  } else {
+    console.log('Permission granted for notifications');
+  } */
+ console.log ("Permissions : ",permissionStatus)
 };

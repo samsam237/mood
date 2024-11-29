@@ -54,7 +54,7 @@ const HealthCalculatorComponent: React.FC = () => {
     };
 
     return (
-      <div>
+      <div className='div-container'>
           <form onSubmit={handleSubmit}>
             <IonList>
               <IonItem className="ion-item" onClick={() => console.log(`Clicked on`)}>
@@ -134,10 +134,10 @@ const HealthCalculatorComponent: React.FC = () => {
             </IonButton>
           </form>
           {results && (
-            <div style={{ marginTop: '20px', padding: '10px', border: '1px solid #ccc', borderRadius: '5px' }}>
-              <h3>Résultats :</h3>
-              <pre>{results}</pre>
-            </div>
+            <div className="result-container">
+                <h3>Résultats :</h3>
+                <pre>{results}</pre>
+          </div>
           )}
       </div>
     );
