@@ -12,7 +12,7 @@ const TabContainer: React.FC<TabContainerProps> = ({ onTabChange }) => {
             {/* <Route path="/main" component={MainPage} exact /> */}
         </IonRouterOutlet>    
         <div className="ion-tab-bar">
-            <IonTabBar className='ion-tab-bar-content'>
+            <IonTabBar slot='bottom' className='ion-tab-bar-content'>
                 <IonTabButton className="custom-tab-button" tab="home" onClick={() => onTabChange('home')}>
                     <div>
                         <IonIcon icon={home} />
