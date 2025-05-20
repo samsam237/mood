@@ -37,16 +37,17 @@
   align-items: center;
   border: 1px solid transparent; 
   padding: 500px;
-}
-  
+}  
 .ion-tab-bar-content{
-  background-color: white;
-  padding-left: 6px;
+  background-color: white !important;
+  opacity: 1 !important;
+  visibility: visible !important;
+  z-index: 1000;
 }
-
 .custom-tab-button {
   --color: #333; /* Couleur de l'icône non sélectionnée */
   --color-selected: #3880ff; /* Couleur de l'icône sélectionnée */
+  color: #000;
   font-size: 14px; /* Taille de la police */
   display: flex;               /* Active le mode Flexbox pour le bouton */
   flex-direction: column;      /* Pour que l'icône et le texte soient alignés verticalement */
@@ -55,11 +56,9 @@
   justify-content: center;
   background-color: transparent;
 }
-
 .custom-tab-button:first-child{
   height: 30px;
 }
-
 .custom-tab-button:first-child div{
   display: flex; flex-direction: row;
   align-items: center;         
@@ -72,11 +71,9 @@
   color: #fff;
   padding: 2px;
 }
-
 .custom-tab-button ion-icon {
   font-size: 24px;
 }
-
 .custom-tab-button:hover {
   --color: #007bff; 
 }

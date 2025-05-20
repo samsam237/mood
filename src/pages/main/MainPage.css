@@ -19,8 +19,10 @@
 } */
 
 .tab-container {
-    position: absolute;
-    bottom: 10px;
+    /* position: absolute;
+    bottom: 10px; */
+    background-color: white;
+    padding-bottom: env(safe-area-inset-bottom); 
     left: 0;
     right: 0;
     height: 56px;
