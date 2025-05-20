@@ -48,3 +48,8 @@
     margin-top: 10px;
     font-size: 0.9em;
 }
+
+#recaptcha-container {
+    margin: 10px 0;
+    text-align: center;
+}

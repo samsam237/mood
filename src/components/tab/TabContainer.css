@@ -4,15 +4,16 @@
   position: absolute; bottom: 20px;
 } */
 
-@media (prefers-color-scheme: dark) {
+/* @media (prefers-color-scheme: dark) {
   ion-tabs {
     background-color: #222222 !important;
     color: #ffffff !important;
   }
-}
+} */
 
 .ion-tab-bar-container {
-  background-color: #fff; 
+  background-color: transparent; 
+  padding: 5px;
 }
 .ion-tab-bar{
   bottom: 15px;                 /* 5px d'espace au-dessus du bas de la page */
@@ -30,13 +31,19 @@
   visibility: visible !important;
 }
 .custom-tab-bar {            
-  border-top: 1px solid #ddd; /* Ajouter une bordure au-dessus du TabBar */
+  border-top: 1px solid #fff; /* Ajouter une bordure au-dessus du TabBar */
   display: flex;               /* Active le mode Flexbox pour le parent */
   justify-content: space-around; /* Espace égal entre les boutons */
   align-items: center;
   border: 1px solid transparent; 
+  padding: 500px;
 }
   
+.ion-tab-bar-content{
+  background-color: white;
+  padding-left: 6px;
+}
+
 .custom-tab-button {
   --color: #333; /* Couleur de l'icône non sélectionnée */
   --color-selected: #3880ff; /* Couleur de l'icône sélectionnée */
@@ -46,6 +53,7 @@
   align-items: center;         /* Centre l'icône et le texte à l'intérieur du bouton */
   height: 25px;
   justify-content: center;
+  background-color: transparent;
 }
 
 .custom-tab-button:first-child{

@@ -17,7 +17,7 @@ const TabContainer: React.FC<TabContainerProps> = ({ onTabChange }) => {
         </IonRouterOutlet>    
 
         <div className="ion-tab-bar">
-            <IonTabBar>
+            <IonTabBar className='ion-tab-bar-content'>
 
                 <IonTabButton className="custom-tab-button" tab="home" onClick={() => onTabChange('home')}>
                     <div>

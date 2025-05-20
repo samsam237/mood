@@ -2,11 +2,12 @@
 import { signInWithCredential, getAuth, signInWithEmailAndPassword, 
          createUserWithEmailAndPassword, signOut, GoogleAuthProvider, 
          signInWithPopup, FacebookAuthProvider, signInWithPhoneNumber, 
-         RecaptchaVerifier } from 'firebase/auth';
+         RecaptchaVerifier, Auth } from 'firebase/auth';
 import app from '../firebaseConfig';
 import storageService from './storageService';
 import { GoogleAuth } from '@codetrix-studio/capacitor-google-auth';
-import { isPlatform } from '@ionic/react';
+
+import { FacebookLogin } from '@capacitor-community/facebook-login';
 
 const auth = getAuth(app);
 
@@ -43,7 +44,7 @@ export async function verifyPhoneCode(confirmationResult: any, code: string): Pr
     const result = await confirmationResult.confirm(code);
     return result.user;
   } catch (error) {
-    console.error('Erreur vérification code', error);
+    console.error('Erreur vérification code:', error);
     throw error;
   }
 }
@@ -75,13 +76,34 @@ export const signInWithGoogle = async () => {
 
 // Facebook Authentication
 export const signInWithFacebook = async () => {
-  const provider = new FacebookAuthProvider();
-  return await signInWithPopup(auth, provider);
+  /* const provider = new FacebookAuthProvider();
+  return await signInWithPopup(auth, provider); */
+  try {
+    const FACEBOOK_PERMISSIONS = ['email', 'public_profile'];
+    const result = await FacebookLogin.login({ permissions: FACEBOOK_PERMISSIONS });
+    if (result.accessToken) {
+      const credential = FacebookAuthProvider.credential(result.accessToken.token);
+      return await signInWithCredential(auth, credential);
+    } else {
+      throw new Error('Aucun jeton d’accès Facebook reçu');
+    }
+  } catch (error) {
+    console.error('Erreur Facebook Sign-In:', error);
+    throw error;
+  }
 };
 
 // Phone Authentication
-export const signInWithPhone = async (phoneNumber: string, appVerifier: RecaptchaVerifier) => {
+/* export const signInWithPhone = async (phoneNumber: string, appVerifier: RecaptchaVerifier) => {
   return await signInWithPhoneNumber(auth, phoneNumber, appVerifier);
+}; */
+export const signInWithPhone = async (phoneNumber: string, appVerifier: RecaptchaVerifier, auth: Auth) => {
+  try {
+    return await signInWithPhoneNumber(auth, phoneNumber, appVerifier);
+  } catch (error) {
+    console.error('Erreur authentification téléphone:', error);
+    throw error;
+  }
 };
 
 // Enregistrer les informations utilisateur dans le stockage

@@ -1,28 +1,32 @@
 
+.ion-page{
+    position: relative; min-height: 100vh; background-color: #FFFFFF;
+    /*background-color: #F0F4F8;*/
+}
+
 .main-content{    
     /* background-color: #F0F4F8; */
-    background-color: transparent;
-    height: 100vh;
-    padding-bottom: 70px;
+    background-color: #FFF;
+    padding-bottom: 50px;
 }
 .content {
     margin: 0 auto;
     padding-top: 30px;
     max-width: 350px;
 }
-.ion-page{
-    position: relative; min-height: 100vh; background-color: #F0F4F8;
-}
 /* .tab-container{
     height: 56px;  position: relative; bottom: 20px;    
 } */
 
 .tab-container {
-    position: fixed;
+    position: absolute;
     bottom: 10px;
     left: 0;
     right: 0;
     height: 56px;
     z-index: 1000;
     background-color: white; /* facultatif, mais aide à le rendre visible */
+}
+.tab-container > *{
+    z-index: 100000;
 }
