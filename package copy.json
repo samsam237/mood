@@ -11,7 +11,12 @@
     "test.unit": "vitest",
     "lint": "eslint",
     "build:android": "npm run build && npx cap sync android && npx cap open android",
-    "build:ios": "npm run build && npx cap sync ios && npx cap open ios"
+    "ionic:start": "vite",
+    "ionic:build": "npm run build && ionic capacitor copy",
+    "build:web": "ionic build --prod",
+    "build:android": "ionic capacitor build android",
+    "build:ios": "ionic capacitor build ios",
+    "sync": "ionic capacitor sync"
   },
   "dependencies": {
     "@capacitor/android": "6.1.2",
