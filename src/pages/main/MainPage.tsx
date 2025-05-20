@@ -2,7 +2,8 @@
 import {
   IonPage,
   setupIonicReact,
-  IonContent
+  IonContent,
+  IonTabs
 } from '@ionic/react';
 
 import TabContainer from '../../components/tab/TabContainer';
@@ -94,6 +95,7 @@ const MainPage: React.FC = () => {
   return (
     <IonPage className='ion-page'>
       <HeaderContainer userName={userName} userPhoto={userPhotoURL}/>
+
       <IonContent >
         <div className='main-content'>
           <div className="content">
@@ -101,9 +103,7 @@ const MainPage: React.FC = () => {
           </div>
         </div>
       </IonContent>
-      <div className='tab-container'>
-        <TabContainer onTabChange={handleTabChange} />
-      </div>
+      <TabContainer onTabChange={handleTabChange} />
     </IonPage>
   );
 };

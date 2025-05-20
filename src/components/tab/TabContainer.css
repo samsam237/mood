@@ -39,15 +39,20 @@
   padding: 500px;
 }  
 .ion-tab-bar-content{
+  border-top: 1px solid #fff; /* Ajouter une bordure au-dessus du TabBar */
+  display: flex;               /* Active le mode Flexbox pour le parent */
+  justify-content: space-around; /* Espace égal entre les boutons */
+  align-items: center;
+  border: 1px solid transparent; 
   background-color: white !important;
   opacity: 1 !important;
   visibility: visible !important;
   z-index: 1000;
+  color: #333;
 }
 .custom-tab-button {
   --color: #333; /* Couleur de l'icône non sélectionnée */
   --color-selected: #3880ff; /* Couleur de l'icône sélectionnée */
-  color: #000;
   font-size: 14px; /* Taille de la police */
   display: flex;               /* Active le mode Flexbox pour le bouton */
   flex-direction: column;      /* Pour que l'icône et le texte soient alignés verticalement */
@@ -55,6 +60,7 @@
   height: 25px;
   justify-content: center;
   background-color: transparent;
+  z-index: 99999999;
 }
 .custom-tab-button:first-child{
   height: 30px;
