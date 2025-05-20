@@ -1,10 +1,52 @@
 
-import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut, GoogleAuthProvider, signInWithPopup, FacebookAuthProvider, signInWithPhoneNumber, RecaptchaVerifier } from 'firebase/auth';
+import { signInWithCredential, getAuth, signInWithEmailAndPassword, 
+         createUserWithEmailAndPassword, signOut, GoogleAuthProvider, 
+         signInWithPopup, FacebookAuthProvider, signInWithPhoneNumber, 
+         RecaptchaVerifier } from 'firebase/auth';
 import app from '../firebaseConfig';
 import storageService from './storageService';
+import { GoogleAuth } from '@codetrix-studio/capacitor-google-auth';
+import { isPlatform } from '@ionic/react';
 
 const auth = getAuth(app);
 
+let recaptchaVerifier: RecaptchaVerifier;
+
+/* export function setUpRecaptcha(containerId = 'recaptcha-container') {
+  if (!recaptchaVerifier) {
+    recaptchaVerifier = new RecaptchaVerifier(containerId, {
+      size: 'invisible',
+      callback: (response: any) => {
+        console.log('reCAPTCHA resolved:', response);
+      },
+      'expired-callback': () => {
+        console.warn('reCAPTCHA expired');
+      },
+    }, auth);
+  }
+}
+ */
+/* export async function sendPhoneCode(phoneNumber: string): Promise<any> {
+  setUpRecaptcha(); // initialise invisible reCAPTCHA
+  try {
+    const confirmationResult = await signInWithPhoneNumber(auth, phoneNumber, recaptchaVerifier);
+    return confirmationResult; // Contient la méthode confirm(code)
+  } catch (error) {
+    console.error('Erreur envoi SMS', error);
+    throw error;
+  }
+}
+ */
+
+export async function verifyPhoneCode(confirmationResult: any, code: string): Promise<any> {
+  try {
+    const result = await confirmationResult.confirm(code);
+    return result.user;
+  } catch (error) {
+    console.error('Erreur vérification code', error);
+    throw error;
+  }
+}
 
 export const signIn = async (email: string, password: string) => {
   return await signInWithEmailAndPassword(auth, email, password);
@@ -22,8 +64,13 @@ export const logout = async () => {
 
 // Google Authentication
 export const signInWithGoogle = async () => {
-  const provider = new GoogleAuthProvider();
-  return await signInWithPopup(auth, provider);
+  const googleUser = await GoogleAuth.signIn();
+  const credential = GoogleAuthProvider.credential(googleUser.authentication.idToken);
+  return await signInWithCredential(auth, credential);
+
+
+/*   const provider = new GoogleAuthProvider();
+  return await signInWithPopup(auth, provider); */
 };
 
 // Facebook Authentication
