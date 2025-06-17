@@ -5,6 +5,34 @@ import { myScheduleDailyAlarms, getReminder, setDrinkReminder, setMoveReminder }
 
 import "./ReminderFrequencyComponent.css";
 
+const ReminderCard = ({ icon, label, value, onValueChange, onSave }: any) => (
+  <IonCard className='card-item'>
+    <IonCardHeader className='card-header'>
+      <div className="circle image">
+        <img src={icon} alt="icon" />
+      </div>
+      <div className='label'>
+        <IonLabel>{label}</IonLabel>
+      </div>
+    </IonCardHeader>
+    <IonCardContent>
+      <IonInput
+        labelPlacement="stacked"
+        className="remider-value"
+        type="number"
+        value={value}
+        placeholder='en minutes'
+        onIonChange={(e) => { if (e.detail.value) onValueChange(e.detail.value) }}
+        required
+      />
+      <div className='button btn-save' onClick={onSave}>
+        Sauvegarder
+      </div>
+    </IonCardContent>
+  </IonCard>
+);
+
+
 const ReminderFrequencyComponent: React.FC = () => {
   const [hydrationFrequency, setHydrationFrequency] = useState<string>('');
   const [movementFrequency, setMovementFrequency] = useState<string>('');
@@ -29,7 +57,7 @@ const ReminderFrequencyComponent: React.FC = () => {
   return (
     <IonList className='reminders-list'>
       <IonItem>
-        <IonCard className='card-item'>
+        {/* <IonCard className='card-item'>
             <IonCardHeader className='card-header'>
               <div className="circle image">
                 <img src="images/water-icon.png" alt="water" />
@@ -52,10 +80,21 @@ const ReminderFrequencyComponent: React.FC = () => {
                 Sauvegarder
               </div>
             </IonCardContent>
-        </IonCard>       
+        </IonCard>    */}    
+        <ReminderCard
+          icon="images/water-icon.png"
+          label="Hydratation (en L)"
+          value={hydrationFrequency}
+          onValueChange={setHydrationFrequency}
+          onSave={() => {
+            myScheduleDailyAlarms(parseInt(hydrationFrequency), "Il faut s'hydrater");
+            setDrinkReminder(parseInt(hydrationFrequency));
+            showDynamicAlert("Ajustement effectué");
+          }}
+        />
       </IonItem>
       <IonItem>
-        <IonCard className='card-item'>
+        {/* <IonCard className='card-item'>
             <IonCardHeader className='card-header'>
               <div className="circle image">
                 <img src="images/move-icon.png" alt="water" />
@@ -78,7 +117,18 @@ const ReminderFrequencyComponent: React.FC = () => {
                 Sauvegarder
               </div>
             </IonCardContent>
-        </IonCard>
+        </IonCard> */}
+        <ReminderCard
+          icon="images/move-icon.png"
+          label="Mouvement (en min)"
+          value={movementFrequency}
+          onValueChange={setMovementFrequency}
+          onSave={() => {
+            myScheduleDailyAlarms(parseInt(movementFrequency), "Il faut bouger");
+            setMoveReminder(parseInt(movementFrequency));
+            showDynamicAlert("Ajustement effectué");
+          }}
+        />
         {/* Alerte avec le message dynamique */}
         <IonAlert
           isOpen={showAlert}  // Affiche ou cache l'alerte

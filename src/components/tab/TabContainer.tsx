@@ -26,9 +26,9 @@ const TabContainer: React.FC<TabContainerProps> = ({ onTabChange }) => {
         <IonTabButton className="custom-tab-button" tab="user" onClick={() => onTabChange('user')}>
             <IonIcon icon={personCircle} />
         </IonTabButton>
-        <IonTabButton className="custom-tab-button" tab="about" onClick={() => onTabChange('about')}>
+        {/* <IonTabButton className="custom-tab-button" tab="about" onClick={() => onTabChange('about')}>
             <IonIcon icon={ribbon} />
-        </IonTabButton>
+        </IonTabButton> */}
     </IonTabBar>
   );
 };

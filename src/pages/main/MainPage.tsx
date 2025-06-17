@@ -50,10 +50,16 @@ import storageService from '../../services/storageService';
 
 import { User } from '../../interfaces/userInterface';
 
+import { initializeReminders } from '../../services/notificationService';
+
 setupIonicReact();
 
 const MainPage: React.FC = () => {
   const [user, setUser] = useState<User | null>(null);
+
+  useEffect(() => {
+    initializeReminders();  
+  }, []);
 
   useEffect(() => {
     const fetchUserData = async () => {

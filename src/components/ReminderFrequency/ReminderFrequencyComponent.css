@@ -42,7 +42,10 @@
     margin-bottom: 10px;
 }
 .button{
-    margin: auto; color: #fff;
+    margin: auto;
+}
+.btn-save{
+    background-color: antiquewhite;
 }
 .button-remider-value-hydratation{
     background: rgb(70, 70, 255);

@@ -9,7 +9,7 @@ export const scheduleDailyAlarms = async (startHour : number, startMinute : numb
   
     while (currentTime.getHours() < endHour || (currentTime.getHours() === endHour && currentTime.getMinutes() <= endMinute)) {
       notifications.push({
-        title: "Alarme Quotidienne",
+        title: "Rappel !!!",
         body: body,
         id: notificationId++,
         schedule: {
@@ -86,4 +86,23 @@ const requestPermissions = async () => {
     console.log('Permission granted for notifications');
   } */
  console.log ("Permissions : ",permissionStatus)
+};
+
+export const initializeReminders = async () => {
+  await LocalNotifications.requestPermissions();
+  const storage = await storageService.initializeStorage();
+  const drinkTime = await storage.get('drinkReminder');
+  const moveTime = await storage.get('moveReminder');
+
+  if (drinkTime && !isNaN(drinkTime)) {
+    await myScheduleDailyAlarms(parseInt(drinkTime), "Il faut s'hydrater");
+  }else{
+    await myScheduleDailyAlarms(120, "Il faut s'hydrater");
+  }
+
+  if (moveTime && !isNaN(moveTime)) {
+    await myScheduleDailyAlarms(parseInt(moveTime), "Il faut bouger");
+  }else{
+    await myScheduleDailyAlarms(60, "Il faut bouger");
+  }
 };

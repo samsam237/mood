@@ -25,7 +25,7 @@ const Welcome: React.FC = () => {
             <h2>ACTIPOD</h2>
             <img src="images/data 4.png"></img>
             <p>
-                Bonjour, je suis ACTIPOD, 
+                Bonjour, je suis MOOD, 
                 <br />votre compagnon d’hydratation et qui vous aident à lutter contre la sédentarité.
             </p>
             <IonButton size="small" color="danger" className='btn-continue' expand="block" onClick={goToNextPage}>
