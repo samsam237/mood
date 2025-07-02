@@ -51,10 +51,13 @@ import storageService from '../../services/storageService';
 import { User } from '../../interfaces/userInterface';
 
 import { initializeReminders } from '../../services/notificationService';
+import DailyAdvicePopup from '../../components/DailyAdvicePopup/DailyAdvicePopup';
 
 setupIonicReact();
 
 const MainPage: React.FC = () => {
+  <DailyAdvicePopup />
+
   const [user, setUser] = useState<User | null>(null);
 
   useEffect(() => {

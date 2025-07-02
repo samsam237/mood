@@ -61,17 +61,17 @@ const DashboardContainer: React.FC = () => {
             </div>
             <div className="card-content-main">
               <div className="user-data">
-                <span className="user-value">{(hydration / 1000).toFixed(1)}</span> litres
+                <span className="user-value">{(hydration).toFixed(1)}</span> mL
               </div>
               <div className="user-objectif">
-                objectif : <span className="user-objectif-value">{hydrationGoal / 1000}</span> Litres
+                🎯 <span className="user-objectif-value">{hydrationGoal}</span> mL
               </div>
             </div>
           </div>            
         </div>
 
         <div className="button green-button" onClick={handleDrink}>
-          +0,1 L <img src="images/ok-icon.png" alt="" />
+          +100 mL <img src="images/ok-icon.png" alt="" />
         </div>
       </div>
       <div className="dashboard-card">
@@ -87,7 +87,7 @@ const DashboardContainer: React.FC = () => {
                 <span className="user-value">{movement}</span> Mouvements
               </div>
               <div className="user-objectif">
-                objectif : <span className="user-objectif-value">{movementGoal}</span>
+                🎯 <span className="user-objectif-value">{movementGoal}</span>
               </div>
             </div>
           </div>
@@ -115,7 +115,7 @@ const DashboardContainer: React.FC = () => {
               <Tooltip />
               <Legend />
               <Line yAxisId="left" type="monotone" dataKey="hydration" name="Hydratation (L)" stroke="#007bff" />
-              <Line yAxisId="right" type="monotone" dataKey="movement" name="Mouvements" stroke="#28a745" />
+              <Line yAxisId="right" type="monotone" dataKey="movement" name="Mouvements" stroke="#E85946" />
             </LineChart>
           </ResponsiveContainer>
         </div>
