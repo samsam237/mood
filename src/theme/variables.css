@@ -17,4 +17,17 @@ http://ionicframework.com/docs/theming/ */
 *{
     font-family: 'Poppins', sans-serif;
 }
+
+:root {
+  /* Health-inspired color palette */
+  --color-primary: #26c6da; /* Teal */
+  --color-accent: #43a047;  /* Green */
+  --color-accent2: #ec407a; /* Pink/Coral */
+  --color-background: #f7fafd; /* Light blue */
+  --color-surface: #ffffff; /* White */
+  --color-text: #263238; /* Dark blue-gray */
+  --color-success: #66bb6a;
+  --color-warning: #ffa726;
+  --color-error: #ef5350;
+}
   

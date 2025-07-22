@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { IonList, IonItem, IonInput, IonCard, IonCardHeader, IonCardContent, IonLabel, IonAlert } from '@ionic/react';
+import { IonList, IonItem, IonInput, IonCard, IonCardHeader, IonCardContent, IonLabel, IonAlert, IonDatetime } from '@ionic/react';
 
 import { myScheduleDailyAlarms, getReminder, setDrinkReminder, setMoveReminder } from '../../services/notificationService';
 
@@ -39,6 +39,30 @@ const ReminderFrequencyComponent: React.FC = () => {
   const [showAlert, setShowAlert] = useState(false);  
   const [alertMessage, setAlertMessage] = useState<string>('');
 
+  const [wakeUpTime, setWakeUpTime] = useState<string>('07:00');
+  const [sleepTime, setSleepTime] = useState<string>('23:00');
+
+  const [hydrationGoal, setHydrationGoal] = useState<string>('2000');
+  const [movementGoal, setMovementGoal] = useState<string>('60');
+
+  const calculateHydrationPerReminder = () => {
+    const totalMinutes = getActiveMinutes();
+    const frequency = parseInt(hydrationFrequency);
+    if (frequency && totalMinutes) {
+      const reminders = Math.floor(totalMinutes / frequency);
+      return reminders ? Math.round(parseInt(hydrationGoal) / reminders) : 0;
+    }
+    return 0;
+  };
+  
+  const getActiveMinutes = () => {
+    const [wakeHour, wakeMin] = wakeUpTime.split(':').map(Number);
+    const [sleepHour, sleepMin] = sleepTime.split(':').map(Number);
+    const wakeMinutes = wakeHour * 60 + wakeMin;
+    const sleepMinutes = sleepHour * 60 + sleepMin;
+    return sleepMinutes > wakeMinutes ? sleepMinutes - wakeMinutes : (1440 - wakeMinutes + sleepMinutes); // gestion nuit
+  };
+  
   const showDynamicAlert = (message : string) => {
     setAlertMessage(message); 
     setShowAlert(true);  
@@ -83,7 +107,7 @@ const ReminderFrequencyComponent: React.FC = () => {
         </IonCard>    */}    
         <ReminderCard
           icon="images/water-icon.png"
-          label="Hydratation (en L)"
+          label="Hydratation"
           value={hydrationFrequency}
           onValueChange={setHydrationFrequency}
           onSave={() => {
@@ -120,7 +144,7 @@ const ReminderFrequencyComponent: React.FC = () => {
         </IonCard> */}
         <ReminderCard
           icon="images/move-icon.png"
-          label="Mouvement (en min)"
+          label="Mouvement"
           value={movementFrequency}
           onValueChange={setMovementFrequency}
           onSave={() => {
@@ -138,6 +162,57 @@ const ReminderFrequencyComponent: React.FC = () => {
           buttons={['OK']}  // Affiche un bouton "OK" pour fermer l'alerte
         />
       </IonItem>
+      <IonItem>
+        <IonLabel>Heure de réveil</IonLabel>
+        <IonDatetime 
+          presentation="time"
+          value={wakeUpTime}
+          onIonChange={e => {
+            const value = e.detail.value;
+            if (typeof value === 'string') {
+              setWakeUpTime(value);
+            }
+          }}
+        />
+      </IonItem>
+      <IonItem>
+        <IonLabel>Heure de coucher</IonLabel>
+        <IonDatetime 
+          presentation="time"
+          value={sleepTime}
+          onIonChange={e => {
+            const value = e.detail.value;
+            if (typeof value === 'string') {
+              setSleepTime(value);
+            }
+          }}
+        />
+      </IonItem>
+
+      <IonItem>
+        <IonLabel position="stacked">Objectif Hydratation (en ml)</IonLabel>
+        <IonInput
+          type="number"
+          value={hydrationGoal}
+          onIonChange={e => setHydrationGoal(e.detail.value!)}
+        />
+      </IonItem>
+
+      <IonItem>
+        <IonLabel position="stacked">Objectif Mouvement (en minutes)</IonLabel>
+        <IonInput
+          type="number"
+          value={movementGoal}
+          onIonChange={e => setMovementGoal(e.detail.value!)}
+        />
+      </IonItem>
+
+      <IonItem>
+        <IonLabel>
+          Quantité à boire à chaque rappel : {calculateHydrationPerReminder()} ml
+        </IonLabel>
+      </IonItem>
+
     </IonList>
   );
 };

@@ -1,9 +1,10 @@
 import { LocalNotifications, ScheduleEvery  } from '@capacitor/local-notifications';
 import storageService from './storageService';
 
-export const scheduleDailyAlarms = async (startHour : number, startMinute : number, endHour: number, endMinute : number, intervalMinutes : number, body : string) => {
+// Add idOffset parameter to avoid ID collisions between different reminder types
+export const scheduleDailyAlarms = async (startHour : number, startMinute : number, endHour: number, endMinute : number, intervalMinutes : number, body : string, idOffset: number = 0) => {
     const notifications = [];
-    let notificationId = 1;
+    let notificationId = 1 + idOffset;
     const currentTime = new Date();
     currentTime.setHours(startHour, startMinute, 0, 0);
   
@@ -24,14 +25,15 @@ export const scheduleDailyAlarms = async (startHour : number, startMinute : numb
   
     await LocalNotifications.schedule({ notifications });
 };
-export const myScheduleDailyAlarms = async ( intervalMinutes : number, body : string) => {
-  //console.log(body);
-  cancelAllDailyAlarmsByBody(body);
-  scheduleDailyAlarms (8, 0, 18, 0, intervalMinutes, body);    
+
+// Add idOffset parameter to myScheduleDailyAlarms and pass it to scheduleDailyAlarms
+export const myScheduleDailyAlarms = async ( intervalMinutes : number, body : string, idOffset: number = 0) => {
+  await cancelAllDailyAlarmsByBody(body);
+  await scheduleDailyAlarms (8, 0, 18, 0, intervalMinutes, body, idOffset);    
 }
 
 const cancelAllDailyAlarms = async () => {
-    const ids = Array.from({ length: 100 }, (_, i) => i + 1);
+    const ids = Array.from({ length: 200 }, (_, i) => i + 1);
     await LocalNotifications.cancel({ notifications: ids.map(id => ({ id })) });
 };
 const cancelAllDailyAlarmsByBody = async (specificBody:string) => {
@@ -95,14 +97,14 @@ export const initializeReminders = async () => {
   const moveTime = await storage.get('moveReminder');
 
   if (drinkTime && !isNaN(drinkTime)) {
-    await myScheduleDailyAlarms(parseInt(drinkTime), "Il faut s'hydrater");
+    await myScheduleDailyAlarms(parseInt(drinkTime), "Il faut s'hydrater", 0);
   }else{
-    await myScheduleDailyAlarms(120, "Il faut s'hydrater");
+    await myScheduleDailyAlarms(120, "Il faut s'hydrater", 0);
   }
 
   if (moveTime && !isNaN(moveTime)) {
-    await myScheduleDailyAlarms(parseInt(moveTime), "Il faut bouger");
+    await myScheduleDailyAlarms(parseInt(moveTime), "Il faut bouger", 100);
   }else{
-    await myScheduleDailyAlarms(60, "Il faut bouger");
+    await myScheduleDailyAlarms(60, "Il faut bouger", 100);
   }
 };

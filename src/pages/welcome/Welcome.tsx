@@ -22,7 +22,7 @@ const Welcome: React.FC = () => {
     <IonPage>
       <IonContent fullscreen >
         <div className="container">
-            <h2>ACTIPOD</h2>
+            <h2>MOOD</h2>
             <img src="images/data 4.png"></img>
             <p>
                 Bonjour, je suis MOOD, 

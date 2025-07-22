@@ -1,6 +1,6 @@
 import React from 'react';
 import { IonTabs, IonTabBar, IonTabButton, IonIcon, IonLabel, IonRouterOutlet } from '@ionic/react';
-import { home, fitness, notifications, calendar, personCircle, ribbon } from 'ionicons/icons';
+import { home, fitness, calendar, personCircle, ribbon, flagSharp, barbellOutline, calculatorOutline } from 'ionicons/icons';
 
 import './TabContainer.css';
 import {TabContainerProps} from './TabContainerProps'
@@ -14,14 +14,11 @@ const TabContainer: React.FC<TabContainerProps> = ({ onTabChange }) => {
                 <IonLabel>Accueil</IonLabel>
             </div>
         </IonTabButton>
-        <IonTabButton className="custom-tab-button" tab="notifications" onClick={() => onTabChange('notifications')}>
-            <IonIcon icon={notifications} />
-        </IonTabButton>
         <IonTabButton className="custom-tab-button" tab="calendar" onClick={() => onTabChange('calendar')}>
             <IonIcon icon={calendar} />
         </IonTabButton>
         <IonTabButton className="custom-tab-button" tab="fitness" onClick={() => onTabChange('fitness')}>
-            <IonIcon icon={fitness} />
+            <IonIcon icon={barbellOutline} />
         </IonTabButton>
         <IonTabButton className="custom-tab-button" tab="user" onClick={() => onTabChange('user')}>
             <IonIcon icon={personCircle} />
