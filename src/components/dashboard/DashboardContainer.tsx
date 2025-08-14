@@ -48,6 +48,8 @@ const DashboardContainer: React.FC = () => {
     getStatsForLastDays(7).then(setGraphData);
   }, []);
 
+  const [graphType, setGraphType] = useState<'hydration' | 'movement'>('hydration');
+
   return (
     <div className="dashboard-grid">
       <AdviceContainer />
@@ -102,11 +104,11 @@ const DashboardContainer: React.FC = () => {
           {/* <div className="card-content-title">
             <div className="card-content-title-content">Évolution sur 7 jours</div>
           </div> */}
-          <p></p>
-          <p></p>
-          <p></p>
-          <p></p>
-          <ResponsiveContainer width="100%" height={250}>
+          <div className="toggle-button">
+            <IonButton onClick={() => setGraphType('hydration')}>Hydratation</IonButton>
+            <IonButton onClick={() => setGraphType('movement')}>Mouvements</IonButton>
+          </div>
+          {/* <ResponsiveContainer width="100%" height={250}>
             <LineChart data={graphData}>
               <CartesianGrid strokeDasharray="3 3" />
               <XAxis dataKey="date" />
@@ -116,6 +118,20 @@ const DashboardContainer: React.FC = () => {
               <Legend />
               <Line yAxisId="left" type="monotone" dataKey="hydration" name="Hydratation (L)" stroke="#007bff" />
               <Line yAxisId="right" type="monotone" dataKey="movement" name="Mouvements" stroke="#E85946" />
+            </LineChart>
+          </ResponsiveContainer> */}
+          <ResponsiveContainer width="98%" height={300}>
+            <LineChart data={graphData}>
+              <CartesianGrid strokeDasharray="3 3" />
+              <XAxis dataKey="date" />
+              <YAxis label={{ value: graphType === 'hydration' ? 'Litres' : 'Mouvements', angle: -90, position: 'insideLeft' }} />
+              <Tooltip />
+              <Legend />
+              {graphType === 'hydration' ? (
+                <Line type="monotone" dataKey="hydration" name="Hydratation (L)" stroke="#007bff" />
+              ) : (
+                <Line type="monotone" dataKey="movement" name="Mouvements" stroke="#E85946" />
+              )}
             </LineChart>
           </ResponsiveContainer>
         </div>
