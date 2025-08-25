@@ -1,4 +1,4 @@
-// src/pages/home/HomeSlides.tsx
+/* // src/pages/home/HomeSlides.tsx
 import React, { useEffect, useRef } from 'react';
 import { IonSlides, IonSlide, IonCard, IonCardHeader, IonCardTitle, IonCardContent } from '@ionic/react';
 import { SwiperOptions } from 'swiper/types';
@@ -43,3 +43,4 @@ const HomeSlides: React.FC = () => {
 };
 
 export default HomeSlides;
+ */
