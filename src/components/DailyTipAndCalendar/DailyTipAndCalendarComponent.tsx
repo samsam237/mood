@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { IonList, IonItem, IonLabel, IonDatetime, IonCard, IonCardContent } from '@ionic/react';
+import AdviceContainer from '../advice/AdviceContainer';
 
 const DailyTipAndCalendarComponent: React.FC = () => {
   const [selectedDate, setSelectedDate] = useState<string>(new Date().toISOString());
@@ -35,12 +36,14 @@ const DailyTipAndCalendarComponent: React.FC = () => {
 
   return (
     <IonList>
-      <IonCard>
+      {/* <IonCard>
         <IonCardContent>
           <h1>Conseil du jour</h1>
           <p>{advice}</p>
         </IonCardContent>
-      </IonCard>
+      </IonCard> */}
+
+      <AdviceContainer />
 
       <IonItem>
         <IonDatetime

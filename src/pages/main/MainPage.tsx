@@ -52,6 +52,7 @@ import { User } from '../../interfaces/userInterface';
 
 import { initializeReminders } from '../../services/notificationService';
 import DailyAdvicePopup from '../../components/DailyAdvicePopup/DailyAdvicePopup';
+import PdfListContainer from '../../components/pdfList/PdfListContainer';
 
 setupIonicReact();
 
@@ -94,6 +95,8 @@ const MainPage: React.FC = () => {
         return <LinksAndRatingsComponent />;
       case 'notifications':
         return <ReminderFrequencyComponent />;
+      case 'sedentary':
+        return <PdfListContainer />;
       default:
         return <DashboardContainer />;
     }

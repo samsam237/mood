@@ -5,6 +5,10 @@
     gap: 16px;
 }
 
+.dashboard-grid > :first-child {
+    grid-column: 1 / -1; /* s'étend de la 1ère à la dernière colonne */
+}
+
 .dashboard-card {
     background: #ffffff;
     border-radius: 10px;

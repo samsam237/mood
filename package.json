@@ -33,13 +33,17 @@
     "@types/react-router-dom": "^5.3.3",
     "firebase": "^11.0.1",
     "ionicons": "^7.0.0",
+    "pdfjs-dist": "^5.4.54",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
     "react-hook-form": "^7.53.1",
+    "react-markdown": "^10.1.0",
+    "react-pdf": "^10.1.0",
     "react-router": "^5.3.4",
     "react-router-dom": "^5.3.4",
     "recharts": "^2.15.3",
-    "swiper": "^11.1.14"
+    "remark-gfm": "^4.0.1",
+    "swiper": "^11.2.10"
   },
   "devDependencies": {
     "@capacitor/cli": "^6.1.2",
