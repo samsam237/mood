@@ -47,7 +47,7 @@ import '@ionic/react/css/palettes/dark.system.css';
 /* Theme variables */
 import './theme/variables.css';
 import './App.css'
-import PdfViewerContainer from './components/pdfViewer/PdfViewerContainer.old';
+/* import PdfViewerContainer from './components/pdfViewer/PdfViewerContainer.old'; */
 
 setupIonicReact();
 
@@ -100,7 +100,7 @@ const App: React.FC = () => {
             <Route path="/home" component={Home} exact />
             <Redirect from="/" to="/home" exact />
             <Route path="/main" component={MainPage} exact />
-            <Route path="pdfs/view/:file" component={PdfViewerContainer} />
+            {/* <Route path="pdfs/view/:file" component={PdfViewerContainer} /> */}
             <Route path="/welcome" component={Welcome} exact />
             <Route path="/login" component={Login} exact />
           </IonRouterOutlet>        
