@@ -4,7 +4,7 @@ import { signInWithCredential, getAuth, signInWithEmailAndPassword,
          signInWithPopup, FacebookAuthProvider, signInWithPhoneNumber, 
          RecaptchaVerifier, Auth } from 'firebase/auth';
 import app from '../firebaseConfig';
-import storageService from './storageService';
+import { storageService } from './storageService';
 import { GoogleAuth } from '@codetrix-studio/capacitor-google-auth';
 
 import { FacebookLogin } from '@capacitor-community/facebook-login';
@@ -115,14 +115,12 @@ export const saveUserData = async (user: any) => {
     phoneNumber: user.phoneNumber,
     photoURL: user.photoURL
   };
-  const storage = await storageService.initializeStorage()
-  await storage.set('user', userData);
-  await storage.set('drinkReminder', 20);
-  await storage.set('moveReminder', 20);
+  await storageService.set('user', userData);
+  await storageService.set('drinkReminder', 20);
+  await storageService.set('moveReminder', 20);
 };
 
 // Supprimer les informations utilisateur du stockage
 const clearUserData = async () => {
-  const storage = await storageService.initializeStorage()
-  await storage.remove('user');
+  await storageService.remove('user');
 };

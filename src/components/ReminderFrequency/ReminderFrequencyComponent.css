@@ -1,55 +1,9 @@
-.reminders-list{
-    display: flex;
-    flex-direction: column;
-    justify-content: center; /* Centre horizontalement */
-    align-items: center;     /* Centre verticalement */
-    width: 100%;  
+.reminders-list {
+    padding: 16px;
 }
 
-
-.card-header{
-    display: flex; flex-direction: row;
-    align-items: center;  justify-content: space-between;
-    position: relative;
-    font-size: 13px;
-    padding: 0%;
-}
-
-.card-header .image, 
-.card-header .label {
-    position: absolute;
-    top : 10px;
-}
-
-.card-header .image{ 
-    right: 5px;
-}
-.card-header .label {
-    left: 5px;
-    font-weight: bold;
-}
-
-.card-header .image{
-    right: 10px; height: 20px; width: 20px; 
-}
-.card-header .label{
-    font-size: 0.8rem;
-    font-weight: bold;
-}
-
-.remider-value{
-    margin-top: 10px;
-    margin-bottom: 10px;
-}
-.button{
-    margin: auto;
-}
-.btn-save{
-    background-color: antiquewhite;
-}
-.button-remider-value-hydratation{
-    background: rgb(70, 70, 255);
-}
-.button-remider-value-move{
-    background: rgb(255, 70, 70);
+.save-button-light-green {
+    --background: #a2e8a2; /* Vert clair */
+    --background-hover: #8cdb8c;
+    --color: #000000; /* Texte noir pour un bon contraste */
 }

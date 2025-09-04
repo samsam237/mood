@@ -10,7 +10,7 @@ import TabContainer from '../../components/tab/TabContainer';
 import HeaderContainer from '../../components/header/HeaderContainer';
 import DashboardContainer from '../../components/dashboard/DashboardContainer';
 import HealthCalculatorComponent from '../../components/healthCalculator/HealthCalculatorComponent'; 
-import ReminderFrequencyComponent from '../../components/ReminderFrequency/ReminderFrequencyComponent';
+
 import PosturesAndExerciseLocationsComponent from '../../components/PosturesAndExerciseLocations/PosturesAndExerciseLocationsComponent';
 import LinksAndRatingsComponent from '../../components/LinksAndRatings/LinksAndRatingsComponent';
 import DailyTipAndCalendarComponent from '../../components/DailyTipAndCalendar/DailyTipAndCalendarComponent';
@@ -46,7 +46,7 @@ import '@ionic/react/css/palettes/dark.system.css';
 import '../../theme/variables.css';
 import './MainPage.css'
 import React, { useEffect, useState }  from 'react';
-import storageService from '../../services/storageService';
+import { storageService } from '../../services/storageService';
 
 import { User } from '../../interfaces/userInterface';
 
@@ -67,8 +67,7 @@ const MainPage: React.FC = () => {
 
   useEffect(() => {
     const fetchUserData = async () => {
-      const storage = await storageService.initializeStorage();
-      const storedUser = await storage.get('user');
+      const storedUser = await storageService.get('user');
       if (storedUser) {
         setUser(storedUser);
       }
@@ -94,7 +93,7 @@ const MainPage: React.FC = () => {
       case 'about':
         return <LinksAndRatingsComponent />;
       case 'notifications':
-        return <ReminderFrequencyComponent />;
+        return <HealthCalculatorComponent />;
       case 'sedentary':
         return <PdfListContainer />;
       default:

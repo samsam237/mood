@@ -1,178 +1,75 @@
 import React, { useState, useEffect } from 'react';
-import { IonList, IonItem, IonInput, IonCard, IonCardHeader, IonCardContent, IonLabel, IonAlert, IonDatetime } from '@ionic/react';
-
-import { myScheduleDailyAlarms, getReminder, setDrinkReminder, setMoveReminder } from '../../services/notificationService';
+import { IonList, IonItem, IonInput, IonLabel, IonAlert, IonDatetime, IonButton } from '@ionic/react';
+import { storageService, UserProfile } from '../../services/storageService';
+import * as notificationService from '../../services/notificationService';
 
 import "./ReminderFrequencyComponent.css";
 
-const ReminderCard = ({ icon, label, value, onValueChange, onSave }: any) => (
-  <IonCard className='card-item'>
-    <IonCardHeader className='card-header'>
-      <div className="circle image">
-        <img src={icon} alt="icon" />
-      </div>
-      <div className='label'>
-        <IonLabel>{label}</IonLabel>
-      </div>
-    </IonCardHeader>
-    <IonCardContent>
-      <IonInput
-        labelPlacement="stacked"
-        className="remider-value"
-        type="number"
-        value={value}
-        placeholder='en minutes'
-        onIonChange={(e) => { if (e.detail.value) onValueChange(e.detail.value) }}
-        required
-      />
-      <div className='button btn-save' onClick={onSave}>
-        Sauvegarder
-      </div>
-    </IonCardContent>
-  </IonCard>
-);
-
-
 const ReminderFrequencyComponent: React.FC = () => {
-  const [hydrationFrequency, setHydrationFrequency] = useState<string>('');
-  const [movementFrequency, setMovementFrequency] = useState<string>('');
-  const [showAlert, setShowAlert] = useState(false);  
-  const [alertMessage, setAlertMessage] = useState<string>('');
+  const [wakeUpTime, setWakeUpTime] = useState('07:00');
+  const [sleepTime, setSleepTime] = useState('23:00');
+  const [hydrationGoal, setHydrationGoal] = useState(2000);
+  const [waterReminderFreq, setWaterReminderFreq] = useState<number | undefined>();
+  const [moveReminderFreq, setMoveReminderFreq] = useState<number | undefined>();
 
-  const [wakeUpTime, setWakeUpTime] = useState<string>('07:00');
-  const [sleepTime, setSleepTime] = useState<string>('23:00');
+  const [showAlert, setShowAlert] = useState(false);
 
-  const [hydrationGoal, setHydrationGoal] = useState<string>('2000');
-  const [movementGoal, setMovementGoal] = useState<string>('60');
+  useEffect(() => {
+    const loadData = async () => {
+        const profile = await storageService.getUserProfile();
+        if (profile) {
+            setWakeUpTime(profile.wakeTime || '07:00');
+            setSleepTime(profile.sleepTime || '23:00');
+            setHydrationGoal(profile.goalHydration || 2000);
+            setWaterReminderFreq(profile.waterReminderFrequency);
+            setMoveReminderFreq(profile.moveReminderFrequency);
+        }
+    };
+    loadData();
+  }, []);
 
-  const calculateHydrationPerReminder = () => {
-    const totalMinutes = getActiveMinutes();
-    const frequency = parseInt(hydrationFrequency);
-    if (frequency && totalMinutes) {
-      const reminders = Math.floor(totalMinutes / frequency);
-      return reminders ? Math.round(parseInt(hydrationGoal) / reminders) : 0;
-    }
-    return 0;
+  const handleSave = async () => {
+    const profile = await storageService.getUserProfile();
+    const updatedProfile: UserProfile = {
+        ...profile,
+        wakeTime: wakeUpTime,
+        sleepTime: sleepTime,
+        goalHydration: hydrationGoal,
+        waterReminderFrequency: waterReminderFreq,
+        moveReminderFrequency: moveReminderFreq
+    };
+    await storageService.saveUserProfile(updatedProfile);
+    await notificationService.initializeReminders();
+    setShowAlert(true);
   };
-  
-  const getActiveMinutes = () => {
+
+  const getWakingHours = () => {
     const [wakeHour, wakeMin] = wakeUpTime.split(':').map(Number);
     const [sleepHour, sleepMin] = sleepTime.split(':').map(Number);
-    const wakeMinutes = wakeHour * 60 + wakeMin;
-    const sleepMinutes = sleepHour * 60 + sleepMin;
-    return sleepMinutes > wakeMinutes ? sleepMinutes - wakeMinutes : (1440 - wakeMinutes + sleepMinutes); // gestion nuit
-  };
-  
-  const showDynamicAlert = (message : string) => {
-    setAlertMessage(message); 
-    setShowAlert(true);  
+    let wakeDate = new Date();
+    wakeDate.setHours(wakeHour, wakeMin, 0, 0);
+    let sleepDate = new Date();
+    sleepDate.setHours(sleepHour, sleepMin, 0, 0);
+    if (sleepDate <= wakeDate) sleepDate.setDate(sleepDate.getDate() + 1);
+    return (sleepDate.getTime() - wakeDate.getTime()) / (1000 * 60 * 60);
   };
 
-  useEffect( () => {
-    const fetchReminder = async () => {
-      const reminder = await getReminder();  // Appel asynchrone à getReminderComponent
-      setHydrationFrequency(reminder.drinkTime);
-      setMovementFrequency(reminder.moveTime);
-    };
-
-    fetchReminder();  // Appel de la fonction d'initialisation
-  }, []);
+  const calculateWaterPerInterval = () => {
+    const wakingHours = getWakingHours();
+    const intervalMinutes = waterReminderFreq || (wakingHours / 8) * 60;
+    if (wakingHours <= 0 || intervalMinutes <= 0) return 0;
+    const numberOfIntervals = (wakingHours * 60) / intervalMinutes;
+    return Math.round(hydrationGoal / numberOfIntervals);
+  };
 
   return (
     <IonList className='reminders-list'>
-      <IonItem>
-        {/* <IonCard className='card-item'>
-            <IonCardHeader className='card-header'>
-              <div className="circle image">
-                <img src="images/water-icon.png" alt="water" />
-              </div>
-              <div className='label'>
-                <IonLabel>Hydration (en min) </IonLabel>
-              </div>
-            </IonCardHeader>
-            <IonCardContent>
-              <IonInput
-                labelPlacement="stacked"
-                className="remider-value"
-                type="number"
-                value={hydrationFrequency}
-                placeholder='en minutes'
-                onIonChange={(e) => {if(e.detail.value) setHydrationFrequency(e.detail.value)}}
-                required
-              />
-              <div className='button button-remider-value-hydratation' onClick={() => {myScheduleDailyAlarms(parseInt(hydrationFrequency), "Il faut s'hydrater"), setDrinkReminder(parseInt(hydrationFrequency)), showDynamicAlert('Ajustement effectué') }}>
-                Sauvegarder
-              </div>
-            </IonCardContent>
-        </IonCard>    */}    
-        <ReminderCard
-          icon="images/water-icon.png"
-          label="Hydratation"
-          value={hydrationFrequency}
-          onValueChange={setHydrationFrequency}
-          onSave={() => {
-            myScheduleDailyAlarms(parseInt(hydrationFrequency), "Il faut s'hydrater");
-            setDrinkReminder(parseInt(hydrationFrequency));
-            showDynamicAlert("Ajustement effectué");
-          }}
-        />
-      </IonItem>
-      <IonItem>
-        {/* <IonCard className='card-item'>
-            <IonCardHeader className='card-header'>
-              <div className="circle image">
-                <img src="images/move-icon.png" alt="water" />
-              </div>
-              <div className='label'>
-                <IonLabel>Mouvement (en min) </IonLabel>
-              </div>
-            </IonCardHeader>
-            <IonCardContent>
-              <IonInput
-                labelPlacement="stacked"
-                className="remider-value"
-                type="number"
-                value={movementFrequency}
-                placeholder='en minutes'
-                onIonChange={(e) => {if(e.detail.value) setMovementFrequency(e.detail.value)}}
-                required
-              />
-              <div className='button button-remider-value-move' onClick={() => {myScheduleDailyAlarms(parseInt(movementFrequency), "Il faut bouger"), setMoveReminder(parseInt(movementFrequency)), showDynamicAlert('Ajustement effectué')}}>
-                Sauvegarder
-              </div>
-            </IonCardContent>
-        </IonCard> */}
-        <ReminderCard
-          icon="images/move-icon.png"
-          label="Mouvement"
-          value={movementFrequency}
-          onValueChange={setMovementFrequency}
-          onSave={() => {
-            myScheduleDailyAlarms(parseInt(movementFrequency), "Il faut bouger");
-            setMoveReminder(parseInt(movementFrequency));
-            showDynamicAlert("Ajustement effectué");
-          }}
-        />
-        {/* Alerte avec le message dynamique */}
-        <IonAlert
-          isOpen={showAlert}  // Affiche ou cache l'alerte
-          onDidDismiss={() => setShowAlert(false)}  // Ferme l'alerte lorsqu'on clique en dehors ou sur "OK"
-          header="Alerte"
-          message={alertMessage}  // Le message dynamique
-          buttons={['OK']}  // Affiche un bouton "OK" pour fermer l'alerte
-        />
-      </IonItem>
       <IonItem>
         <IonLabel>Heure de réveil</IonLabel>
         <IonDatetime 
           presentation="time"
           value={wakeUpTime}
-          onIonChange={e => {
-            const value = e.detail.value;
-            if (typeof value === 'string') {
-              setWakeUpTime(value);
-            }
-          }}
+          onIonChange={e => setWakeUpTime(e.detail.value as string)}
         />
       </IonItem>
       <IonItem>
@@ -180,12 +77,7 @@ const ReminderFrequencyComponent: React.FC = () => {
         <IonDatetime 
           presentation="time"
           value={sleepTime}
-          onIonChange={e => {
-            const value = e.detail.value;
-            if (typeof value === 'string') {
-              setSleepTime(value);
-            }
-          }}
+          onIonChange={e => setSleepTime(e.detail.value as string)}
         />
       </IonItem>
 
@@ -194,25 +86,46 @@ const ReminderFrequencyComponent: React.FC = () => {
         <IonInput
           type="number"
           value={hydrationGoal}
-          onIonChange={e => setHydrationGoal(e.detail.value!)}
+          onIonChange={e => setHydrationGoal(parseInt(e.detail.value!, 10))}
         />
       </IonItem>
 
       <IonItem>
-        <IonLabel position="stacked">Objectif Mouvement (en minutes)</IonLabel>
+        <IonLabel position="stacked">Fréquence rappel hydratation (en minutes)</IonLabel>
         <IonInput
           type="number"
-          value={movementGoal}
-          onIonChange={e => setMovementGoal(e.detail.value!)}
+          value={waterReminderFreq}
+          placeholder="Défaut (calculé automatiquement)"
+          onIonChange={e => setWaterReminderFreq(parseInt(e.detail.value!, 10))}
         />
+      </IonItem>
+      <IonItem>
+          <IonLabel>
+            Eau par rappel : ~{calculateWaterPerInterval()} ml
+          </IonLabel>
       </IonItem>
 
       <IonItem>
-        <IonLabel>
-          Quantité à boire à chaque rappel : {calculateHydrationPerReminder()} ml
-        </IonLabel>
+        <IonLabel position="stacked">Fréquence rappel mouvement (en minutes)</IonLabel>
+        <IonInput
+          type="number"
+          value={moveReminderFreq}
+          placeholder="Défaut (toutes les 60 minutes)"
+          onIonChange={e => setMoveReminderFreq(parseInt(e.detail.value!, 10))}
+        />
       </IonItem>
 
+      <IonButton expand="full" onClick={handleSave} className="ion-margin-top save-button-light-green">
+        Valider
+      </IonButton>
+
+      <IonAlert
+          isOpen={showAlert}
+          onDidDismiss={() => setShowAlert(false)}
+          header={"Succès"}
+          message={"Vos réglages de rappel ont été mis à jour."}
+          buttons={['OK']}
+        />
     </IonList>
   );
 };

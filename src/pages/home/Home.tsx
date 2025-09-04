@@ -3,7 +3,7 @@ import { IonPage, IonContent, IonButton } from '@ionic/react';
 
 import type { Swiper as SwiperType } from 'swiper';
 
-import storageService from '../../services/storageService';
+import { storageService } from '../../services/storageService';
 
 import 'swiper/css';
 import 'swiper/css/navigation';
@@ -21,8 +21,7 @@ const Home: React.FC = () => {
   
   useEffect(() => {
     const fetchUserData = async () => {
-      const storage = await storageService.initializeStorage();
-      const storedUser = await storage.get('user');
+      const storedUser = await storageService.get('user');
       if (storedUser) {
         setUser(storedUser);
         history.replace('/main'); 

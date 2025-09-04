@@ -4,6 +4,7 @@ import { IonButton } from '@ionic/react';
 import AdviceContainer from '../advice/AdviceContainer'
 import { useState, useEffect } from 'react';
 import { addWaterIntake, addMovement, getDailyStats, getStatsForLastDays } from '../../services/statsServices';
+import { storageService } from '../../services/storageService';
 
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 
@@ -12,6 +13,7 @@ const DashboardContainer: React.FC = () => {
   const [hydrationGoal, setHydrationGoal] = useState(3000);
   const [movement, setMovement] = useState(0);
   const [movementGoal, setMovementGoal] = useState(12);
+  const [waterPerInterval, setWaterPerInterval] = useState(100); // Quantité d'eau par intervalle
 
   const refreshStats = async () => {
     const stats = await getDailyStats();
@@ -19,6 +21,18 @@ const DashboardContainer: React.FC = () => {
     setMovement(stats.movement);
     setHydrationGoal(stats.goalHydration);
     setMovementGoal(stats.goalMovement);
+    
+    // Calculer la quantité d'eau par intervalle
+    const waterPerIntervalValue = await storageService.calculateWaterPerInterval();
+    setWaterPerInterval(waterPerIntervalValue);
+    
+    console.log('Stats chargées:', { 
+      hydration: stats.hydration, 
+      movement: stats.movement, 
+      goalHydration: stats.goalHydration, 
+      goalMovement: stats.goalMovement,
+      waterPerInterval: waterPerIntervalValue
+    });
   };
 
   useEffect(() => {
@@ -26,7 +40,7 @@ const DashboardContainer: React.FC = () => {
   }, []);
 
   const handleDrink = async () => {
-    await addWaterIntake(100); // +100 mL
+    await addWaterIntake(waterPerInterval); // Utilise la quantité calculée
     refreshStats();
   };
 
@@ -73,7 +87,7 @@ const DashboardContainer: React.FC = () => {
         </div>
 
         <div className="button green-button" onClick={handleDrink}>
-          +100 mL <img src="images/ok-icon.png" alt="" />
+          +{waterPerInterval} mL <img src="images/ok-icon.png" alt="" />
         </div>
       </div>
       <div className="dashboard-card">

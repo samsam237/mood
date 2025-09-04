@@ -1,110 +1,141 @@
-import { LocalNotifications, ScheduleEvery  } from '@capacitor/local-notifications';
-import storageService from './storageService';
+import { LocalNotifications, ScheduleEvery } from '@capacitor/local-notifications';
+import { storageService } from './storageService';
+import healthTips from '../../public/data/health-tips.json';
 
-// Add idOffset parameter to avoid ID collisions between different reminder types
-export const scheduleDailyAlarms = async (startHour : number, startMinute : number, endHour: number, endMinute : number, intervalMinutes : number, body : string, idOffset: number = 0) => {
+const WATER_REMINDER_ID_OFFSET = 1000;
+const MOVE_REMINDER_ID_OFFSET = 2000;
+const DAILY_TIP_ID = 3000;
+const DEFAULT_WATER_REMINDERS_PER_DAY = 8;
+
+// Schedules a block of alarms within a given time range and interval
+export const scheduleAlarms = async (startHour: number, startMinute: number, endHour: number, endMinute: number, intervalMinutes: number, body: string, idOffset: number) => {
+    await cancelAlarmsByBody(body); // Cancel previous alarms for this type
+
     const notifications = [];
     let notificationId = 1 + idOffset;
-    const currentTime = new Date();
-    currentTime.setHours(startHour, startMinute, 0, 0);
-  
-    while (currentTime.getHours() < endHour || (currentTime.getHours() === endHour && currentTime.getMinutes() <= endMinute)) {
-      notifications.push({
-        title: "Rappel !!!",
-        body: body,
-        id: notificationId++,
-        schedule: {
-          at: new Date(currentTime),
-          every: 'day' as ScheduleEvery ,
-        },
-        /* sound: "beep.aiff", */
-      });
-  
-      currentTime.setMinutes(currentTime.getMinutes() + intervalMinutes);
+    const now = new Date();
+    const startTime = new Date(now.getFullYear(), now.getMonth(), now.getDate(), startHour, startMinute);
+    const endTime = new Date(now.getFullYear(), now.getMonth(), now.getDate(), endHour, endMinute);
+
+    if (endTime <= startTime) { // Handle overnight schedules
+        endTime.setDate(endTime.getDate() + 1);
     }
-  
-    await LocalNotifications.schedule({ notifications });
+
+    let currentTime = startTime;
+
+    while (currentTime < endTime) {
+        notifications.push({
+            title: "Rappel !",
+            body: body,
+            id: notificationId++,
+            schedule: {
+                at: new Date(currentTime),
+                repeats: true,
+                every: 'day' as ScheduleEvery
+            },
+            sound: "alarm.wav",
+        });
+        currentTime.setMinutes(currentTime.getMinutes() + intervalMinutes);
+    }
+
+    if (notifications.length > 0) {
+        await LocalNotifications.schedule({ notifications });
+    }
 };
 
-// Add idOffset parameter to myScheduleDailyAlarms and pass it to scheduleDailyAlarms
-export const myScheduleDailyAlarms = async ( intervalMinutes : number, body : string, idOffset: number = 0) => {
-  await cancelAllDailyAlarmsByBody(body);
-  await scheduleDailyAlarms (8, 0, 18, 0, intervalMinutes, body, idOffset);    
-}
+// Schedules the daily health tip
+export const scheduleDailyTipNotification = async () => {
+    await cancelAlarmsByBodyPrefix("Conseil du jour:");
 
-const cancelAllDailyAlarms = async () => {
-    const ids = Array.from({ length: 200 }, (_, i) => i + 1);
-    await LocalNotifications.cancel({ notifications: ids.map(id => ({ id })) });
-};
-const cancelAllDailyAlarmsByBody = async (specificBody:string) => {
-  // Récupérer toutes les notifications planifiées
-  const pendingNotifications = await LocalNotifications.getPending();
+    const randomTip = healthTips[Math.floor(Math.random() * healthTips.length)];
+    const scheduleTime = new Date();
+    scheduleTime.setHours(9, 0, 0, 0);
 
-  // Filtrer les notifications ayant le `body` spécifié
-  const notificationsToCancel = pendingNotifications.notifications.filter(
-    (notification) => notification.body === specificBody
-  );
-
-  // Annuler les notifications correspondant au `body`
-  await LocalNotifications.cancel({
-    notifications: notificationsToCancel.map((notification) => ({ id: notification.id }))
-  });
-
-  //console.log(`${notificationsToCancel.length} notifications annulées.`);
+    await LocalNotifications.schedule({
+        notifications: [{
+            title: "Conseil Santé du Jour",
+            body: `Conseil du jour: ${randomTip}`,
+            id: DAILY_TIP_ID,
+            schedule: { at: scheduleTime, repeats: true, every: 'day' as ScheduleEvery },
+            sound: "alarm.wav"
+        }]
+    });
 };
 
-export const getReminder = async () => {
-  const storage = await storageService.initializeStorage()
-  const drinkTime = await storage.get('drinkReminder');
-  const moveTime = await storage.get('moveReminder');
-
-  return { drinkTime, moveTime }
+// Universal cancellation functions
+const cancelAlarmsByBody = async (specificBody: string) => {
+    const pending = await LocalNotifications.getPending();
+    const toCancel = pending.notifications.filter(n => n.body === specificBody);
+    if (toCancel.length > 0) {
+        await LocalNotifications.cancel({ notifications: toCancel.map(n => ({ id: n.id })) });
+    }
 };
 
-const setReminder = async (reminderName : string, value:number) => {
-  const storage = await storageService.initializeStorage()
-  await storage.set(reminderName, value);
+const cancelAlarmsByBodyPrefix = async (prefix: string) => {
+    const pending = await LocalNotifications.getPending();
+    const toCancel = pending.notifications.filter(n => n.body?.startsWith(prefix));
+    if (toCancel.length > 0) {
+        await LocalNotifications.cancel({ notifications: toCancel.map(n => ({ id: n.id })) });
+    }
 };
 
-export const setDrinkReminder = async ( value:number) => {
-  await setReminder('drinkReminder', value)
-};
-
-export const setMoveReminder = async (value:number) => {
-  await setReminder('moveReminder', value)
-};
-
-const checkPendingNotifications = async () => {
-  const pending = await LocalNotifications.getPending();
-  console.log('Notifications en attente:', pending);
-};
-const requestPermissions = async () => {
-  const permissionStatus = await LocalNotifications.requestPermissions();
-  
-  // Vérifie si la permission de notification a été accordée
-  /* if (permissionStatus.status !== 'granted') {
-    console.log('Permission denied for notifications');
-  } else {
-    console.log('Permission granted for notifications');
-  } */
- console.log ("Permissions : ",permissionStatus)
-};
-
+// Main function to initialize all reminders based on user profile
 export const initializeReminders = async () => {
-  await LocalNotifications.requestPermissions();
-  const storage = await storageService.initializeStorage();
-  const drinkTime = await storage.get('drinkReminder');
-  const moveTime = await storage.get('moveReminder');
+    await LocalNotifications.requestPermissions();
+    const profile = await storageService.getUserProfile();
 
-  if (drinkTime && !isNaN(drinkTime)) {
-    await myScheduleDailyAlarms(parseInt(drinkTime), "Il faut s'hydrater", 0);
-  }else{
-    await myScheduleDailyAlarms(120, "Il faut s'hydrater", 0);
-  }
+    // Always schedule the daily tip
+    await scheduleDailyTipNotification();
 
-  if (moveTime && !isNaN(moveTime)) {
-    await myScheduleDailyAlarms(parseInt(moveTime), "Il faut bouger", 100);
-  }else{
-    await myScheduleDailyAlarms(60, "Il faut bouger", 100);
-  }
+    if (!profile || !profile.wakeTime || !profile.sleepTime) {
+        console.log("User profile with wake/sleep times not found. Cannot schedule reminders.");
+        return;
+    }
+
+    const [wakeHour, wakeMinute] = profile.wakeTime.split(':').map(Number);
+    const [sleepHour, sleepMinute] = profile.sleepTime.split(':').map(Number);
+
+    // --- Water Reminders ---
+    let waterIntervalMinutes = profile.waterReminderFrequency; // Check for manual override
+    if (!waterIntervalMinutes) {
+        // Automatic calculation if no manual frequency is set
+        let wakeDate = new Date();
+        wakeDate.setHours(wakeHour, wakeMinute, 0, 0);
+        let sleepDate = new Date();
+        sleepDate.setHours(sleepHour, sleepMinute, 0, 0);
+
+        if (sleepDate <= wakeDate) { // Handle overnight
+            sleepDate.setDate(sleepDate.getDate() + 1);
+        }
+
+        const wakingMillis = sleepDate.getTime() - wakeDate.getTime();
+        const wakingHours = wakingMillis / (1000 * 60 * 60);
+        waterIntervalMinutes = Math.round((wakingHours / DEFAULT_WATER_REMINDERS_PER_DAY) * 60);
+    }
+
+    if (waterIntervalMinutes > 0) {
+        await scheduleAlarms(
+            wakeHour, wakeMinute, 
+            sleepHour, sleepMinute, 
+            waterIntervalMinutes, 
+            "Il est temps de s'hydrater !", 
+            WATER_REMINDER_ID_OFFSET
+        );
+    }
+
+    // --- Move Reminders ---
+    const moveIntervalMinutes = profile.moveReminderFrequency || 60; // Manual override or default to 60 minutes
+    await scheduleAlarms(
+        wakeHour, wakeMinute, 
+        sleepHour, sleepMinute, 
+        moveIntervalMinutes, 
+        "Un petit mouvement s'impose !", 
+        MOVE_REMINDER_ID_OFFSET
+    );
+};
+
+export default {
+    initializeReminders,
+    scheduleAlarms,
+    scheduleDailyTipNotification
 };
