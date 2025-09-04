@@ -33,7 +33,7 @@ export const scheduleAlarms = async (startHour: number, startMinute: number, end
                 repeats: true,
                 every: 'day' as ScheduleEvery
             },
-            sound: "alarm.wav",
+            sound: "digital_alarm_clock_151920.wav",
         });
         currentTime.setMinutes(currentTime.getMinutes() + intervalMinutes);
     }
