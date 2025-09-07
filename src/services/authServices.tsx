@@ -65,27 +65,44 @@ export const logout = async () => {
 
 // Google Authentication
 export const signInWithGoogle = async () => {
-  const googleUser = await GoogleAuth.signIn();
-  const credential = GoogleAuthProvider.credential(googleUser.authentication.idToken);
-  return await signInWithCredential(auth, credential);
-
-
-/*   const provider = new GoogleAuthProvider();
-  return await signInWithPopup(auth, provider); */
+  try {
+    console.log('Début de la connexion Google...');
+    const googleUser = await GoogleAuth.signIn();
+    console.log('Google user reçu:', googleUser);
+    
+    if (!googleUser.authentication?.idToken) {
+      throw new Error('Aucun token ID reçu de Google');
+    }
+    
+    const credential = GoogleAuthProvider.credential(googleUser.authentication.idToken);
+    console.log('Credential créé:', credential);
+    
+    const result = await signInWithCredential(auth, credential);
+    console.log('Connexion Firebase réussie:', result);
+    return result;
+  } catch (error) {
+    console.error('Erreur Google Sign-In:', error);
+    throw error;
+  }
 };
 
 // Facebook Authentication
 export const signInWithFacebook = async () => {
-  /* const provider = new FacebookAuthProvider();
-  return await signInWithPopup(auth, provider); */
   try {
+    console.log('Début de la connexion Facebook...');
     const FACEBOOK_PERMISSIONS = ['email', 'public_profile'];
     const result = await FacebookLogin.login({ permissions: FACEBOOK_PERMISSIONS });
+    console.log('Facebook login result:', result);
+    
     if (result.accessToken) {
       const credential = FacebookAuthProvider.credential(result.accessToken.token);
-      return await signInWithCredential(auth, credential);
+      console.log('Facebook credential créé:', credential);
+      
+      const firebaseResult = await signInWithCredential(auth, credential);
+      console.log('Connexion Firebase réussie:', firebaseResult);
+      return firebaseResult;
     } else {
-      throw new Error('Aucun jeton d’accès Facebook reçu');
+      throw new Error('Aucun jeton d\'accès Facebook reçu');
     }
   } catch (error) {
     console.error('Erreur Facebook Sign-In:', error);
@@ -99,7 +116,10 @@ export const signInWithFacebook = async () => {
 }; */
 export const signInWithPhone = async (phoneNumber: string, appVerifier: RecaptchaVerifier, auth: Auth) => {
   try {
-    return await signInWithPhoneNumber(auth, phoneNumber, appVerifier);
+    console.log('Début de la connexion par téléphone...', phoneNumber);
+    const result = await signInWithPhoneNumber(auth, phoneNumber, appVerifier);
+    console.log('Code SMS envoyé avec succès');
+    return result;
   } catch (error) {
     console.error('Erreur authentification téléphone:', error);
     throw error;

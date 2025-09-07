@@ -5,6 +5,7 @@ import AdviceContainer from '../advice/AdviceContainer'
 import { useState, useEffect } from 'react';
 import { addWaterIntake, addMovement, getDailyStats, getStatsForLastDays } from '../../services/statsServices';
 import { storageService } from '../../services/storageService';
+import { getNextNotificationTimes } from '../../services/notificationService';
 
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 
@@ -14,6 +15,12 @@ const DashboardContainer: React.FC = () => {
   const [movement, setMovement] = useState(0);
   const [movementGoal, setMovementGoal] = useState(12);
   const [waterPerInterval, setWaterPerInterval] = useState(100); // Quantité d'eau par intervalle
+  const [nextWaterNotification, setNextWaterNotification] = useState<Date | null>(null);
+  const [nextMoveNotification, setNextMoveNotification] = useState<Date | null>(null);
+  const [showWaterReminders, setShowWaterReminders] = useState(false);
+  const [showMoveReminders, setShowMoveReminders] = useState(false);
+  const [waterReminders, setWaterReminders] = useState<any[]>([]);
+  const [moveReminders, setMoveReminders] = useState<any[]>([]);
 
   const refreshStats = async () => {
     const stats = await getDailyStats();
@@ -26,12 +33,19 @@ const DashboardContainer: React.FC = () => {
     const waterPerIntervalValue = await storageService.calculateWaterPerInterval();
     setWaterPerInterval(waterPerIntervalValue);
     
+    // Récupérer les prochaines notifications
+    const { nextWater, nextMove } = await getNextNotificationTimes();
+    setNextWaterNotification(nextWater);
+    setNextMoveNotification(nextMove);
+    
     console.log('Stats chargées:', { 
       hydration: stats.hydration, 
       movement: stats.movement, 
       goalHydration: stats.goalHydration, 
       goalMovement: stats.goalMovement,
-      waterPerInterval: waterPerIntervalValue
+      waterPerInterval: waterPerIntervalValue,
+      nextWater,
+      nextMove
     });
   };
 
@@ -49,6 +63,44 @@ const DashboardContainer: React.FC = () => {
     refreshStats();
   };
 
+  // Fonction pour générer les rappels de la journée
+  const generateDailyReminders = async (type: 'water' | 'move') => {
+    const profile = await storageService.getUserProfile();
+    if (!profile) return [];
+
+    const now = new Date();
+    const [wakeHour, wakeMinute] = (profile.wakeTime || '07:00').split(':').map(Number);
+    const [sleepHour, sleepMinute] = (profile.sleepTime || '23:00').split(':').map(Number);
+    
+    const startTime = new Date(now.getFullYear(), now.getMonth(), now.getDate(), wakeHour, wakeMinute);
+    const endTime = new Date(now.getFullYear(), now.getMonth(), now.getDate(), sleepHour, sleepMinute);
+    
+    if (endTime <= startTime) {
+      endTime.setDate(endTime.getDate() + 1);
+    }
+
+    let intervalMinutes;
+    if (type === 'water') {
+      intervalMinutes = profile.waterReminderFrequency || 30;
+    } else {
+      intervalMinutes = profile.moveReminderFrequency || 60;
+    }
+
+    const reminders = [];
+    let currentTime = new Date(startTime);
+    
+    while (currentTime < endTime) {
+      reminders.push({
+        time: currentTime.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' }),
+        type: type === 'water' ? '💧 Hydratation' : '🏃 Mouvement',
+        passed: currentTime < now
+      });
+      currentTime.setMinutes(currentTime.getMinutes() + intervalMinutes);
+    }
+
+    return reminders;
+  };
+
   type StatsEntry = {
     date: string;
     hydration: number;
@@ -60,9 +112,35 @@ const DashboardContainer: React.FC = () => {
   useEffect(() => {
     refreshStats();
     getStatsForLastDays(7).then(setGraphData);
+    
+    // Mettre à jour les décomptes toutes les minutes
+    const interval = setInterval(() => {
+      refreshStats();
+    }, 60000); // 60 secondes
+    
+    return () => clearInterval(interval);
   }, []);
 
   const [graphType, setGraphType] = useState<'hydration' | 'movement'>('hydration');
+
+  // Fonction pour formater le temps restant
+  const formatTimeRemaining = (nextNotification: Date | null) => {
+    if (!nextNotification) return 'Non configuré';
+    
+    const now = new Date();
+    const diff = nextNotification.getTime() - now.getTime();
+    
+    if (diff <= 0) return 'Maintenant';
+    
+    const hours = Math.floor(diff / (1000 * 60 * 60));
+    const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+    
+    if (hours > 0) {
+      return `${hours}h ${minutes}min`;
+    } else {
+      return `${minutes}min`;
+    }
+  };
 
   return (
     <div className="dashboard-grid">
@@ -81,6 +159,9 @@ const DashboardContainer: React.FC = () => {
               </div>
               <div className="user-objectif">
                 🎯 <span className="user-objectif-value">{hydrationGoal}</span> mL
+              </div>
+              <div className="next-notification">
+                ⏰ Prochaine: {formatTimeRemaining(nextWaterNotification)}
               </div>
             </div>
           </div>            
@@ -105,11 +186,38 @@ const DashboardContainer: React.FC = () => {
               <div className="user-objectif">
                 🎯 <span className="user-objectif-value">{movementGoal}</span>
               </div>
+              <div className="next-notification">
+                ⏰ Prochaine: {formatTimeRemaining(nextMoveNotification)}
+              </div>
             </div>
           </div>
         </div>
         <div className="button green-button" onClick={handleMove}>
           +1 <img src="images/ok-icon.png" alt="" />
+        </div>
+      </div>
+
+      {/* Boutons pour afficher les rappels */}
+      <div className="dashboard-card full-width">
+        <div className="card">
+          <div className="card-content">
+            <div className="reminders-buttons">
+              <div className="button green-button" onClick={async () => {
+                const reminders = await generateDailyReminders('water');
+                setWaterReminders(reminders);
+                setShowWaterReminders(true);
+              }}>
+                📅 Rappels Hydratation
+              </div>
+              <div className="button green-button" onClick={async () => {
+                const reminders = await generateDailyReminders('move');
+                setMoveReminders(reminders);
+                setShowMoveReminders(true);
+              }}>
+                📅 Rappels Mouvement
+              </div>
+            </div>
+          </div>
         </div>
       </div>
 
@@ -150,6 +258,48 @@ const DashboardContainer: React.FC = () => {
           </ResponsiveContainer>
         </div>
       </div>
+
+      {/* Popup Rappels Hydratation */}
+      {showWaterReminders && (
+        <div className="popup-overlay" onClick={() => setShowWaterReminders(false)}>
+          <div className="popup-content" onClick={(e) => e.stopPropagation()}>
+            <div className="popup-header">
+              <h3>💧 Rappels Hydratation du Jour</h3>
+              <button className="close-button" onClick={() => setShowWaterReminders(false)}>×</button>
+            </div>
+            <div className="reminders-list">
+              {waterReminders.map((reminder, index) => (
+                <div key={index} className={`reminder-item ${reminder.passed ? 'passed' : 'upcoming'}`}>
+                  <span className="reminder-time">{reminder.time}</span>
+                  <span className="reminder-type">{reminder.type}</span>
+                  {reminder.passed && <span className="status">✓</span>}
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Popup Rappels Mouvement */}
+      {showMoveReminders && (
+        <div className="popup-overlay" onClick={() => setShowMoveReminders(false)}>
+          <div className="popup-content" onClick={(e) => e.stopPropagation()}>
+            <div className="popup-header">
+              <h3>🏃 Rappels Mouvement du Jour</h3>
+              <button className="close-button" onClick={() => setShowMoveReminders(false)}>×</button>
+            </div>
+            <div className="reminders-list">
+              {moveReminders.map((reminder, index) => (
+                <div key={index} className={`reminder-item ${reminder.passed ? 'passed' : 'upcoming'}`}>
+                  <span className="reminder-time">{reminder.time}</span>
+                  <span className="reminder-type">{reminder.type}</span>
+                  {reminder.passed && <span className="status">✓</span>}
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
     </div>
 
     

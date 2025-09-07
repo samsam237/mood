@@ -57,8 +57,6 @@ import PdfListContainer from '../../components/pdfList/PdfListContainer';
 setupIonicReact();
 
 const MainPage: React.FC = () => {
-  <DailyAdvicePopup />
-
   const [user, setUser] = useState<User | null>(null);
 
   useEffect(() => {
@@ -106,6 +104,7 @@ const MainPage: React.FC = () => {
   return (
     <IonPage className='ion-page'>
       <HeaderContainer userName={userName} userPhoto={userPhotoURL}/>
+      <DailyAdvicePopup />
 
       <IonContent >
         <div className='main-content'>

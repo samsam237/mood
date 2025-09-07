@@ -1,12 +1,12 @@
-import React from 'react';
+import React, { useState } from 'react';
 import {
   IonPage, IonHeader, IonToolbar, IonTitle,
   IonContent, IonList, IonItem, IonLabel, IonButton, IonIcon,
-  IonCardContent,
-  IonCard
+  IonCardContent, IonCard, IonModal, IonButtons
 } from '@ionic/react';
-import { documentTextOutline, eyeOutline } from 'ionicons/icons';
+import { documentTextOutline, eyeOutline, closeOutline } from 'ionicons/icons';
 import { useHistory } from 'react-router-dom';
+import PdfViewerContainer from '../pdfViewer/PdfViewerContainer';
 
 const PDFS = [
   { name: 'Définitions (sédentarité & activité physique)', file: '3.pdf' },
@@ -21,6 +21,8 @@ const PDFS = [
 
 const PdfListContainer: React.FC = () => {
   const history = useHistory();
+  const [selectedPdf, setSelectedPdf] = useState<string | null>(null);
+  const [isModalOpen, setIsModalOpen] = useState(false);
 
   return (
     <div>
@@ -34,7 +36,10 @@ const PdfListContainer: React.FC = () => {
               {/* Voir dans l'app */}
               <IonButton
                 slot="end"
-                onClick={() => history.push(`/main/pdfs/view/${encodeURIComponent(pdf.file)}`)}
+                onClick={() => {
+                  setSelectedPdf(pdf.file);
+                  setIsModalOpen(true);
+                }}
               >
                 <IonIcon icon={eyeOutline} slot="start" />
                 Ouvrir
@@ -43,6 +48,28 @@ const PdfListContainer: React.FC = () => {
           </IonCard>
         ))}
       </IonList>
+
+      {/* Modal pour afficher le PDF */}
+      <IonModal isOpen={isModalOpen} onDidDismiss={() => setIsModalOpen(false)}>
+        <IonHeader>
+          <IonToolbar>
+            <IonTitle>Visualisation PDF</IonTitle>
+            <IonButtons slot="end">
+              <IonButton onClick={() => setIsModalOpen(false)}>
+                <IonIcon icon={closeOutline} />
+              </IonButton>
+            </IonButtons>
+          </IonToolbar>
+        </IonHeader>
+        <IonContent>
+          {selectedPdf && (
+            <PdfViewerContainer 
+              file={selectedPdf} 
+              onClose={() => setIsModalOpen(false)}
+            />
+          )}
+        </IonContent>
+      </IonModal>
     </div>
   );
 };

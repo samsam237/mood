@@ -53,23 +53,31 @@ const PhoneLogin: React.FC = () => {
   const handlePhoneLogin = async () => {
     if (!recaptchaVerifier.current) {
       setErrorMessage('Erreur: reCAPTCHA non initialisé.');
+      alert('❌ Erreur: reCAPTCHA non initialisé.');
       return;
     }
 
     setIsLoading(true);
     try {
+      console.log('Tentative de connexion par téléphone...', phoneNumber);
+      alert('🔄 Envoi du code SMS...');
+      
       const confirmation = await signInWithPhone(phoneNumber, recaptchaVerifier.current, auth);
       setConfirmationResult(confirmation);
       setErrorMessage('');
+      alert('✅ Code SMS envoyé avec succès!');
     } catch (error: any) {
       setIsLoading(false);
-      const errorMsg = error.message || 'Une erreur est survenue lors de l’envoi du code.';
+      const errorMsg = error.message || "Une erreur est survenue lors de l'envoi du code.";
       if (error.code === 'auth/invalid-phone-number') {
         setErrorMessage('Le numéro de téléphone est invalide. Utilisez le format international (ex: +33123456789).');
+        alert('❌ Le numéro de téléphone est invalide. Utilisez le format international (ex: +33123456789).');
       } else if (error.code === 'auth/too-many-requests') {
         setErrorMessage('Trop de tentatives. Veuillez réessayer plus tard.');
+        alert('❌ Trop de tentatives. Veuillez réessayer plus tard.');
       } else {
         setErrorMessage('Erreur lors de la connexion par téléphone.');
+        alert(`❌ Erreur lors de la connexion par téléphone: ${error.message}`);
       }
       console.error('Phone login error:', error);
     } finally {
@@ -80,22 +88,29 @@ const PhoneLogin: React.FC = () => {
   const handleVerifyCode = async () => {
     if (!confirmationResult) {
       setErrorMessage('Aucun code de vérification envoyé.');
+      alert('❌ Aucun code de vérification envoyé.');
       return;
     }
 
     setIsLoading(true);
     try {
+      console.log('Vérification du code...', verificationCode);
+      alert('🔄 Vérification du code...');
+      
       const userCredential = await verifyPhoneCode(confirmationResult, verificationCode);
       await saveUserData(userCredential);
       setErrorMessage('');
+      alert('✅ Code vérifié avec succès!');
       history.replace('/main');
     } catch (error: any) {
       setIsLoading(false);
       const errorMsg = error.message || 'Erreur lors de la vérification du code.';
       if (error.code === 'auth/invalid-verification-code') {
         setErrorMessage('Code de vérification invalide.');
+        alert('❌ Code de vérification invalide.');
       } else {
         setErrorMessage('Erreur lors de la vérification.');
+        alert(`❌ Erreur lors de la vérification: ${error.message}`);
       }
       console.error('Verification code error:', error);
     } finally {

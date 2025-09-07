@@ -12,12 +12,21 @@ const FacebookLogin: React.FC = () => {
 
   const handleFacebookLogin = async () => {
     try {
+      console.log('Tentative de connexion Facebook...');
+      alert('🔄 Début de la connexion Facebook...');
+      
       const res = await signInWithFacebook();
+      console.log('Facebook login successful:', res);
+      alert('✅ Facebook login successful!');
+      
       await saveUserData(res.user);
+      console.log('User data saved');
+      alert('💾 User data saved!');
+      
       history.replace('/main'); 
-      // Handle successful login (e.g., redirect or show a message)
-    } catch (error) {
+    } catch (error: any) {
       console.error("Facebook login error", error);
+      alert(`❌ Erreur de connexion Facebook: ${error.message || 'Erreur inconnue'}`);
     }
   };
 

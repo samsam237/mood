@@ -12,12 +12,21 @@ const GoogleLogin: React.FC = () => {
 
   const handleGoogleLogin = async () => {
     try {
+      console.log('Tentative de connexion Google...');
+      alert('🔄 Début de la connexion Google...');
+      
       const res = await signInWithGoogle();
+      console.log('Google login successful:', res);
+      alert('✅ Google login successful!');
+      
       await saveUserData(res.user);
+      console.log('User data saved');
+      alert('💾 User data saved!');
+      
       history.replace('/main'); 
-      // Handle successful login (e.g., redirect or show a message)
-    } catch (error) {
+    } catch (error: any) {
       console.error("Google login error", error);
+      alert(`❌ Erreur de connexion Google: ${error.message || 'Erreur inconnue'}`);
     }
   };
 
