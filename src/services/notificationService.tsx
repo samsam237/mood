@@ -1,4 +1,5 @@
 import { LocalNotifications, ScheduleEvery } from '@capacitor/local-notifications';
+import { Capacitor } from '@capacitor/core';
 import { storageService } from './storageService';
 import healthTips from '../../public/data/health-tips.json';
 
@@ -22,7 +23,8 @@ export const scheduleAlarms = async (startHour: number, startMinute: number, end
     }
 
     let currentTime = startTime;
-
+    const soundFile = Capacitor.getPlatform() === 'ios' ? 'digital_alarm_clock_151920.wav' : 'digital_alarm_clock_151920';
+  
     while (currentTime < endTime) {
         notifications.push({
             title: "Rappel !",
@@ -33,7 +35,7 @@ export const scheduleAlarms = async (startHour: number, startMinute: number, end
                 repeats: true,
                 every: 'day' as ScheduleEvery
             },
-            sound: "digital_alarm_clock_151920.wav",
+            sound: soundFile,
         });
         currentTime.setMinutes(currentTime.getMinutes() + intervalMinutes);
     }
@@ -61,13 +63,15 @@ export const scheduleDailyTipNotification = async () => {
     const scheduleTime = new Date();
     scheduleTime.setHours(9, 0, 0, 0);
 
+    const soundFile = Capacitor.getPlatform() === 'ios' ? 'digital_alarm_clock_151920.wav' : 'digital_alarm_clock_151920';
+
     await LocalNotifications.schedule({
         notifications: [{
             title: "Conseil Santé du Jour",
             body: `Conseil du jour: ${randomTip}`,
             id: DAILY_TIP_ID,
             schedule: { at: scheduleTime, repeats: true, every: 'day' as ScheduleEvery },
-            sound: "digital_alarm_clock_151920.wav"
+            sound: soundFile,
         }]
     });
 };
