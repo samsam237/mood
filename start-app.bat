@@ -1,0 +1,9 @@
+@echo off
+echo Starting Mood Tracker App...
+echo.
+echo Installing missing dependencies...
+npm install expo-status-bar react-native-blob-util react-native-svg --legacy-peer-deps
+echo.
+echo Starting Expo development server...
+npx expo start --web --clear
+pause
