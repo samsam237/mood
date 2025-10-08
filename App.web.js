@@ -7,15 +7,15 @@ import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { View, Text, StyleSheet } from 'react-native';
 
 // Import screens
-import HomeScreen from './src/screens/HomeScreen';
-import MoodEntryScreen from './src/screens/MoodEntryScreen';
+import HomeScreen from './src/screens/HomeScreen.web';
+import MoodEntryScreen from './src/screens/MoodEntryScreen.web';
 import AnalyticsScreen from './src/screens/AnalyticsScreen';
-import ProfileScreen from './src/screens/ProfileScreen';
-import AuthScreen from './src/screens/AuthScreen';
+import ProfileScreen from './src/screens/ProfileScreen.web';
+import AuthScreen from './src/screens/AuthScreen.web';
 import PDFViewerScreen from './src/screens/PDFViewerScreen';
 
 // Import contexts
-import { AuthProvider, useAuth } from './src/contexts/AuthContext';
+import { AuthProvider, useAuth } from './src/contexts/AuthContext.web';
 import { MoodProvider } from './src/contexts/MoodContext';
 import { ThemeProvider } from './src/contexts/ThemeContext';
 

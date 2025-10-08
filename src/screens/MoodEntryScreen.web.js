@@ -5,98 +5,167 @@ import {
   StyleSheet,
   SafeAreaView,
   ScrollView,
+  TextInput,
   TouchableOpacity,
+  Alert,
 } from 'react-native';
 import { useMood } from '../contexts/MoodContext';
 import Card from '../components/common/Card';
 import Button from '../components/common/Button';
 import { theme } from '../constants/theme';
 
+const MOOD_OPTIONS = [
+  { value: 5, label: 'Excellent', emoji: '😍', color: '#10B981' },
+  { value: 4, label: 'Good', emoji: '😊', color: '#3B82F6' },
+  { value: 3, label: 'Okay', emoji: '😐', color: '#F59E0B' },
+  { value: 2, label: 'Bad', emoji: '😔', color: '#EF4444' },
+  { value: 1, label: 'Terrible', emoji: '😭', color: '#7C2D12' },
+];
+
 const MoodEntryScreen = () => {
-  const { addMood } = useMood();
+  const { saveMood } = useMood();
   const [selectedMood, setSelectedMood] = useState(null);
   const [note, setNote] = useState('');
-
-  const moods = [
-    { id: 1, emoji: '😢', label: 'Très triste', value: 1, color: '#FF6B6B' },
-    { id: 2, emoji: '😔', label: 'Triste', value: 2, color: '#FF8E8E' },
-    { id: 3, emoji: '😐', label: 'Neutre', value: 3, color: '#FFD93D' },
-    { id: 4, emoji: '😊', label: 'Content', value: 4, color: '#6BCF7F' },
-    { id: 5, emoji: '😄', label: 'Très heureux', value: 5, color: '#4ECDC4' },
-  ];
+  const [loading, setLoading] = useState(false);
 
   const handleSaveMood = async () => {
     if (!selectedMood) {
-      alert('Veuillez sélectionner une humeur');
+      Alert.alert('Error', 'Please select a mood');
       return;
     }
 
-    const moodData = {
-      value: selectedMood.value,
-      emoji: selectedMood.emoji,
-      label: selectedMood.label,
+    setLoading(true);
+    const result = await saveMood({
+      ...selectedMood,
       note: note.trim(),
-      timestamp: new Date().toISOString(),
-    };
+    });
+    setLoading(false);
 
-    await addMood(moodData);
-    setSelectedMood(null);
-    setNote('');
-    alert('Humeur enregistrée avec succès !');
+    if (result.success) {
+      Alert.alert('Success', 'Mood saved successfully!', [
+        { text: 'OK', onPress: () => {
+          setSelectedMood(null);
+          setNote('');
+        }}
+      ]);
+    } else {
+      Alert.alert('Error', result.error || 'Failed to save mood');
+    }
+  };
+
+  const handleMoodSelect = (mood) => {
+    setSelectedMood(mood);
   };
 
   return (
     <SafeAreaView style={styles.container}>
       <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false}>
+        {/* Header */}
         <View style={styles.header}>
-          <Text style={styles.title}>Comment vous sentez-vous ?</Text>
+          <Text style={styles.title}>How are you feeling?</Text>
           <Text style={styles.subtitle}>
-            Sélectionnez votre humeur actuelle
+            Select your current mood and add any notes
           </Text>
         </View>
 
+        {/* Mood Selection */}
         <Card style={styles.moodCard}>
-          <View style={styles.moodGrid}>
-            {moods.map((mood) => (
+          <Text style={styles.sectionTitle}>Select Your Mood</Text>
+          <View style={styles.moodOptions}>
+            {MOOD_OPTIONS.map((mood) => (
               <TouchableOpacity
-                key={mood.id}
+                key={mood.value}
                 style={[
                   styles.moodOption,
-                  selectedMood?.id === mood.id && styles.selectedMood,
+                  selectedMood?.value === mood.value && styles.selectedMoodOption,
                   { borderColor: mood.color }
                 ]}
-                onPress={() => setSelectedMood(mood)}
+                onPress={() => handleMoodSelect(mood)}
               >
                 <Text style={styles.moodEmoji}>{mood.emoji}</Text>
-                <Text style={styles.moodLabel}>{mood.label}</Text>
+                <Text style={[
+                  styles.moodLabel,
+                  selectedMood?.value === mood.value && styles.selectedMoodLabel
+                ]}>
+                  {mood.label}
+                </Text>
               </TouchableOpacity>
             ))}
           </View>
         </Card>
 
+        {/* Note Section */}
         <Card style={styles.noteCard}>
-          <Text style={styles.cardTitle}>Note (optionnelle)</Text>
-          <View style={styles.noteContainer}>
-            <textarea
-              style={styles.noteInput}
-              placeholder="Décrivez ce qui influence votre humeur..."
-              value={note}
-              onChange={(e) => setNote(e.target.value)}
-              rows={4}
-            />
+          <Text style={styles.sectionTitle}>Add a Note (Optional)</Text>
+          <TextInput
+            style={styles.noteInput}
+            placeholder="How are you feeling? What's on your mind?"
+            value={note}
+            onChangeText={setNote}
+            multiline
+            numberOfLines={4}
+            textAlignVertical="top"
+            placeholderTextColor={theme.colors.textSecondary}
+          />
+          <Text style={styles.characterCount}>
+            {note.length}/500 characters
+          </Text>
+        </Card>
+
+        {/* Quick Notes */}
+        <Card style={styles.quickNotesCard}>
+          <Text style={styles.sectionTitle}>Quick Notes</Text>
+          <View style={styles.quickNotes}>
+            {[
+              'Had a great day!',
+              'Feeling stressed',
+              'Grateful for today',
+              'Need some rest',
+              'Excited about something',
+              'Feeling lonely'
+            ].map((quickNote, index) => (
+              <TouchableOpacity
+                key={index}
+                style={styles.quickNoteButton}
+                onPress={() => setNote(quickNote)}
+              >
+                <Text style={styles.quickNoteText}>{quickNote}</Text>
+              </TouchableOpacity>
+            ))}
           </View>
         </Card>
 
-        <View style={styles.buttonContainer}>
+        {/* Save Button */}
+        <View style={styles.saveButtonContainer}>
           <Button
-            title="Enregistrer l'humeur"
+            title="Save Mood"
             onPress={handleSaveMood}
+            loading={loading}
             disabled={!selectedMood}
             variant="primary"
             size="large"
             style={styles.saveButton}
           />
         </View>
+
+        {/* Selected Mood Preview */}
+        {selectedMood && (
+          <Card style={styles.previewCard}>
+            <Text style={styles.previewTitle}>Preview</Text>
+            <View style={styles.previewContent}>
+              <Text style={styles.previewEmoji}>{selectedMood.emoji}</Text>
+              <View style={styles.previewText}>
+                <Text style={styles.previewMood}>{selectedMood.label}</Text>
+                <Text style={styles.previewTime}>
+                  {new Date().toLocaleString()}
+                </Text>
+                {note && (
+                  <Text style={styles.previewNote}>"{note}"</Text>
+                )}
+              </View>
+            </View>
+          </Card>
+        )}
       </ScrollView>
     </SafeAreaView>
   );
@@ -109,45 +178,52 @@ const styles = StyleSheet.create({
   },
   scrollView: {
     flex: 1,
-    paddingHorizontal: theme.spacing.md,
   },
   header: {
-    marginVertical: theme.spacing.lg,
-    alignItems: 'center',
+    padding: theme.spacing.lg,
+    paddingBottom: theme.spacing.md,
   },
   title: {
-    fontSize: 24,
+    fontSize: 28,
     fontWeight: 'bold',
     color: theme.colors.text,
     marginBottom: theme.spacing.sm,
-    textAlign: 'center',
   },
   subtitle: {
     fontSize: 16,
     color: theme.colors.textSecondary,
-    textAlign: 'center',
+    lineHeight: 24,
   },
   moodCard: {
+    margin: theme.spacing.lg,
+    marginTop: 0,
+  },
+  sectionTitle: {
+    fontSize: 18,
+    fontWeight: '600',
+    color: theme.colors.text,
     marginBottom: theme.spacing.md,
   },
-  moodGrid: {
+  moodOptions: {
     flexDirection: 'row',
     flexWrap: 'wrap',
     justifyContent: 'space-between',
   },
   moodOption: {
-    width: '48%',
-    alignItems: 'center',
-    padding: theme.spacing.md,
-    marginBottom: theme.spacing.sm,
-    borderRadius: theme.borderRadius.md,
+    width: '18%',
+    aspectRatio: 1,
+    backgroundColor: theme.colors.surface,
+    borderRadius: theme.borderRadius.lg,
     borderWidth: 2,
     borderColor: theme.colors.border,
-    backgroundColor: theme.colors.surface,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: theme.spacing.sm,
+    padding: theme.spacing.sm,
   },
-  selectedMood: {
+  selectedMoodOption: {
     backgroundColor: theme.colors.primary + '20',
-    borderColor: theme.colors.primary,
+    borderWidth: 3,
   },
   moodEmoji: {
     fontSize: 32,
@@ -159,36 +235,93 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     fontWeight: '500',
   },
-  noteCard: {
-    marginBottom: theme.spacing.lg,
+  selectedMoodLabel: {
+    color: theme.colors.primary,
+    fontWeight: 'bold',
   },
-  cardTitle: {
-    fontSize: 18,
+  noteCard: {
+    margin: theme.spacing.lg,
+    marginTop: 0,
+  },
+  noteInput: {
+    borderWidth: 1,
+    borderColor: theme.colors.border,
+    borderRadius: theme.borderRadius.md,
+    padding: theme.spacing.md,
+    fontSize: 16,
+    color: theme.colors.text,
+    backgroundColor: theme.colors.surface,
+    minHeight: 100,
+  },
+  characterCount: {
+    fontSize: 12,
+    color: theme.colors.textSecondary,
+    textAlign: 'right',
+    marginTop: theme.spacing.xs,
+  },
+  quickNotesCard: {
+    margin: theme.spacing.lg,
+    marginTop: 0,
+  },
+  quickNotes: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: theme.spacing.sm,
+  },
+  quickNoteButton: {
+    backgroundColor: theme.colors.surface,
+    borderWidth: 1,
+    borderColor: theme.colors.border,
+    borderRadius: theme.borderRadius.md,
+    paddingHorizontal: theme.spacing.md,
+    paddingVertical: theme.spacing.sm,
+  },
+  quickNoteText: {
+    fontSize: 14,
+    color: theme.colors.text,
+  },
+  saveButtonContainer: {
+    padding: theme.spacing.lg,
+  },
+  saveButton: {
+    width: '100%',
+  },
+  previewCard: {
+    margin: theme.spacing.lg,
+    marginTop: 0,
+  },
+  previewTitle: {
+    fontSize: 16,
     fontWeight: '600',
     color: theme.colors.text,
     marginBottom: theme.spacing.md,
   },
-  noteContainer: {
-    width: '100%',
+  previewContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
   },
-  noteInput: {
-    width: '100%',
-    minHeight: 80,
-    padding: theme.spacing.md,
-    borderWidth: 1,
-    borderColor: theme.colors.border,
-    borderRadius: theme.borderRadius.md,
-    fontSize: 16,
+  previewEmoji: {
+    fontSize: 40,
+    marginRight: theme.spacing.md,
+  },
+  previewText: {
+    flex: 1,
+  },
+  previewMood: {
+    fontSize: 18,
+    fontWeight: '600',
     color: theme.colors.text,
-    backgroundColor: theme.colors.surface,
-    fontFamily: 'inherit',
-    resize: 'vertical',
+    marginBottom: theme.spacing.xs,
   },
-  buttonContainer: {
-    marginBottom: theme.spacing.xl,
+  previewTime: {
+    fontSize: 14,
+    color: theme.colors.textSecondary,
+    marginBottom: theme.spacing.xs,
   },
-  saveButton: {
-    width: '100%',
+  previewNote: {
+    fontSize: 14,
+    color: theme.colors.text,
+    fontStyle: 'italic',
   },
 });
 

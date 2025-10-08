@@ -4,6 +4,7 @@ import { NavigationContainer } from '@react-navigation/native';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { createStackNavigator } from '@react-navigation/stack';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
+import { View, Text, StyleSheet } from 'react-native';
 
 // Import screens conditionnels
 import { 
@@ -25,6 +26,25 @@ import { theme } from './src/constants/theme';
 
 const Tab = createBottomTabNavigator();
 const Stack = createStackNavigator();
+
+// Simple icon component for cross-platform compatibility
+const SimpleIcon = ({ name, size = 24, color = '#000' }) => {
+  const iconMap = {
+    'home': '🏠',
+    'mood': '😊', 
+    'analytics': '📊',
+    'person': '👤',
+    'help': '❓'
+  };
+  
+  return (
+    <View style={[styles.iconContainer, { width: size, height: size }]}>
+      <Text style={[styles.iconText, { fontSize: size * 0.8, color }]}>
+        {iconMap[name] || iconMap.help}
+      </Text>
+    </View>
+  );
+};
 
 // Main Tab Navigator
 const MainTabNavigator = () => {
@@ -49,7 +69,7 @@ const MainTabNavigator = () => {
             default:
               iconName = 'help';
           }
-          return <Icon name={iconName} size={size} color={color} />;
+          return <SimpleIcon name={iconName} size={size} color={color} />;
         },
         tabBarActiveTintColor: theme.colors.primary,
         tabBarInactiveTintColor: theme.colors.textSecondary,
@@ -105,7 +125,11 @@ const AppContent = () => {
   const { user, loading } = useAuth();
 
   if (loading) {
-    return null; // Add loading screen here
+    return (
+      <View style={styles.loadingContainer}>
+        <Text style={styles.loadingText}>Loading...</Text>
+      </View>
+    );
   }
 
   return (
@@ -130,3 +154,23 @@ export default function App() {
     </SafeAreaProvider>
   );
 }
+
+const styles = StyleSheet.create({
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: theme.colors.background,
+  },
+  loadingText: {
+    fontSize: 18,
+    color: theme.colors.text,
+  },
+  iconContainer: {
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  iconText: {
+    textAlign: 'center',
+  },
+});

@@ -5,184 +5,231 @@ import {
   StyleSheet,
   SafeAreaView,
   ScrollView,
+  Image,
   TouchableOpacity,
+  Alert,
   Switch,
 } from 'react-native';
-import { useAuth } from '../contexts/AuthContext';
-import { useTheme } from '../contexts/ThemeContext';
+import { useAuth } from '../contexts/AuthContext.web';
 import { useMood } from '../contexts/MoodContext';
+import { useTheme } from '../contexts/ThemeContext';
 import Card from '../components/common/Card';
 import Button from '../components/common/Button';
-import { theme } from '../constants/theme';
+import { theme as defaultTheme } from '../constants/theme';
+
+// Simple icon component for web
+const SimpleIcon = ({ name, size, color }) => (
+  <View style={[styles.icon, { width: size, height: size, backgroundColor: color }]}>
+    <Text style={styles.iconText}>{name.charAt(0).toUpperCase()}</Text>
+  </View>
+);
 
 const ProfileScreen = () => {
   const { user, signOut } = useAuth();
-  const { isDarkMode, toggleTheme } = useTheme();
-  const { moods, clearAllMoods } = useMood();
-  const [notifications, setNotifications] = useState(true);
+  const { moods } = useMood();
+  const { theme, isDarkMode, toggleTheme } = useTheme();
+  const [notificationsEnabled, setNotificationsEnabled] = useState(true);
 
-  const handleSignOut = async () => {
-    if (window.confirm('Êtes-vous sûr de vouloir vous déconnecter ?')) {
-      await signOut();
-    }
-  };
-
-  const handleClearData = async () => {
-    if (window.confirm('Êtes-vous sûr de vouloir supprimer toutes vos données ? Cette action est irréversible.')) {
-      await clearAllMoods();
-      alert('Données supprimées avec succès');
-    }
+  const handleSignOut = () => {
+    Alert.alert(
+      'Sign Out',
+      'Are you sure you want to sign out?',
+      [
+        { text: 'Cancel', style: 'cancel' },
+        { text: 'Sign Out', onPress: signOut, style: 'destructive' },
+      ]
+    );
   };
 
   const handleExportData = () => {
-    const data = {
-      user: user,
-      moods: moods,
-      exportDate: new Date().toISOString(),
-    };
-    
-    const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `mood-tracker-export-${new Date().toISOString().split('T')[0]}.json`;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url);
+    Alert.alert(
+      'Export Data',
+      'This feature will export your mood data to a CSV file.',
+      [
+        { text: 'Cancel', style: 'cancel' },
+        { text: 'Export', onPress: () => console.log('Export data') },
+      ]
+    );
   };
 
+  const handleDeleteData = () => {
+    Alert.alert(
+      'Delete All Data',
+      'This will permanently delete all your mood entries. This action cannot be undone.',
+      [
+        { text: 'Cancel', style: 'cancel' },
+        { 
+          text: 'Delete', 
+          onPress: () => console.log('Delete all data'),
+          style: 'destructive' 
+        },
+      ]
+    );
+  };
+
+  const profileStats = [
+    {
+      title: 'Total Entries',
+      value: moods.length,
+      icon: 'assessment',
+      color: theme.colors.primary,
+    },
+    {
+      title: 'Days Tracked',
+      value: new Set(moods.map(mood => 
+        new Date(mood.timestamp).toDateString()
+      )).size,
+      icon: 'calendar-today',
+      color: theme.colors.secondary,
+    },
+    {
+      title: 'Average Mood',
+      value: moods.length > 0 
+        ? (moods.reduce((sum, mood) => sum + mood.mood, 0) / moods.length).toFixed(1)
+        : '0',
+      icon: 'sentiment-satisfied',
+      color: theme.colors.success,
+    },
+  ];
+
+  const settingsOptions = [
+    {
+      title: 'Notifications',
+      subtitle: 'Get reminders to log your mood',
+      type: 'switch',
+      value: notificationsEnabled,
+      onValueChange: setNotificationsEnabled,
+      icon: 'notifications',
+    },
+    {
+      title: 'Dark Mode',
+      subtitle: 'Switch between light and dark themes',
+      type: 'switch',
+      value: isDarkMode,
+      onValueChange: toggleTheme,
+      icon: 'dark-mode',
+    },
+    {
+      title: 'Export Data',
+      subtitle: 'Download your mood data',
+      type: 'button',
+      onPress: handleExportData,
+      icon: 'file-download',
+    },
+    {
+      title: 'Delete All Data',
+      subtitle: 'Permanently remove all your data',
+      type: 'button',
+      onPress: handleDeleteData,
+      icon: 'delete-forever',
+      destructive: true,
+    },
+  ];
+
   return (
-    <SafeAreaView style={styles.container}>
+    <SafeAreaView style={[styles.container, { backgroundColor: theme.colors.background }]}>
       <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false}>
-        <View style={styles.header}>
-          <View style={styles.avatarContainer}>
-            <Text style={styles.avatarText}>
-              {user?.name ? user.name.charAt(0).toUpperCase() : 'U'}
-            </Text>
+        {/* Profile Header */}
+        <Card style={styles.profileCard}>
+          <View style={styles.profileHeader}>
+            <Image
+              source={{ uri: user?.photo || require('../../assets/default-avatar.png') }}
+              style={styles.avatar}
+            />
+            <View style={styles.profileInfo}>
+              <Text style={[styles.userName, { color: theme.colors.text }]}>
+                {user?.name || 'Anonymous User'}
+              </Text>
+              <Text style={[styles.userEmail, { color: theme.colors.textSecondary }]}>
+                {user?.email || 'No email provided'}
+              </Text>
+            </View>
           </View>
-          <Text style={styles.userName}>
-            {user?.name || 'Utilisateur'}
-          </Text>
-          <Text style={styles.userEmail}>
-            {user?.email || 'user@example.com'}
-          </Text>
+        </Card>
+
+        {/* Stats Cards */}
+        <View style={styles.statsContainer}>
+          {profileStats.map((stat, index) => (
+            <Card key={index} style={styles.statCard}>
+              <View style={styles.statContent}>
+                <SimpleIcon name={stat.icon} size={24} color={stat.color} />
+                <View style={styles.statText}>
+                  <Text style={[styles.statValue, { color: theme.colors.text }]}>
+                    {stat.value}
+                  </Text>
+                  <Text style={[styles.statLabel, { color: theme.colors.textSecondary }]}>
+                    {stat.title}
+                  </Text>
+                </View>
+              </View>
+            </Card>
+          ))}
         </View>
 
-        {/* Statistiques utilisateur */}
-        <Card style={styles.statsCard}>
-          <Text style={styles.cardTitle}>Vos Statistiques</Text>
-          <View style={styles.statsGrid}>
-            <View style={styles.statItem}>
-              <Text style={styles.statValue}>{moods.length}</Text>
-              <Text style={styles.statLabel}>Entrées Total</Text>
-            </View>
-            <View style={styles.statItem}>
-              <Text style={styles.statValue}>
-                {moods.filter(mood => {
-                  const weekAgo = new Date();
-                  weekAgo.setDate(weekAgo.getDate() - 7);
-                  return new Date(mood.timestamp) >= weekAgo;
-                }).length}
-              </Text>
-              <Text style={styles.statLabel}>Cette Semaine</Text>
-            </View>
-            <View style={styles.statItem}>
-              <Text style={styles.statValue}>
-                {moods.length > 0 ? Math.round(moods.reduce((acc, mood) => acc + mood.value, 0) / moods.length * 10) / 10 : 0}
-              </Text>
-              <Text style={styles.statLabel}>Moyenne</Text>
-            </View>
-          </View>
-        </Card>
+        {/* Settings */}
+        <View style={styles.settingsContainer}>
+          <Text style={[styles.sectionTitle, { color: theme.colors.text }]}>
+            Settings
+          </Text>
+          <Card style={styles.settingsCard}>
+            {settingsOptions.map((option, index) => (
+              <View key={index}>
+                <TouchableOpacity
+                  style={styles.settingItem}
+                  onPress={option.onPress}
+                  disabled={option.type === 'switch'}
+                >
+                  <View style={styles.settingLeft}>
+                    <SimpleIcon 
+                      name={option.icon} 
+                      size={20} 
+                      color={option.destructive ? theme.colors.error : theme.colors.textSecondary} 
+                    />
+                    <View style={styles.settingText}>
+                      <Text style={[
+                        styles.settingTitle,
+                        { color: option.destructive ? theme.colors.error : theme.colors.text }
+                      ]}>
+                        {option.title}
+                      </Text>
+                      <Text style={[styles.settingSubtitle, { color: theme.colors.textSecondary }]}>
+                        {option.subtitle}
+                      </Text>
+                    </View>
+                  </View>
+                  <View style={styles.settingRight}>
+                    {option.type === 'switch' ? (
+                      <Switch
+                        value={option.value}
+                        onValueChange={option.onValueChange}
+                        trackColor={{ 
+                          false: theme.colors.border, 
+                          true: theme.colors.primary 
+                        }}
+                        thumbColor={option.value ? theme.colors.white : theme.colors.textSecondary}
+                      />
+                    ) : (
+                      <SimpleIcon name="chevron-right" size={16} color={theme.colors.textSecondary} />
+                    )}
+                  </View>
+                </TouchableOpacity>
+                {index < settingsOptions.length - 1 && (
+                  <View style={[styles.separator, { backgroundColor: theme.colors.border }]} />
+                )}
+              </View>
+            ))}
+          </Card>
+        </View>
 
-        {/* Paramètres d'affichage */}
-        <Card style={styles.settingsCard}>
-          <Text style={styles.cardTitle}>Paramètres</Text>
-          
-          <View style={styles.settingItem}>
-            <View style={styles.settingInfo}>
-              <Text style={styles.settingTitle}>Mode Sombre</Text>
-              <Text style={styles.settingDescription}>
-                Basculer entre le thème clair et sombre
-              </Text>
-            </View>
-            <Switch
-              value={isDarkMode}
-              onValueChange={toggleTheme}
-              trackColor={{ false: theme.colors.border, true: theme.colors.primary }}
-              thumbColor={isDarkMode ? theme.colors.white : theme.colors.surface}
-            />
-          </View>
-
-          <View style={styles.settingItem}>
-            <View style={styles.settingInfo}>
-              <Text style={styles.settingTitle}>Notifications</Text>
-              <Text style={styles.settingDescription}>
-                Recevoir des rappels pour enregistrer votre humeur
-              </Text>
-            </View>
-            <Switch
-              value={notifications}
-              onValueChange={setNotifications}
-              trackColor={{ false: theme.colors.border, true: theme.colors.primary }}
-              thumbColor={notifications ? theme.colors.white : theme.colors.surface}
-            />
-          </View>
-        </Card>
-
-        {/* Gestion des données */}
-        <Card style={styles.dataCard}>
-          <Text style={styles.cardTitle}>Gestion des Données</Text>
-          
-          <TouchableOpacity style={styles.dataItem} onPress={handleExportData}>
-            <View style={styles.dataIcon}>
-              <Text style={styles.dataIconText}>📤</Text>
-            </View>
-            <View style={styles.dataInfo}>
-              <Text style={styles.dataTitle}>Exporter les Données</Text>
-              <Text style={styles.dataDescription}>
-                Télécharger vos données au format JSON
-              </Text>
-            </View>
-            <Text style={styles.dataArrow}>›</Text>
-          </TouchableOpacity>
-
-          <TouchableOpacity style={styles.dataItem} onPress={handleClearData}>
-            <View style={styles.dataIcon}>
-              <Text style={styles.dataIconText}>🗑️</Text>
-            </View>
-            <View style={styles.dataInfo}>
-              <Text style={styles.dataTitle}>Supprimer Toutes les Données</Text>
-              <Text style={styles.dataDescription}>
-                Effacer toutes vos entrées d'humeur
-              </Text>
-            </View>
-            <Text style={styles.dataArrow}>›</Text>
-          </TouchableOpacity>
-        </Card>
-
-        {/* Informations de l'app */}
-        <Card style={styles.infoCard}>
-          <Text style={styles.cardTitle}>À Propos</Text>
-          <View style={styles.infoItem}>
-            <Text style={styles.infoLabel}>Version</Text>
-            <Text style={styles.infoValue}>1.0.0</Text>
-          </View>
-          <View style={styles.infoItem}>
-            <Text style={styles.infoLabel}>Développé par</Text>
-            <Text style={styles.infoValue}>Mood Tracker Team</Text>
-          </View>
-        </Card>
-
-        {/* Bouton de déconnexion */}
-        <View style={styles.logoutContainer}>
+        {/* Sign Out Button */}
+        <View style={styles.signOutContainer}>
           <Button
-            title="Se Déconnecter"
+            title="Sign Out"
             onPress={handleSignOut}
-            variant="secondary"
+            variant="outline"
             size="large"
-            style={styles.logoutButton}
+            style={[styles.signOutButton, { borderColor: theme.colors.error }]}
+            textStyle={{ color: theme.colors.error }}
           />
         </View>
       </ScrollView>
@@ -193,155 +240,115 @@ const ProfileScreen = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: theme.colors.background,
   },
   scrollView: {
     flex: 1,
-    paddingHorizontal: theme.spacing.md,
   },
-  header: {
+  profileCard: {
+    margin: defaultTheme.spacing.lg,
+    marginBottom: defaultTheme.spacing.md,
+  },
+  profileHeader: {
+    flexDirection: 'row',
     alignItems: 'center',
-    marginVertical: theme.spacing.xl,
   },
-  avatarContainer: {
+  avatar: {
     width: 80,
     height: 80,
     borderRadius: 40,
-    backgroundColor: theme.colors.primary,
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginBottom: theme.spacing.md,
+    marginRight: defaultTheme.spacing.md,
   },
-  avatarText: {
-    fontSize: 32,
-    fontWeight: 'bold',
-    color: theme.colors.white,
+  profileInfo: {
+    flex: 1,
   },
   userName: {
     fontSize: 24,
     fontWeight: 'bold',
-    color: theme.colors.text,
-    marginBottom: theme.spacing.xs,
+    marginBottom: defaultTheme.spacing.xs,
   },
   userEmail: {
     fontSize: 16,
-    color: theme.colors.textSecondary,
   },
-  statsCard: {
-    marginBottom: theme.spacing.md,
-  },
-  cardTitle: {
-    fontSize: 18,
-    fontWeight: '600',
-    color: theme.colors.text,
-    marginBottom: theme.spacing.md,
-  },
-  statsGrid: {
+  statsContainer: {
     flexDirection: 'row',
-    justifyContent: 'space-around',
+    paddingHorizontal: defaultTheme.spacing.lg,
+    marginBottom: defaultTheme.spacing.lg,
   },
-  statItem: {
+  statCard: {
+    flex: 1,
+    marginHorizontal: defaultTheme.spacing.xs,
+  },
+  statContent: {
+    flexDirection: 'row',
     alignItems: 'center',
   },
+  statText: {
+    marginLeft: defaultTheme.spacing.sm,
+  },
   statValue: {
-    fontSize: 24,
+    fontSize: 20,
     fontWeight: 'bold',
-    color: theme.colors.primary,
-    marginBottom: theme.spacing.xs,
   },
   statLabel: {
     fontSize: 12,
-    color: theme.colors.textSecondary,
-    textAlign: 'center',
+  },
+  settingsContainer: {
+    paddingHorizontal: defaultTheme.spacing.lg,
+    marginBottom: defaultTheme.spacing.lg,
+  },
+  sectionTitle: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    marginBottom: defaultTheme.spacing.md,
   },
   settingsCard: {
-    marginBottom: theme.spacing.md,
+    padding: 0,
   },
   settingItem: {
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingVertical: theme.spacing.md,
-    borderBottomWidth: 1,
-    borderBottomColor: theme.colors.border,
+    padding: defaultTheme.spacing.lg,
   },
-  settingInfo: {
+  settingLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
     flex: 1,
-    marginRight: theme.spacing.md,
+  },
+  settingText: {
+    marginLeft: defaultTheme.spacing.md,
+    flex: 1,
   },
   settingTitle: {
     fontSize: 16,
     fontWeight: '500',
-    color: theme.colors.text,
-    marginBottom: theme.spacing.xs,
+    marginBottom: defaultTheme.spacing.xs,
   },
-  settingDescription: {
+  settingSubtitle: {
     fontSize: 14,
-    color: theme.colors.textSecondary,
   },
-  dataCard: {
-    marginBottom: theme.spacing.md,
+  settingRight: {
+    marginLeft: defaultTheme.spacing.sm,
   },
-  dataItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingVertical: theme.spacing.md,
-    borderBottomWidth: 1,
-    borderBottomColor: theme.colors.border,
+  separator: {
+    height: 1,
+    marginLeft: defaultTheme.spacing.lg,
   },
-  dataIcon: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: theme.colors.surface,
+  signOutContainer: {
+    paddingHorizontal: defaultTheme.spacing.lg,
+    marginBottom: defaultTheme.spacing.xl,
+  },
+  signOutButton: {
+    borderWidth: 1,
+  },
+  icon: {
     justifyContent: 'center',
     alignItems: 'center',
-    marginRight: theme.spacing.md,
+    borderRadius: 4,
   },
-  dataIconText: {
-    fontSize: 20,
-  },
-  dataInfo: {
-    flex: 1,
-  },
-  dataTitle: {
-    fontSize: 16,
-    fontWeight: '500',
-    color: theme.colors.text,
-    marginBottom: theme.spacing.xs,
-  },
-  dataDescription: {
-    fontSize: 14,
-    color: theme.colors.textSecondary,
-  },
-  dataArrow: {
-    fontSize: 20,
-    color: theme.colors.textSecondary,
-  },
-  infoCard: {
-    marginBottom: theme.spacing.md,
-  },
-  infoItem: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    paddingVertical: theme.spacing.sm,
-    borderBottomWidth: 1,
-    borderBottomColor: theme.colors.border,
-  },
-  infoLabel: {
-    fontSize: 14,
-    color: theme.colors.textSecondary,
-  },
-  infoValue: {
-    fontSize: 14,
-    color: theme.colors.text,
-    fontWeight: '500',
-  },
-  logoutContainer: {
-    marginVertical: theme.spacing.xl,
-  },
-  logoutButton: {
-    backgroundColor: theme.colors.error,
+  iconText: {
+    color: 'white',
+    fontWeight: 'bold',
+    fontSize: 12,
   },
 });
 

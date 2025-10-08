@@ -4,6 +4,7 @@
 export const authConfig = {
   google: {
     webClientId: 'YOUR_GOOGLE_WEB_CLIENT_ID',
+    clientSecret: 'YOUR_GOOGLE_CLIENT_SECRET',
     iosClientId: 'YOUR_GOOGLE_IOS_CLIENT_ID',
   },
   facebook: {

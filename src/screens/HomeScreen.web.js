@@ -8,11 +8,18 @@ import {
   TouchableOpacity,
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
-import { useAuth } from '../contexts/AuthContext';
+import { useAuth } from '../contexts/AuthContext.web';
 import { useMood } from '../contexts/MoodContext';
 import Card from '../components/common/Card';
 import Button from '../components/common/Button';
 import { theme } from '../constants/theme';
+
+// Simple icon component for web
+const SimpleIcon = ({ name, size, color }) => (
+  <View style={[styles.icon, { width: size, height: size, backgroundColor: color }]}>
+    <Text style={styles.iconText}>{name.charAt(0).toUpperCase()}</Text>
+  </View>
+);
 
 const HomeScreen = () => {
   const navigation = useNavigation();
@@ -27,19 +34,19 @@ const HomeScreen = () => {
   const quickActions = [
     {
       title: 'Add Mood',
-      icon: '➕',
+      icon: 'add-circle',
       onPress: () => navigation.navigate('Mood'),
       color: theme.colors.primary,
     },
     {
       title: 'View Analytics',
-      icon: '📊',
+      icon: 'analytics',
       onPress: () => navigation.navigate('Analytics'),
       color: theme.colors.secondary,
     },
     {
       title: 'Read Journal',
-      icon: '📄',
+      icon: 'picture-as-pdf',
       onPress: () => navigation.navigate('PDFViewer', { 
         pdfUrl: 'https://example.com/sample.pdf' 
       }),
@@ -47,37 +54,76 @@ const HomeScreen = () => {
     },
   ];
 
+  const getMoodEmoji = (mood) => {
+    const moodEmojis = {
+      1: '😢', // Very Sad
+      2: '😔', // Sad
+      3: '😐', // Neutral
+      4: '😊', // Happy
+      5: '😄', // Very Happy
+    };
+    return moodEmojis[mood] || '😐';
+  };
+
+  const getMoodDescription = (mood) => {
+    const descriptions = {
+      1: 'Very Sad',
+      2: 'Sad',
+      3: 'Neutral',
+      4: 'Happy',
+      5: 'Very Happy',
+    };
+    return descriptions[mood] || 'Unknown';
+  };
+
   return (
     <SafeAreaView style={styles.container}>
       <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false}>
+        {/* Header */}
         <View style={styles.header}>
           <Text style={styles.greeting}>
             Hello, {user?.name || 'User'}! 👋
           </Text>
-          <Text style={styles.date}>
-            {new Date().toLocaleDateString('en-US', { 
-              weekday: 'long', 
-              year: 'numeric', 
-              month: 'long', 
-              day: 'numeric' 
-            })}
+          <Text style={styles.subtitle}>
+            How are you feeling today?
           </Text>
         </View>
 
-        {/* Today's Mood Status */}
+        {/* Today's Mood Card */}
         <Card style={styles.moodCard}>
-          <Text style={styles.cardTitle}>Today's Mood</Text>
+          <View style={styles.moodHeader}>
+            <Text style={styles.moodTitle}>Today's Mood</Text>
+            <Text style={styles.moodDate}>
+              {new Date().toLocaleDateString('en-US', {
+                weekday: 'long',
+                year: 'numeric',
+                month: 'long',
+                day: 'numeric'
+              })}
+            </Text>
+          </View>
+          
           {todaysMood ? (
-            <View style={styles.moodStatus}>
-              <Text style={styles.moodEmoji}>{todaysMood.emoji}</Text>
-              <Text style={styles.moodLabel}>{todaysMood.label}</Text>
-              <Text style={styles.moodNote}>{todaysMood.note}</Text>
+            <View style={styles.moodContent}>
+              <Text style={styles.moodEmoji}>
+                {getMoodEmoji(todaysMood.mood)}
+              </Text>
+              <Text style={styles.moodDescription}>
+                {getMoodDescription(todaysMood.mood)}
+              </Text>
+              {todaysMood.note && (
+                <Text style={styles.moodNote}>
+                  "{todaysMood.note}"
+                </Text>
+              )}
             </View>
           ) : (
-            <View style={styles.noMood}>
-              <Text style={styles.noMoodText}>No mood recorded today</Text>
+            <View style={styles.noMoodContent}>
+              <Text style={styles.noMoodText}>
+                No mood entry for today yet
+              </Text>
               <Button
-                title="Add Your Mood"
+                title="Add Mood"
                 onPress={() => navigation.navigate('Mood')}
                 variant="primary"
                 size="small"
@@ -87,53 +133,71 @@ const HomeScreen = () => {
           )}
         </Card>
 
+        {/* Quick Stats */}
+        <View style={styles.statsContainer}>
+          <Card style={styles.statCard}>
+            <View style={styles.statContent}>
+              <SimpleIcon name="trending-up" size={24} color={theme.colors.success} />
+              <View style={styles.statText}>
+                <Text style={styles.statValue}>{analytics.totalEntries}</Text>
+                <Text style={styles.statLabel}>Total Entries</Text>
+              </View>
+            </View>
+          </Card>
+          
+          <Card style={styles.statCard}>
+            <View style={styles.statContent}>
+              <SimpleIcon name="calendar" size={24} color={theme.colors.info} />
+              <View style={styles.statText}>
+                <Text style={styles.statValue}>{analytics.currentStreak}</Text>
+                <Text style={styles.statLabel}>Day Streak</Text>
+              </View>
+            </View>
+          </Card>
+        </View>
+
         {/* Quick Actions */}
-        <Card>
-          <Text style={styles.cardTitle}>Quick Actions</Text>
-          <View style={styles.quickActions}>
+        <View style={styles.actionsContainer}>
+          <Text style={styles.sectionTitle}>Quick Actions</Text>
+          <View style={styles.actionsGrid}>
             {quickActions.map((action, index) => (
               <TouchableOpacity
                 key={index}
-                style={[styles.actionButton, { backgroundColor: action.color }]}
+                style={[styles.actionButton, { borderLeftColor: action.color }]}
                 onPress={action.onPress}
-                accessibilityRole="button"
-                accessibilityLabel={action.title}
               >
-                <Text style={styles.actionIcon}>{action.icon}</Text>
+                <SimpleIcon name={action.icon} size={24} color={action.color} />
                 <Text style={styles.actionText}>{action.title}</Text>
               </TouchableOpacity>
             ))}
           </View>
-        </Card>
+        </View>
 
-        {/* Weekly Summary */}
-        <Card>
-          <Text style={styles.cardTitle}>This Week</Text>
-          <View style={styles.summaryRow}>
-            <View style={styles.summaryItem}>
-              <Text style={styles.summaryValue}>
-                {analytics.weeklyAverage.toFixed(1)}
-              </Text>
-              <Text style={styles.summaryLabel}>Avg Mood</Text>
-            </View>
-            <View style={styles.summaryItem}>
-              <Text style={styles.summaryValue}>
-                {moods.filter(mood => {
-                  const weekAgo = new Date();
-                  weekAgo.setDate(weekAgo.getDate() - 7);
-                  return new Date(mood.timestamp) >= weekAgo;
-                }).length}
-              </Text>
-              <Text style={styles.summaryLabel}>Entries</Text>
-            </View>
-            <View style={styles.summaryItem}>
-              <Text style={styles.summaryValue}>
-                {Math.max(0, analytics.weeklyAverage - 3).toFixed(1)}
-              </Text>
-              <Text style={styles.summaryLabel}>Improvement</Text>
+        {/* Recent Moods */}
+        {moods.length > 0 && (
+          <View style={styles.recentContainer}>
+            <Text style={styles.sectionTitle}>Recent Moods</Text>
+            <View style={styles.recentMoods}>
+              {moods.slice(0, 5).map((mood, index) => (
+                <Card key={index} style={styles.recentMoodCard}>
+                  <View style={styles.recentMoodContent}>
+                    <Text style={styles.recentMoodEmoji}>
+                      {getMoodEmoji(mood.mood)}
+                    </Text>
+                    <View style={styles.recentMoodInfo}>
+                      <Text style={styles.recentMoodDate}>
+                        {new Date(mood.timestamp).toLocaleDateString()}
+                      </Text>
+                      <Text style={styles.recentMoodDescription}>
+                        {getMoodDescription(mood.mood)}
+                      </Text>
+                    </View>
+                  </View>
+                </Card>
+              ))}
             </View>
           </View>
-        </Card>
+        )}
       </ScrollView>
     </SafeAreaView>
   );
@@ -146,49 +210,58 @@ const styles = StyleSheet.create({
   },
   scrollView: {
     flex: 1,
-    paddingHorizontal: theme.spacing.md,
   },
   header: {
-    marginVertical: theme.spacing.lg,
+    padding: theme.spacing.lg,
+    paddingBottom: theme.spacing.md,
   },
   greeting: {
-    fontSize: 24,
+    fontSize: 28,
     fontWeight: 'bold',
     color: theme.colors.text,
     marginBottom: theme.spacing.xs,
   },
-  date: {
+  subtitle: {
     fontSize: 16,
     color: theme.colors.textSecondary,
   },
   moodCard: {
+    margin: theme.spacing.lg,
+    marginTop: 0,
+  },
+  moodHeader: {
     marginBottom: theme.spacing.md,
   },
-  cardTitle: {
-    fontSize: 18,
-    fontWeight: '600',
+  moodTitle: {
+    fontSize: 20,
+    fontWeight: 'bold',
     color: theme.colors.text,
-    marginBottom: theme.spacing.md,
+    marginBottom: theme.spacing.xs,
   },
-  moodStatus: {
+  moodDate: {
+    fontSize: 14,
+    color: theme.colors.textSecondary,
+  },
+  moodContent: {
     alignItems: 'center',
   },
   moodEmoji: {
     fontSize: 48,
     marginBottom: theme.spacing.sm,
   },
-  moodLabel: {
-    fontSize: 20,
+  moodDescription: {
+    fontSize: 18,
     fontWeight: '600',
     color: theme.colors.text,
-    marginBottom: theme.spacing.xs,
+    marginBottom: theme.spacing.sm,
   },
   moodNote: {
     fontSize: 14,
     color: theme.colors.textSecondary,
+    fontStyle: 'italic',
     textAlign: 'center',
   },
-  noMood: {
+  noMoodContent: {
     alignItems: 'center',
     paddingVertical: theme.spacing.lg,
   },
@@ -198,46 +271,103 @@ const styles = StyleSheet.create({
     marginBottom: theme.spacing.md,
   },
   addMoodButton: {
-    marginTop: theme.spacing.sm,
+    paddingHorizontal: theme.spacing.lg,
   },
-  quickActions: {
+  statsContainer: {
     flexDirection: 'row',
+    paddingHorizontal: theme.spacing.lg,
+    marginBottom: theme.spacing.lg,
+  },
+  statCard: {
+    flex: 1,
+    marginHorizontal: theme.spacing.xs,
+  },
+  statContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  statText: {
+    marginLeft: theme.spacing.sm,
+  },
+  statValue: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    color: theme.colors.text,
+  },
+  statLabel: {
+    fontSize: 12,
+    color: theme.colors.textSecondary,
+  },
+  actionsContainer: {
+    paddingHorizontal: theme.spacing.lg,
+    marginBottom: theme.spacing.lg,
+  },
+  sectionTitle: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    color: theme.colors.text,
+    marginBottom: theme.spacing.md,
+  },
+  actionsGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
     justifyContent: 'space-between',
   },
   actionButton: {
-    flex: 1,
-    alignItems: 'center',
-    paddingVertical: theme.spacing.lg,
-    marginHorizontal: theme.spacing.xs,
+    width: '30%',
+    backgroundColor: theme.colors.surface,
     borderRadius: theme.borderRadius.md,
-  },
-  actionIcon: {
-    fontSize: 24,
-    marginBottom: theme.spacing.xs,
+    padding: theme.spacing.md,
+    alignItems: 'center',
+    borderLeftWidth: 4,
+    marginBottom: theme.spacing.sm,
   },
   actionText: {
-    color: theme.colors.white,
     fontSize: 12,
-    fontWeight: '600',
+    color: theme.colors.text,
+    marginTop: theme.spacing.xs,
     textAlign: 'center',
   },
-  summaryRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-around',
+  recentContainer: {
+    paddingHorizontal: theme.spacing.lg,
+    marginBottom: theme.spacing.xl,
   },
-  summaryItem: {
+  recentMoods: {
+    gap: theme.spacing.sm,
+  },
+  recentMoodCard: {
+    padding: theme.spacing.sm,
+  },
+  recentMoodContent: {
+    flexDirection: 'row',
     alignItems: 'center',
   },
-  summaryValue: {
+  recentMoodEmoji: {
     fontSize: 24,
-    fontWeight: 'bold',
-    color: theme.colors.primary,
-    marginBottom: theme.spacing.xs,
+    marginRight: theme.spacing.sm,
   },
-  summaryLabel: {
+  recentMoodInfo: {
+    flex: 1,
+  },
+  recentMoodDate: {
     fontSize: 12,
     color: theme.colors.textSecondary,
-    textAlign: 'center',
+    marginBottom: theme.spacing.xs,
+  },
+  recentMoodDescription: {
+    fontSize: 14,
+    color: theme.colors.text,
+    fontWeight: '500',
+  },
+  icon: {
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderRadius: 4,
+  },
+  iconText: {
+    color: 'white',
+    fontWeight: 'bold',
+    fontSize: 12,
   },
 });
 
