@@ -10,9 +10,12 @@ const config: CapacitorConfig = {
       forceCodeForRefreshToken: true,
     },
   },
-  appId: 'io.ionic.starter',
+  appId: 'com.mood.health',
   appName: 'MOOD',
-  webDir: 'dist'
+  webDir: 'dist',
+  server: {
+    androidScheme: 'https'
+  }
 };
 
 export default config;

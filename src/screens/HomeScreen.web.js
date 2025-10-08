@@ -1,139 +1,188 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
   StyleSheet,
   ScrollView,
-  SafeAreaView,
   TouchableOpacity,
 } from 'react-native';
-import { useNavigation } from '@react-navigation/native';
-import { useAuth } from '../contexts/AuthContext';
-import { useMood } from '../contexts/MoodContext';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import { MaterialIcons } from '@expo/vector-icons';
+import { useHealth } from '../contexts/HealthContext';
 import Card from '../components/common/Card';
-import Button from '../components/common/Button';
 import { theme } from '../constants/theme';
+import notificationService from '../services/notificationService';
 
 const HomeScreen = () => {
-  const navigation = useNavigation();
-  const { user } = useAuth();
-  const { moods, getMoodAnalytics } = useMood();
-  
-  const analytics = getMoodAnalytics();
-  const todaysMood = moods.find(mood => 
-    new Date(mood.timestamp).toDateString() === new Date().toDateString()
-  );
+  const { waterIntake, movements, dailyGoals, todayTip, userProfile, addWater, addMovement, getStats } = useHealth();
+  const stats = getStats();
+  const [nextWater, setNextWater] = useState(null);
+  const [nextMove, setNextMove] = useState(null);
+  const [timeUntilWater, setTimeUntilWater] = useState('');
+  const [timeUntilMove, setTimeUntilMove] = useState('');
 
-  const quickActions = [
-    {
-      title: 'Add Mood',
-      icon: '➕',
-      onPress: () => navigation.navigate('Mood'),
-      color: theme.colors.primary,
-    },
-    {
-      title: 'View Analytics',
-      icon: '📊',
-      onPress: () => navigation.navigate('Analytics'),
-      color: theme.colors.secondary,
-    },
-    {
-      title: 'Read Journal',
-      icon: '📄',
-      onPress: () => navigation.navigate('PDFViewer', { 
-        pdfUrl: 'https://example.com/sample.pdf' 
-      }),
-      color: theme.colors.info,
-    },
-  ];
+  // Mettre à jour les comptes à rebours toutes les minutes
+  useEffect(() => {
+    updateNextNotifications();
+    const interval = setInterval(updateNextNotifications, 60000); // Toutes les minutes
+    return () => clearInterval(interval);
+  }, [userProfile]);
+
+  const updateNextNotifications = async () => {
+    const times = await notificationService.getNextNotificationTimes();
+    setNextWater(times.nextWater);
+    setNextMove(times.nextMove);
+
+    if (times.nextWater) {
+      setTimeUntilWater(formatTimeUntil(times.nextWater));
+    }
+    if (times.nextMove) {
+      setTimeUntilMove(formatTimeUntil(times.nextMove));
+    }
+  };
+
+  const formatTimeUntil = (targetDate) => {
+    const now = new Date();
+    const diff = targetDate - now;
+    
+    if (diff < 0) return 'Bientôt';
+    
+    const hours = Math.floor(diff / (1000 * 60 * 60));
+    const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+    
+    if (hours > 0) {
+      return `${hours}h ${minutes}min`;
+    }
+    return `${minutes} min`;
+  };
+
+  // Obtenir la date du jour formatée
+  const today = new Date();
+  const dateOptions = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
+  const formattedDate = today.toLocaleDateString('fr-FR', dateOptions);
 
   return (
     <SafeAreaView style={styles.container}>
-      <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false}>
+      <ScrollView showsVerticalScrollIndicator={false}>
+        {/* En-tête */}
         <View style={styles.header}>
-          <Text style={styles.greeting}>
-            Hello, {user?.name || 'User'}! 👋
-          </Text>
-          <Text style={styles.date}>
-            {new Date().toLocaleDateString('en-US', { 
-              weekday: 'long', 
-              year: 'numeric', 
-              month: 'long', 
-              day: 'numeric' 
-            })}
-          </Text>
+          <Text style={styles.title}>💪 MOOD</Text>
+          <Text style={styles.subtitle}>Mouvement pour la Santé</Text>
+          <Text style={styles.date}>{formattedDate}</Text>
         </View>
 
-        {/* Today's Mood Status */}
-        <Card style={styles.moodCard}>
-          <Text style={styles.cardTitle}>Today's Mood</Text>
-          {todaysMood ? (
-            <View style={styles.moodStatus}>
-              <Text style={styles.moodEmoji}>{todaysMood.emoji}</Text>
-              <Text style={styles.moodLabel}>{todaysMood.label}</Text>
-              <Text style={styles.moodNote}>{todaysMood.note}</Text>
-            </View>
-          ) : (
-            <View style={styles.noMood}>
-              <Text style={styles.noMoodText}>No mood recorded today</Text>
-              <Button
-                title="Add Your Mood"
-                onPress={() => navigation.navigate('Mood')}
-                variant="primary"
-                size="small"
-                style={styles.addMoodButton}
+        {/* Conseil du jour */}
+        <Card style={styles.tipCard}>
+          <MaterialIcons name="lightbulb" size={24} color={theme.colors.warning} />
+          <Text style={styles.tipTitle}>Conseil santé du jour</Text>
+          <Text style={styles.tipText}>{todayTip}</Text>
+        </Card>
+
+        {/* Hydratation */}
+        <Card style={styles.actionCard}>
+          <View style={styles.cardHeader}>
+            <MaterialIcons name="local-drink" size={32} color={theme.colors.info} />
+            <Text style={styles.cardTitle}>Hydratation</Text>
+          </View>
+          
+          <View style={styles.progressContainer}>
+            <View style={styles.progressBar}>
+              <View 
+                style={[
+                  styles.progressFill,
+                  { width: `${stats.waterPercentage}%`, backgroundColor: theme.colors.info }
+                ]} 
               />
+            </View>
+            <Text style={styles.progressText}>
+              {waterIntake}ml / {dailyGoals.water}ml ({Math.round(stats.waterPercentage)}%)
+            </Text>
+          </View>
+
+          <TouchableOpacity 
+            style={[styles.actionButton, { backgroundColor: theme.colors.info }]}
+            onPress={() => addWater(250)}
+          >
+            <MaterialIcons name="add" size={24} color="#fff" />
+            <Text style={styles.buttonText}>J'ai bu de l'eau (250ml)</Text>
+          </TouchableOpacity>
+
+          {stats.waterRemaining > 0 && (
+            <Text style={styles.remainingText}>
+              Encore {stats.waterRemaining}ml à boire aujourd'hui
+            </Text>
+          )}
+
+          {timeUntilWater && (
+            <View style={styles.nextReminderBox}>
+              <MaterialIcons name="alarm" size={16} color={theme.colors.info} />
+              <Text style={styles.nextReminderText}>
+                Prochain rappel dans {timeUntilWater}
+              </Text>
             </View>
           )}
         </Card>
 
-        {/* Quick Actions */}
-        <Card>
-          <Text style={styles.cardTitle}>Quick Actions</Text>
-          <View style={styles.quickActions}>
-            {quickActions.map((action, index) => (
-              <TouchableOpacity
-                key={index}
-                style={[styles.actionButton, { backgroundColor: action.color }]}
-                onPress={action.onPress}
-                accessibilityRole="button"
-                accessibilityLabel={action.title}
-              >
-                <Text style={styles.actionIcon}>{action.icon}</Text>
-                <Text style={styles.actionText}>{action.title}</Text>
-              </TouchableOpacity>
-            ))}
+        {/* Mouvements */}
+        <Card style={styles.actionCard}>
+          <View style={styles.cardHeader}>
+            <MaterialIcons name="directions-run" size={32} color={theme.colors.success} />
+            <Text style={styles.cardTitle}>Mouvements</Text>
           </View>
+          
+          <View style={styles.progressContainer}>
+            <View style={styles.progressBar}>
+              <View 
+                style={[
+                  styles.progressFill,
+                  { width: `${stats.movementsPercentage}%`, backgroundColor: theme.colors.success }
+                ]} 
+              />
+            </View>
+            <Text style={styles.progressText}>
+              {movements} / {dailyGoals.movements} mouvements ({Math.round(stats.movementsPercentage)}%)
+            </Text>
+          </View>
+
+          <TouchableOpacity 
+            style={[styles.actionButton, { backgroundColor: theme.colors.success }]}
+            onPress={addMovement}
+          >
+            <MaterialIcons name="add" size={24} color="#fff" />
+            <Text style={styles.buttonText}>J'ai bougé !</Text>
+          </TouchableOpacity>
+
+          {stats.movementsRemaining > 0 && (
+            <Text style={styles.remainingText}>
+              Encore {stats.movementsRemaining} mouvements à faire
+            </Text>
+          )}
+
+          {timeUntilMove && (
+            <View style={styles.nextReminderBox}>
+              <MaterialIcons name="alarm" size={16} color={theme.colors.success} />
+              <Text style={styles.nextReminderText}>
+                Prochain rappel dans {timeUntilMove}
+              </Text>
+            </View>
+          )}
         </Card>
 
-        {/* Weekly Summary */}
-        <Card>
-          <Text style={styles.cardTitle}>This Week</Text>
-          <View style={styles.summaryRow}>
-            <View style={styles.summaryItem}>
-              <Text style={styles.summaryValue}>
-                {analytics.weeklyAverage.toFixed(1)}
-              </Text>
-              <Text style={styles.summaryLabel}>Avg Mood</Text>
-            </View>
-            <View style={styles.summaryItem}>
-              <Text style={styles.summaryValue}>
-                {moods.filter(mood => {
-                  const weekAgo = new Date();
-                  weekAgo.setDate(weekAgo.getDate() - 7);
-                  return new Date(mood.timestamp) >= weekAgo;
-                }).length}
-              </Text>
-              <Text style={styles.summaryLabel}>Entries</Text>
-            </View>
-            <View style={styles.summaryItem}>
-              <Text style={styles.summaryValue}>
-                {Math.max(0, analytics.weeklyAverage - 3).toFixed(1)}
-              </Text>
-              <Text style={styles.summaryLabel}>Improvement</Text>
-            </View>
-          </View>
-        </Card>
+        {/* Statistiques rapides */}
+        <View style={styles.quickStats}>
+          <Card style={styles.statCard}>
+            <MaterialIcons name="emoji-events" size={32} color={theme.colors.warning} />
+            <Text style={styles.statValue}>{movements + Math.floor(waterIntake / 250)}</Text>
+            <Text style={styles.statLabel}>Actions aujourd'hui</Text>
+          </Card>
+          
+          <Card style={styles.statCard}>
+            <MaterialIcons name="trending-up" size={32} color={theme.colors.primary} />
+            <Text style={styles.statValue}>{Math.round((stats.waterPercentage + stats.movementsPercentage) / 2)}%</Text>
+            <Text style={styles.statLabel}>Objectifs atteints</Text>
+          </Card>
+        </View>
+
       </ScrollView>
     </SafeAreaView>
   );
@@ -144,97 +193,132 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: theme.colors.background,
   },
-  scrollView: {
-    flex: 1,
-    paddingHorizontal: theme.spacing.md,
-  },
   header: {
-    marginVertical: theme.spacing.lg,
-  },
-  greeting: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    color: theme.colors.text,
-    marginBottom: theme.spacing.xs,
-  },
-  date: {
-    fontSize: 16,
-    color: theme.colors.textSecondary,
-  },
-  moodCard: {
-    marginBottom: theme.spacing.md,
-  },
-  cardTitle: {
-    fontSize: 18,
-    fontWeight: '600',
-    color: theme.colors.text,
-    marginBottom: theme.spacing.md,
-  },
-  moodStatus: {
-    alignItems: 'center',
-  },
-  moodEmoji: {
-    fontSize: 48,
-    marginBottom: theme.spacing.sm,
-  },
-  moodLabel: {
-    fontSize: 20,
-    fontWeight: '600',
-    color: theme.colors.text,
-    marginBottom: theme.spacing.xs,
-  },
-  moodNote: {
-    fontSize: 14,
-    color: theme.colors.textSecondary,
-    textAlign: 'center',
-  },
-  noMood: {
     alignItems: 'center',
     paddingVertical: theme.spacing.lg,
   },
-  noMoodText: {
-    fontSize: 16,
-    color: theme.colors.textSecondary,
-    marginBottom: theme.spacing.md,
-  },
-  addMoodButton: {
-    marginTop: theme.spacing.sm,
-  },
-  quickActions: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-  },
-  actionButton: {
-    flex: 1,
-    alignItems: 'center',
-    paddingVertical: theme.spacing.lg,
-    marginHorizontal: theme.spacing.xs,
-    borderRadius: theme.borderRadius.md,
-  },
-  actionIcon: {
-    fontSize: 24,
-    marginBottom: theme.spacing.xs,
-  },
-  actionText: {
-    color: theme.colors.white,
-    fontSize: 12,
-    fontWeight: '600',
-    textAlign: 'center',
-  },
-  summaryRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-around',
-  },
-  summaryItem: {
-    alignItems: 'center',
-  },
-  summaryValue: {
-    fontSize: 24,
+  title: {
+    fontSize: 32,
     fontWeight: 'bold',
     color: theme.colors.primary,
     marginBottom: theme.spacing.xs,
   },
-  summaryLabel: {
+  subtitle: {
+    fontSize: 14,
+    color: theme.colors.textSecondary,
+  },
+  date: {
+    fontSize: 13,
+    color: theme.colors.textSecondary,
+    marginTop: theme.spacing.xs,
+    textTransform: 'capitalize',
+  },
+  tipCard: {
+    margin: theme.spacing.md,
+    padding: theme.spacing.md,
+    backgroundColor: theme.colors.warning + '15',
+    borderLeftWidth: 4,
+    borderLeftColor: theme.colors.warning,
+  },
+  tipTitle: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    color: theme.colors.text,
+    marginTop: theme.spacing.sm,
+    marginBottom: theme.spacing.xs,
+  },
+  tipText: {
+    fontSize: 14,
+    color: theme.colors.text,
+    lineHeight: 20,
+  },
+  actionCard: {
+    margin: theme.spacing.md,
+    padding: theme.spacing.lg,
+  },
+  cardHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: theme.spacing.md,
+  },
+  cardTitle: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    color: theme.colors.text,
+    marginLeft: theme.spacing.sm,
+  },
+  progressContainer: {
+    marginBottom: theme.spacing.md,
+  },
+  progressBar: {
+    height: 12,
+    backgroundColor: theme.colors.border,
+    borderRadius: 6,
+    overflow: 'hidden',
+    marginBottom: theme.spacing.xs,
+  },
+  progressFill: {
+    height: '100%',
+    borderRadius: 6,
+  },
+  progressText: {
+    fontSize: 14,
+    color: theme.colors.textSecondary,
+    textAlign: 'center',
+  },
+  actionButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    padding: theme.spacing.md,
+    borderRadius: theme.borderRadius.md,
+    marginTop: theme.spacing.sm,
+  },
+  buttonText: {
+    color: '#fff',
+    fontSize: 16,
+    fontWeight: '600',
+    marginLeft: theme.spacing.xs,
+  },
+  remainingText: {
+    fontSize: 12,
+    color: theme.colors.textSecondary,
+    textAlign: 'center',
+    marginTop: theme.spacing.sm,
+  },
+  nextReminderBox: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginTop: theme.spacing.sm,
+    padding: theme.spacing.sm,
+    backgroundColor: theme.colors.warning + '15',
+    borderRadius: theme.borderRadius.sm,
+  },
+  nextReminderText: {
+    fontSize: 13,
+    color: theme.colors.text,
+    marginLeft: theme.spacing.xs,
+    fontWeight: '600',
+  },
+  quickStats: {
+    flexDirection: 'row',
+    marginHorizontal: theme.spacing.md,
+    marginBottom: theme.spacing.xl,
+  },
+  statCard: {
+    flex: 1,
+    alignItems: 'center',
+    padding: theme.spacing.md,
+    marginHorizontal: theme.spacing.xs,
+  },
+  statValue: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    color: theme.colors.text,
+    marginVertical: theme.spacing.xs,
+  },
+  statLabel: {
     fontSize: 12,
     color: theme.colors.textSecondary,
     textAlign: 'center',

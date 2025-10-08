@@ -8,7 +8,9 @@ import {
   Alert,
   Dimensions,
 } from 'react-native';
-import Pdf from 'react-native-pdf';
+// Note: react-native-pdf doesn't work in Expo Go. Use PDFViewerScreen.web.js for web
+// For Expo Go testing, we'll show a placeholder
+const Pdf = null; // import Pdf from 'react-native-pdf';
 import { pdfService } from '../services/pdfService';
 import { theme } from '../constants/theme';
 
@@ -58,6 +60,21 @@ const PDFViewerScreen = ({ route }) => {
       <SafeAreaView style={styles.container}>
         <View style={styles.errorContainer}>
           <Text style={styles.errorText}>{error}</Text>
+        </View>
+      </SafeAreaView>
+    );
+  }
+
+  // Show placeholder for Expo Go
+  if (!Pdf) {
+    return (
+      <SafeAreaView style={styles.container}>
+        <View style={styles.errorContainer}>
+          <Text style={styles.errorText}>
+            📱 PDF Viewer requires a native build{'\n\n'}
+            This feature is not available in Expo Go.{'\n\n'}
+            Use the web version or create a development build.
+          </Text>
         </View>
       </SafeAreaView>
     );

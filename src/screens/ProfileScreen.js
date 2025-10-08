@@ -16,7 +16,7 @@ import { useTheme } from '../contexts/ThemeContext';
 import Card from '../components/common/Card';
 import Button from '../components/common/Button';
 import { theme as defaultTheme } from '../constants/theme';
-import Icon from 'react-native-vector-icons/MaterialIcons';
+import { MaterialIcons as Icon } from '@expo/vector-icons';
 
 const ProfileScreen = () => {
   const { user, signOut } = useAuth();

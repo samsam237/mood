@@ -3,10 +3,11 @@ import {
   View,
   Text,
   StyleSheet,
-  SafeAreaView,
   ScrollView,
   TouchableOpacity,
+  TextInput,
 } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { useMood } from '../contexts/MoodContext';
 import Card from '../components/common/Card';
 import Button from '../components/common/Button';
@@ -77,12 +78,14 @@ const MoodEntryScreen = () => {
         <Card style={styles.noteCard}>
           <Text style={styles.cardTitle}>Note (optionnelle)</Text>
           <View style={styles.noteContainer}>
-            <textarea
+            <TextInput
               style={styles.noteInput}
               placeholder="Décrivez ce qui influence votre humeur..."
               value={note}
-              onChange={(e) => setNote(e.target.value)}
-              rows={4}
+              onChangeText={setNote}
+              multiline
+              numberOfLines={4}
+              placeholderTextColor={theme.colors.textSecondary}
             />
           </View>
         </Card>
@@ -173,7 +176,7 @@ const styles = StyleSheet.create({
   },
   noteInput: {
     width: '100%',
-    minHeight: 80,
+    minHeight: 100,
     padding: theme.spacing.md,
     borderWidth: 1,
     borderColor: theme.colors.border,
@@ -181,8 +184,7 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: theme.colors.text,
     backgroundColor: theme.colors.surface,
-    fontFamily: 'inherit',
-    resize: 'vertical',
+    textAlignVertical: 'top',
   },
   buttonContainer: {
     marginBottom: theme.spacing.xl,

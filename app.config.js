@@ -36,17 +36,21 @@ export default {
     web: {
       favicon: './assets/favicon.png'
     },
+    notification: {
+      icon: './assets/icon.png',
+      color: '#6366F1',
+      androidMode: 'default',
+      androidCollapsedTitle: 'Rappels MOOD',
+    },
     plugins: [
-      '@react-native-google-signin/google-signin'
-      // Facebook plugin temporairement désactivé pour les tests
-      // [
-      //   'react-native-fbsdk-next',
-      //   {
-      //     appID: 'YOUR_FACEBOOK_APP_ID',
-      //     clientToken: 'YOUR_FACEBOOK_CLIENT_TOKEN',
-      //     displayName: 'Mood Tracker'
-      //   }
-      // ]
+      [
+        'expo-notifications',
+        {
+          icon: './assets/icon.png',
+          color: '#6366F1',
+          sounds: ['./public/digital_alarm_clock_151920.wav'],
+        }
+      ]
     ]
   }
 };

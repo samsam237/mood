@@ -19,9 +19,9 @@ export const authService = {
 
   async refreshGoogleToken() {
     try {
-      const { GoogleSignin } = await import('@react-native-google-signin/google-signin');
-      const tokens = await GoogleSignin.getTokens();
-      return tokens;
+      // Not available in Expo Go
+      console.warn('Google token refresh not available in Expo Go');
+      return null;
     } catch (error) {
       console.error('Error refreshing Google token:', error);
       throw error;

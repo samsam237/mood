@@ -1,0 +1,318 @@
+{
+  "hydratation": [
+    {
+      "id": 1,
+      "title": "1",
+      "file": "hydratation/1.pdf",
+      "icon": "water-drop"
+    },
+    {
+      "id": 2,
+      "title": "2",
+      "file": "hydratation/2.pdf",
+      "icon": "local-drink"
+    },
+    {
+      "id": 3,
+      "title": "3",
+      "file": "hydratation/3.pdf",
+      "icon": "opacity"
+    },
+    {
+      "id": 4,
+      "title": "4",
+      "file": "hydratation/4.pdf",
+      "icon": "invert-colors"
+    },
+    {
+      "id": 5,
+      "title": "5",
+      "file": "hydratation/5.pdf",
+      "icon": "analytics"
+    },
+    {
+      "id": 6,
+      "title": "6",
+      "file": "hydratation/6.pdf",
+      "icon": "health-and-safety"
+    },
+    {
+      "id": 7,
+      "title": "7",
+      "file": "hydratation/7.pdf",
+      "icon": "favorite"
+    },
+    {
+      "id": 8,
+      "title": "9",
+      "file": "hydratation/9.pdf",
+      "icon": "info"
+    }
+  ],
+  "exercices": [
+    {
+      "id": 1,
+      "title": "10",
+      "file": "exercice/10.pdf",
+      "icon": "assignment"
+    },
+    {
+      "id": 2,
+      "title": "6",
+      "file": "exercice/6.pdf",
+      "icon": "assignment"
+    },
+    {
+      "id": 3,
+      "title": "A1",
+      "file": "exercice/A1.pdf",
+      "icon": "assignment"
+    },
+    {
+      "id": 4,
+      "title": "AP-recos-sport-sante-adultes-seniors 1111",
+      "file": "exercice/AP-recos-sport-sante-adultes-seniors  1111.pdf",
+      "icon": "sports"
+    },
+    {
+      "id": 5,
+      "title": "AP-recos-sport-sante-bebes22222",
+      "file": "exercice/AP-recos-sport-sante-bebes22222.pdf",
+      "icon": "sports"
+    },
+    {
+      "id": 6,
+      "title": "AP-recos-sport-sante-enfants-ados3333",
+      "file": "exercice/AP-recos-sport-sante-enfants-ados3333.pdf",
+      "icon": "sports"
+    },
+    {
+      "id": 7,
+      "title": "AP-recos-sport-sante-femmes-enceintes4444",
+      "file": "exercice/AP-recos-sport-sante-femmes-enceintes4444.pdf",
+      "icon": "sports"
+    },
+    {
+      "id": 8,
+      "title": "AP-recos-sport-sante-handicap-adultes5555",
+      "file": "exercice/AP-recos-sport-sante-handicap-adultes5555.pdf",
+      "icon": "sports"
+    },
+    {
+      "id": 9,
+      "title": "AP-recos-sport-sante-post-partum6666",
+      "file": "exercice/AP-recos-sport-sante-post-partum6666.pdf",
+      "icon": "sports"
+    },
+    {
+      "id": 10,
+      "title": "D",
+      "file": "exercice/D.pdf",
+      "icon": "assignment"
+    },
+    {
+      "id": 11,
+      "title": "ECHAUFFEMENT ARTICULAIRE SUR CHAISE",
+      "file": "exercice/ECHAUFFEMENT ARTICULAIRE SUR CHAISE.pdf",
+      "icon": "event-seat"
+    },
+    {
+      "id": 12,
+      "title": "ENTRETIEN DE L EQUILIBRE 2",
+      "file": "exercice/ENTRETIEN DE L_EQUILIBRE 2.pdf",
+      "icon": "accessibility"
+    },
+    {
+      "id": 13,
+      "title": "ENTRETIEN DE L ÉQUILIBRE 1",
+      "file": "exercice/ENTRETIEN DE L_ÉQUILIBRE 1.pdf",
+      "icon": "accessibility"
+    },
+    {
+      "id": 14,
+      "title": "ENTRETIEN DE L ÉQUILIBRE 3",
+      "file": "exercice/ENTRETIEN DE L_ÉQUILIBRE 3.pdf",
+      "icon": "accessibility"
+    },
+    {
+      "id": 15,
+      "title": "EQUILIBRE DES MEMBRES INFÉRIEURS",
+      "file": "exercice/EQUILIBRE DES MEMBRES INFÉRIEURS.pdf",
+      "icon": "accessibility"
+    },
+    {
+      "id": 16,
+      "title": "EXERCICE BALLON PAILLE 2",
+      "file": "exercice/EXERCICE BALLON PAILLE 2.pdf",
+      "icon": "sports-baseball"
+    },
+    {
+      "id": 17,
+      "title": "EXERCICE BALLON PAILLE 3",
+      "file": "exercice/EXERCICE BALLON PAILLE 3.pdf",
+      "icon": "sports-baseball"
+    },
+    {
+      "id": 18,
+      "title": "EXERCICE BALLON PAILLE",
+      "file": "exercice/EXERCICE BALLON PAILLE.pdf",
+      "icon": "sports-baseball"
+    },
+    {
+      "id": 19,
+      "title": "EXERCICE GLOBAL",
+      "file": "exercice/EXERCICE GLOBAL.pdf",
+      "icon": "assignment"
+    },
+    {
+      "id": 20,
+      "title": "GYM SUR CHAISE",
+      "file": "exercice/GYM SUR CHAISE.pdf",
+      "icon": "event-seat"
+    },
+    {
+      "id": 21,
+      "title": "GYM À DEUX",
+      "file": "exercice/GYM À DEUX.pdf",
+      "icon": "fitness-center"
+    },
+    {
+      "id": 22,
+      "title": "L1",
+      "file": "exercice/L1.pdf",
+      "icon": "assignment"
+    },
+    {
+      "id": 23,
+      "title": "MOBILISATION ARTICULAIRE BAS DU CORPS",
+      "file": "exercice/MOBILISATION ARTICULAIRE BAS DU CORPS.pdf",
+      "icon": "sync"
+    },
+    {
+      "id": 24,
+      "title": "MOBILISATION ARTICULAIRE HAUT DU CORPS",
+      "file": "exercice/MOBILISATION ARTICULAIRE HAUT DU CORPS.pdf",
+      "icon": "sync"
+    },
+    {
+      "id": 25,
+      "title": "MOBILISATION DES DOIGTS ET DES MAINS",
+      "file": "exercice/MOBILISATION DES DOIGTS ET DES MAINS.pdf",
+      "icon": "sync"
+    },
+    {
+      "id": 26,
+      "title": "MOBILISATION DES MEMBRES SUPERIEURS",
+      "file": "exercice/MOBILISATION DES MEMBRES SUPERIEURS.pdf",
+      "icon": "back-hand"
+    },
+    {
+      "id": 27,
+      "title": "MOBILISATION DES MEMBRES SUR CHAISE",
+      "file": "exercice/MOBILISATION DES MEMBRES SUR CHAISE.pdf",
+      "icon": "event-seat"
+    },
+    {
+      "id": 28,
+      "title": "MOBILISATION DES POIGNETS",
+      "file": "exercice/MOBILISATION DES POIGNETS.pdf",
+      "icon": "sync"
+    },
+    {
+      "id": 29,
+      "title": "N1",
+      "file": "exercice/N1.pdf",
+      "icon": "assignment"
+    },
+    {
+      "id": 30,
+      "title": "PREVENTION DES CHUTES",
+      "file": "exercice/PREVENTION DES CHUTES.pdf",
+      "icon": "health-and-safety"
+    },
+    {
+      "id": 31,
+      "title": "RENFORCEMENT MUSCULAIRE DE LA SANGLE ABDOMINALE",
+      "file": "exercice/RENFORCEMENT MUSCULAIRE DE LA SANGLE ABDOMINALE.pdf",
+      "icon": "fitness-center"
+    },
+    {
+      "id": 32,
+      "title": "RENFORCEMENT MUSCULAIRE DES ABDOMINAUX",
+      "file": "exercice/RENFORCEMENT MUSCULAIRE DES ABDOMINAUX.pdf",
+      "icon": "fitness-center"
+    },
+    {
+      "id": 33,
+      "title": "RENFORCEMENT MUSCULAIRE DES MEMBRES INFERIEURS",
+      "file": "exercice/RENFORCEMENT MUSCULAIRE DES MEMBRES INFERIEURS.pdf",
+      "icon": "directions-walk"
+    },
+    {
+      "id": 34,
+      "title": "RENFORCEMENT MUSCULAIRE DES MEMBRES INFÉRIEURS 2",
+      "file": "exercice/RENFORCEMENT MUSCULAIRE DES MEMBRES INFÉRIEURS 2.pdf",
+      "icon": "directions-walk"
+    },
+    {
+      "id": 35,
+      "title": "RENFORCEMENT MUSCULAIRE DES MEMBRES INFÉRIEURS",
+      "file": "exercice/RENFORCEMENT MUSCULAIRE DES MEMBRES INFÉRIEURS.pdf",
+      "icon": "directions-walk"
+    },
+    {
+      "id": 36,
+      "title": "RENFORCEMENT MUSCULAIRE DES SUPERIEURS",
+      "file": "exercice/RENFORCEMENT MUSCULAIRE DES SUPERIEURS.pdf",
+      "icon": "back-hand"
+    },
+    {
+      "id": 37,
+      "title": "RENFORCEMENT MUSCULAIRE MEMBRES INFÉRIEURS 1",
+      "file": "exercice/RENFORCEMENT MUSCULAIRE MEMBRES INFÉRIEURS 1.pdf",
+      "icon": "directions-walk"
+    },
+    {
+      "id": 38,
+      "title": "RENFORCEMENT MUSCULAIRE MEMBRES INFÉRIEURS",
+      "file": "exercice/RENFORCEMENT MUSCULAIRE MEMBRES INFÉRIEURS.pdf",
+      "icon": "directions-walk"
+    },
+    {
+      "id": 39,
+      "title": "RENFORCEMENT MUSCULAIRE MEMBRES SUPÉRIEURS",
+      "file": "exercice/RENFORCEMENT MUSCULAIRE MEMBRES SUPÉRIEURS.pdf",
+      "icon": "back-hand"
+    },
+    {
+      "id": 40,
+      "title": "RENFORCEMENTS MUSCULAIRE DE MEMBRES INFÉRIEUR 3",
+      "file": "exercice/RENFORCEMENTS MUSCULAIRE DE MEMBRES INFÉRIEUR 3.pdf",
+      "icon": "assignment"
+    },
+    {
+      "id": 41,
+      "title": "RENFORCEMENTS MUSCULAIRE DE MEMBRES INFÉRIEUR 4",
+      "file": "exercice/RENFORCEMENTS MUSCULAIRE DE MEMBRES INFÉRIEUR 4.pdf",
+      "icon": "assignment"
+    },
+    {
+      "id": 42,
+      "title": "SOUPLESSE BAS DU CORPS",
+      "file": "exercice/SOUPLESSE BAS DU CORPS.pdf",
+      "icon": "self-improvement"
+    },
+    {
+      "id": 43,
+      "title": "SOUPLESSE DOIGTS ET ORTEILS",
+      "file": "exercice/SOUPLESSE DOIGTS ET ORTEILS.pdf",
+      "icon": "self-improvement"
+    }
+  ],
+  "metadata": {
+    "totalDocuments": 51,
+    "hydratationCount": 8,
+    "exercicesCount": 43,
+    "lastUpdated": "2025-10-08T14:15:15.170Z"
+  }
+}
