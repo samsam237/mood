@@ -3,10 +3,10 @@ import {
   View,
   Text,
   StyleSheet,
-  SafeAreaView,
   Image,
   Alert,
 } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import LinearGradient from 'expo-linear-gradient';
 import { useAuth } from '../contexts/AuthContext';
 import Button from '../components/common/Button';

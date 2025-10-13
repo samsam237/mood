@@ -26,7 +26,7 @@ Notifications.setNotificationHandler({
     shouldPlaySound: true,
     shouldSetBadge: false,
     shouldShowBanner: true,
-    priority: Notifications.AndroidNotificationPriority.HIGH,
+    priority: Notifications.AndroidNotificationPriority.MAX,
   }),
 });
 
@@ -57,11 +57,13 @@ export const requestPermissions = async () => {
     await Notifications.setNotificationChannelAsync('default', {
       name: 'Rappels MOOD',
       importance: Notifications.AndroidImportance.MAX,
-      vibrationPattern: [0, 250, 250, 250],
+      vibrationPattern: [0, 500, 200, 500],
       lightColor: '#6366F1',
       sound: 'default',
       enableVibrate: true,
       enableLights: true,
+      bypassDnd: true, // Contourner le mode Ne pas déranger
+      showBadge: true,
     });
   }
 
@@ -97,8 +99,9 @@ export const scheduleWaterReminders = async (wakeTime, sleepTime, intervalMinute
           title: "💧 Il est temps de s'hydrater !",
           body: "Buvez un verre d'eau pour rester en bonne santé",
           sound: 'default',
-          vibrate: [0, 250, 250, 250],
-          priority: Notifications.AndroidNotificationPriority.HIGH,
+          vibrate: [0, 500, 200, 500],
+          priority: Notifications.AndroidNotificationPriority.MAX,
+          data: { type: 'water', amount: 250 }, // Données pour identifier le type de rappel
         },
         trigger: {
           hour: currentTime.getHours(),
@@ -157,8 +160,9 @@ export const scheduleMoveReminders = async (wakeTime, sleepTime, intervalMinutes
           title: "💪 Un petit mouvement s'impose !",
           body: "Levez-vous et bougez pendant 2-3 minutes",
           sound: 'default',
-          vibrate: [0, 250, 250, 250],
-          priority: Notifications.AndroidNotificationPriority.HIGH,
+          vibrate: [0, 500, 200, 500],
+          priority: Notifications.AndroidNotificationPriority.MAX,
+          data: { type: 'movement' }, // Données pour identifier le type de rappel
         },
         trigger: {
           hour: currentTime.getHours(),
@@ -249,11 +253,11 @@ export const initializeReminders = async () => {
     await scheduleDailyTip();
 
     // Planifier les rappels d'eau
-    const waterInterval = profile.waterReminderFrequency || 30; // 30 min par défaut
+    const waterInterval = profile. waterReminderFrequency || 30; // 30min par défaut
     await scheduleWaterReminders(profile.wakeTime, profile.sleepTime, waterInterval);
 
     // Planifier les rappels de mouvement
-    const moveInterval = profile.moveReminderFrequency || 60; // 60 min par défaut
+    const moveInterval = profile.moveReminderFrequency || 30; // 30min par défaut
     await scheduleMoveReminders(profile.wakeTime, profile.sleepTime, moveInterval);
 
     console.log('✅ Tous les rappels ont été planifiés');
@@ -302,8 +306,8 @@ export const getNextNotificationTimes = async () => {
     const [sleepHour, sleepMinute] = profile.sleepTime.split(':').map(Number);
     const now = new Date();
 
-    const waterInterval = profile.waterReminderFrequency || 30;
-    const moveInterval = profile.moveReminderFrequency || 60;
+    const waterInterval = profile.waterReminderFrequency || 120;
+    const moveInterval = profile.moveReminderFrequency || 120;
 
     const nextWater = calculateNextNotification(now, wakeHour, wakeMinute, sleepHour, sleepMinute, waterInterval);
     const nextMove = calculateNextNotification(now, wakeHour, wakeMinute, sleepHour, sleepMinute, moveInterval);

@@ -12,7 +12,7 @@ import HomeScreen from './src/screens/HomeScreen.web';
 import StatisticsScreen from './src/screens/StatisticsScreen.web';
 import ExercisesScreen from './src/screens/ExercisesScreen.web';
 import GuidesScreen from './src/screens/GuidesScreen.web';
-import PDFViewerScreen from './src/screens/PDFViewerScreen.web';
+import { PDFViewerScreen } from './src/utils/platform';
 import SettingsScreen from './src/screens/SettingsScreen.web';
 import GoalsScreen from './src/screens/GoalsScreen.web';
 import ProfileScreen from './src/screens/ProfileScreen.web';
@@ -22,6 +22,9 @@ import SystemScreen from './src/screens/SystemScreen.web';
 import { AuthProvider } from './src/contexts/AuthContext';
 import { HealthProvider } from './src/contexts/HealthContext';
 import { ThemeProvider } from './src/contexts/ThemeContext';
+
+// Import hooks
+import { useNotificationHandler } from './src/hooks/useNotificationHandler';
 
 // Import theme
 import { theme } from './src/constants/theme';
@@ -87,6 +90,9 @@ const MainTabNavigator = () => {
 
 // Main Stack Navigator
 const MainStackNavigator = () => {
+  // Activer le gestionnaire de notifications
+  useNotificationHandler();
+
   return (
     <Stack.Navigator>
       <Stack.Screen 

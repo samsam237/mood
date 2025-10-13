@@ -1,55 +1,67 @@
 import React from 'react';
-import { StyleSheet, Dimensions, Platform } from 'react-native';
-import Pdf from 'react-native-pdf';
+import { StyleSheet, View, Text, TouchableOpacity, Linking } from 'react-native';
+import * as Print from 'expo-print';
 
-const NativePDFViewer = ({ source, onLoadComplete, onError }) => {
-  
-  // Convertir le chemin pour les assets Android
-  const getPdfSource = () => {
-    if (Platform.OS === 'android') {
-      // Chemins des assets Android
-      // /assets/pdfs/hydratation/1.pdf → file:///android_asset/pdfs/hydratation/1.pdf
-      const assetPath = source.uri.replace('/assets/', '');
-      return { uri: `bundle-assets://${assetPath}`, cache: true };
+const SimplePDFViewer = ({ source, onError }) => {
+  const openPDF = async () => {
+    try {
+      // Solution directe - expo-print peut parfois gérer les require() directement
+      await Print.printAsync({
+        uri: source, // ou source.uri selon votre structure
+      });
+    } catch (err) {
+      console.error('❌ Erreur ouverture PDF:', err);
+      if (onError) {
+        onError(err);
+      }
+      
+      // Fallback: Ouvrir dans le navigateur si c'est une URL
+      if (typeof source === 'string' && source.startsWith('http')) {
+        Linking.openURL(source);
+      }
     }
-    return source;
   };
 
   return (
-    <Pdf
-      source={getPdfSource()}
-      onLoadComplete={(numberOfPages, filePath) => {
-        console.log(`PDF chargé: ${numberOfPages} pages`);
-        if (onLoadComplete) {
-          onLoadComplete(numberOfPages, filePath);
-        }
-      }}
-      onPageChanged={(page, numberOfPages) => {
-        console.log(`Page ${page}/${numberOfPages}`);
-      }}
-      onError={(error) => {
-        console.error('Erreur PDF:', error);
-        if (onError) {
-          onError(error);
-        }
-      }}
-      style={styles.pdf}
-      trustAllCerts={false}
-      enablePaging={true}
-      spacing={10}
-      minScale={1.0}
-      maxScale={3.0}
-    />
+    <View style={styles.container}>
+      <Text style={styles.title}>PDF Disponible</Text>
+      <Text style={styles.subtitle}>Cliquez pour ouvrir le document</Text>
+      <TouchableOpacity onPress={openPDF} style={styles.button}>
+        <Text style={styles.buttonText}>Ouvrir le PDF</Text>
+      </TouchableOpacity>
+    </View>
   );
 };
 
 const styles = StyleSheet.create({
-  pdf: {
+  container: {
     flex: 1,
-    width: Dimensions.get('window').width,
-    height: Dimensions.get('window').height,
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 20,
+  },
+  title: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    marginBottom: 10,
+  },
+  subtitle: {
+    fontSize: 16,
+    color: '#666',
+    marginBottom: 30,
+    textAlign: 'center',
+  },
+  button: {
+    backgroundColor: '#007AFF',
+    paddingHorizontal: 30,
+    paddingVertical: 15,
+    borderRadius: 10,
+  },
+  buttonText: {
+    color: 'white',
+    fontSize: 18,
+    fontWeight: '600',
   },
 });
 
-export default NativePDFViewer;
-
+export default SimplePDFViewer;

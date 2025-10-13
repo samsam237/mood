@@ -11,6 +11,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { MaterialIcons } from '@expo/vector-icons';
 import Card from '../components/common/Card';
 import { theme } from '../constants/theme';
+import { getPdfAsset } from '../utils/pdfAssets';
 
 // Import du catalogue généré automatiquement
 import pdfCatalog from '../../public/data/pdf-catalog.json';
@@ -140,7 +141,10 @@ const GuidesScreen = ({ navigation }) => {
             currentDocs.map((doc) => (
               <TouchableOpacity
                 key={doc.id}
-                onPress={() => navigation.navigate('PDFViewer', { pdfUrl: `/assets/pdfs/${doc.file}` })}
+                onPress={() => navigation.navigate('PDFViewer', {
+                  pdfSource: require('../../assets/pdfs/hydratation/1.pdf'),  // ✅
+                  pdfTitle: "Test Hydratation 1"
+                })}
               >
                 <Card style={styles.docCard}>
                   <View style={[styles.docIcon, { backgroundColor: getCategoryColor() + '20' }]}>

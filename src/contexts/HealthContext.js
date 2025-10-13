@@ -23,8 +23,8 @@ export const HealthProvider = ({ children }) => {
   const [userProfile, setUserProfile] = useState({
     wakeTime: '07:00',
     sleepTime: '23:00',
-    waterReminderFrequency: 30, // minutes
-    moveReminderFrequency: 60, // minutes
+    waterReminderFrequency: 30, // minutes (30min)
+    moveReminderFrequency: 30, // minutes (30min)
   });
 
   // Charger les données au démarrage

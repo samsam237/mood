@@ -11,7 +11,7 @@ export const LinearGradient = isWeb
 
 export const PDFViewer = isWeb
   ? require('../components/web/WebPDFViewer').default
-  : require('react-native-pdf').default;
+  : require('../components/NativePDFViewer').default;
 
 // Écrans conditionnels
 export const AuthScreen = isWeb

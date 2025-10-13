@@ -1,127 +1,76 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import {
   View,
   Text,
   StyleSheet,
   SafeAreaView,
   ActivityIndicator,
-  Alert,
-  Dimensions,
+  TouchableOpacity,
+  StatusBar,
 } from 'react-native';
-// Note: react-native-pdf doesn't work in Expo Go. Use PDFViewerScreen.web.js for web
-// For Expo Go testing, we'll show a placeholder
-const Pdf = null; // import Pdf from 'react-native-pdf';
-import { pdfService } from '../services/pdfService';
+import { useNavigation } from '@react-navigation/native';
+import NativePDFViewer from '../components/NativePDFViewer';
 import { theme } from '../constants/theme';
 
 const PDFViewerScreen = ({ route }) => {
-  const { pdfUrl } = route.params;
+  const { pdfSource, pdfTitle = 'Document PDF' } = route.params;
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [currentPage, setCurrentPage] = useState(1);
-  const [totalPages, setTotalPages] = useState(0);
-
-  useEffect(() => {
-    validatePDF();
-  }, [pdfUrl]);
-
-  const validatePDF = async () => {
-    if (!pdfUrl) {
-      setError('No PDF URL provided');
-      setLoading(false);
-      return;
-    }
-
-    const isValid = await pdfService.validatePDFUrl(pdfUrl);
-    if (!isValid) {
-      setError('Invalid PDF URL or file not accessible');
-      setLoading(false);
-    }
-  };
+  const navigation = useNavigation();
 
   const handleLoadComplete = (numberOfPages, filePath) => {
-    setTotalPages(numberOfPages);
+    console.log(`✅ PDF prêt: ${filePath}`);
     setLoading(false);
-    console.log(`PDF loaded: ${numberOfPages} pages`);
-  };
-
-  const handlePageChanged = (page, numberOfPages) => {
-    setCurrentPage(page);
+    setError(null);
   };
 
   const handleError = (error) => {
-    console.error('PDF Error:', error);
-    setError('Failed to load PDF. Please try again.');
+    console.error('❌ PDF Error:', error);
+    setError('Impossible de charger le PDF. Veuillez réessayer.');
     setLoading(false);
   };
 
-  if (error) {
-    return (
-      <SafeAreaView style={styles.container}>
-        <View style={styles.errorContainer}>
-          <Text style={styles.errorText}>{error}</Text>
-        </View>
-      </SafeAreaView>
-    );
-  }
-
-  // Show placeholder for Expo Go
-  if (!Pdf) {
-    return (
-      <SafeAreaView style={styles.container}>
-        <View style={styles.errorContainer}>
-          <Text style={styles.errorText}>
-            📱 PDF Viewer requires a native build{'\n\n'}
-            This feature is not available in Expo Go.{'\n\n'}
-            Use the web version or create a development build.
-          </Text>
-        </View>
-      </SafeAreaView>
-    );
-  }
+  const handleBack = () => {
+    navigation.goBack();
+  };
 
   return (
     <SafeAreaView style={styles.container}>
+      <StatusBar backgroundColor={theme.colors.background} />
+      
+      {/* Header */}
+      <View style={styles.header}>
+        <TouchableOpacity onPress={handleBack} style={styles.backButton}>
+          <Text style={styles.backButtonText}>‹ Retour</Text>
+        </TouchableOpacity>
+        
+        <View style={styles.titleContainer}>
+          <Text style={styles.title} numberOfLines={1}>{pdfTitle}</Text>
+          <Text style={styles.subtitle}>Prêt à visualiser</Text>
+        </View>
+        
+        <View style={styles.placeholder} />
+      </View>
+
+      {/* PDF Viewer */}
+      <NativePDFViewer
+        source={pdfSource}
+        onLoadComplete={handleLoadComplete}
+        onError={handleError}
+      />
+      
+      {/* Loading Overlay */}
       {loading && (
-        <View style={styles.loadingContainer}>
+        <View style={styles.loadingOverlay}>
           <ActivityIndicator size="large" color={theme.colors.primary} />
-          <Text style={styles.loadingText}>Loading PDF...</Text>
+          <Text style={styles.loadingText}>Préparation du PDF...</Text>
         </View>
       )}
       
-      <Pdf
-        source={{ uri: pdfUrl, cache: true }}
-        onLoadComplete={handleLoadComplete}
-        onPageChanged={handlePageChanged}
-        onError={handleError}
-        onLoadProgress={(percent) => {
-          console.log(`Loading: ${Math.round(percent * 100)}%`);
-        }}
-        style={styles.pdf}
-        trustAllCerts={false}
-        renderActivityIndicator={() => (
-          <ActivityIndicator color={theme.colors.primary} size="large" />
-        )}
-        enablePaging={true}
-        enableRTL={false}
-        enableAnnotationRendering={true}
-        password=""
-        spacing={0}
-        minScale={1.0}
-        maxScale={3.0}
-        scale={1.0}
-        horizontal={false}
-        page={currentPage}
-        onScaleChanged={(scale) => {
-          console.log('Scale changed:', scale);
-        }}
-      />
-      
-      {totalPages > 0 && (
-        <View style={styles.pageIndicator}>
-          <Text style={styles.pageText}>
-            Page {currentPage} of {totalPages}
-          </Text>
+      {/* Error Overlay */}
+      {error && (
+        <View style={styles.errorOverlay}>
+          <Text style={styles.errorText}>{error}</Text>
         </View>
       )}
     </SafeAreaView>
@@ -133,7 +82,44 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: theme.colors.background,
   },
-  loadingContainer: {
+  header: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    backgroundColor: theme.colors.background,
+    borderBottomWidth: 1,
+    borderBottomColor: theme.colors.border,
+  },
+  backButton: {
+    padding: 8,
+  },
+  backButtonText: {
+    fontSize: 16,
+    color: theme.colors.primary,
+    fontWeight: '600',
+  },
+  titleContainer: {
+    flex: 1,
+    alignItems: 'center',
+    paddingHorizontal: 12,
+  },
+  title: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: theme.colors.text,
+    textAlign: 'center',
+  },
+  subtitle: {
+    fontSize: 12,
+    color: theme.colors.textSecondary,
+    marginTop: 2,
+  },
+  placeholder: {
+    width: 60,
+  },
+  loadingOverlay: {
     position: 'absolute',
     top: 0,
     left: 0,
@@ -142,43 +128,28 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     backgroundColor: theme.colors.overlay,
-    zIndex: 1000,
   },
   loadingText: {
     marginTop: theme.spacing.md,
     fontSize: 16,
     color: theme.colors.white,
+    fontWeight: '600',
   },
-  errorContainer: {
-    flex: 1,
-    justifyContent: 'center',
+  errorOverlay: {
+    position: 'absolute',
+    top: 100,
+    left: 20,
+    right: 20,
+    backgroundColor: theme.colors.error,
+    padding: theme.spacing.md,
+    borderRadius: theme.borderRadius.lg,
     alignItems: 'center',
-    padding: theme.spacing.xl,
   },
   errorText: {
-    fontSize: 16,
-    color: theme.colors.error,
-    textAlign: 'center',
-    lineHeight: 24,
-  },
-  pdf: {
-    flex: 1,
-    width: Dimensions.get('window').width,
-    height: Dimensions.get('window').height,
-  },
-  pageIndicator: {
-    position: 'absolute',
-    bottom: 30,
-    alignSelf: 'center',
-    backgroundColor: theme.colors.overlay,
-    paddingHorizontal: theme.spacing.md,
-    paddingVertical: theme.spacing.sm,
-    borderRadius: theme.borderRadius.md,
-  },
-  pageText: {
     color: theme.colors.white,
     fontSize: 14,
-    fontWeight: '600',
+    fontWeight: '500',
+    textAlign: 'center',
   },
 });
 

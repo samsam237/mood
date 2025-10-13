@@ -19,13 +19,13 @@ const GoalsScreen = () => {
   const [waterGoal, setWaterGoal] = useState(dailyGoals.water.toString());
   const [movementsGoal, setMovementsGoal] = useState(dailyGoals.movements.toString());
   const [waterFrequency, setWaterFrequency] = useState('30');
-  const [moveFrequency, setMoveFrequency] = useState('60');
+  const [moveFrequency, setMoveFrequency] = useState('30');
 
   useEffect(() => {
     // Charger les fréquences existantes
     if (userProfile) {
       setWaterFrequency((userProfile.waterReminderFrequency || 30).toString());
-      setMoveFrequency((userProfile.moveReminderFrequency || 60).toString());
+      setMoveFrequency((userProfile.moveReminderFrequency || 30).toString());
     }
   }, [userProfile]);
 
@@ -40,7 +40,7 @@ const GoalsScreen = () => {
       // Sauvegarder les fréquences de rappel
       await updateUserProfile({
         waterReminderFrequency: parseInt(waterFrequency) || 30,
-        moveReminderFrequency: parseInt(moveFrequency) || 60,
+        moveReminderFrequency: parseInt(moveFrequency) || 30,
       });
 
       // Réinitialiser les rappels avec les nouvelles fréquences

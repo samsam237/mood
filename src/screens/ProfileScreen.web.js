@@ -104,7 +104,7 @@ const ProfileScreen = () => {
               placeholder="Votre nom"
               placeholderTextColor={theme.colors.textSecondary}
             />
-          </Card>
+        </Card>
 
           <Card style={styles.inputCard}>
             <Text style={styles.label}>Âge</Text>
@@ -137,7 +137,7 @@ const ProfileScreen = () => {
             />
             <Text style={styles.helpText}>
               Format : HH:MM (ex: 07:00)
-            </Text>
+              </Text>
           </Card>
 
           <Card style={styles.inputCard}>
@@ -155,7 +155,7 @@ const ProfileScreen = () => {
             <Text style={styles.helpText}>
               Format : HH:MM (ex: 23:00)
             </Text>
-          </Card>
+        </Card>
 
           <Card style={styles.infoCard}>
             <MaterialIcons name="info" size={20} color={theme.colors.info} />
@@ -198,23 +198,23 @@ const ProfileScreen = () => {
               <View style={styles.bmiHeader}>
                 <MaterialIcons name="assessment" size={32} color={bmiCategory.color} />
                 <Text style={styles.bmiTitle}>Votre IMC</Text>
-              </View>
+            </View>
               <Text style={styles.bmiValue}>{bmi}</Text>
               <View style={[styles.bmiCategory, { backgroundColor: bmiCategory.color + '20' }]}>
                 <Text style={[styles.bmiCategoryText, { color: bmiCategory.color }]}>
                   {bmiCategory.text}
-                </Text>
-              </View>
-            </Card>
+              </Text>
+            </View>
+        </Card>
           )}
 
-          <Card style={styles.infoCard}>
+        <Card style={styles.infoCard}>
             <MaterialIcons name="info" size={20} color={theme.colors.info} />
             <Text style={styles.infoText}>
               L'IMC est un indicateur de votre corpulence. Un IMC entre 18,5 et 25 est considéré comme normal.
             </Text>
           </Card>
-        </View>
+          </View>
 
         {/* Bouton Enregistrer */}
         <View style={styles.buttonContainer}>
