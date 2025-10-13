@@ -17,9 +17,10 @@ import SettingsScreen from './src/screens/SettingsScreen.web';
 import GoalsScreen from './src/screens/GoalsScreen.web';
 import ProfileScreen from './src/screens/ProfileScreen.web';
 import SystemScreen from './src/screens/SystemScreen.web';
+import AuthScreen from './src/screens/AuthScreen.web';
 
 // Import contexts
-import { AuthProvider } from './src/contexts/AuthContext';
+import { AuthProvider, useAuth } from './src/contexts/AuthContext';
 import { HealthProvider } from './src/contexts/HealthContext';
 import { ThemeProvider } from './src/contexts/ThemeContext';
 
@@ -88,8 +89,8 @@ const MainTabNavigator = () => {
   );
 };
 
-// Main Stack Navigator
-const MainStackNavigator = () => {
+// Authenticated Stack Navigator
+const AuthenticatedStackNavigator = () => {
   // Activer le gestionnaire de notifications
   useNotificationHandler();
 
@@ -140,6 +141,36 @@ const MainStackNavigator = () => {
   );
 };
 
+// Main App Navigator with Authentication
+const AppNavigator = () => {
+  const { user, loading } = useAuth();
+
+  if (loading) {
+    return (
+      <View style={{ 
+        flex: 1, 
+        justifyContent: 'center', 
+        alignItems: 'center',
+        backgroundColor: theme.colors.primary 
+      }}>
+        <Text style={{ color: theme.colors.white, fontSize: 18 }}>
+          Chargement...
+        </Text>
+      </View>
+    );
+  }
+
+  return (
+    <Stack.Navigator screenOptions={{ headerShown: false }}>
+      {user ? (
+        <Stack.Screen name="Authenticated" component={AuthenticatedStackNavigator} />
+      ) : (
+        <Stack.Screen name="Auth" component={AuthScreen} />
+      )}
+    </Stack.Navigator>
+  );
+};
+
 // Main App Component
 export default function App() {
   return (
@@ -149,7 +180,7 @@ export default function App() {
           <HealthProvider>
             <NavigationContainer>
               <StatusBar style="light" backgroundColor={theme.colors.primary} />
-              <MainStackNavigator />
+              <AppNavigator />
             </NavigationContainer>
           </HealthProvider>
         </AuthProvider>

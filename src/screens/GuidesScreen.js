@@ -11,10 +11,9 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { MaterialIcons } from '@expo/vector-icons';
 import Card from '../components/common/Card';
 import { theme } from '../constants/theme';
-import { getPdfAsset } from '../utils/pdfAssets';
 
 // Import du catalogue généré automatiquement
-import pdfCatalog from '../../public/data/pdf-catalog.json';
+import pdfCatalog from '../../assets/data/pdf-catalog.json';
 
 const GuidesScreen = ({ navigation }) => {
   const [selectedCategory, setSelectedCategory] = useState('hydratation');
@@ -37,6 +36,23 @@ const GuidesScreen = ({ navigation }) => {
 
   const getCategoryColor = () => {
     return selectedCategory === 'hydratation' ? theme.colors.info : theme.colors.success;
+  };
+
+  const openPDF = (doc) => {
+    console.log('📄 Ouverture PDF mobile:', doc);
+    
+    // Construire le chemin du PDF pour mobile
+    const pdfPath = `/assets/pdfs/${doc.file}`;
+    
+    console.log('🔗 Chemin PDF construit:', pdfPath);
+    
+    // Navigation vers le viewer PDF avec les bonnes données
+    navigation.navigate('PDFViewer', {
+      pdfUrl: pdfPath,
+      pdfTitle: doc.title,
+      pdfFile: doc.file,
+      pdfSource: { uri: pdfPath }
+    });
   };
 
   if (loading) {
@@ -141,17 +157,7 @@ const GuidesScreen = ({ navigation }) => {
             currentDocs.map((doc) => (
               <TouchableOpacity
                 key={doc.id}
-                onPress={() => {
-                  const pdfPath = `/assets/pdfs/${doc.file}`;
-                  console.log('📄 Ouverture PDF (Web):', doc);
-                  console.log('🔗 Chemin PDF construit:', pdfPath);
-                  
-                  navigation.navigate('PDFViewer', {
-                    pdfUrl: pdfPath,
-                    pdfTitle: doc.title,
-                    pdfFile: doc.file
-                  });
-                }}
+                onPress={() => openPDF(doc)}
               >
                 <Card style={styles.docCard}>
                   <View style={[styles.docIcon, { backgroundColor: getCategoryColor() + '20' }]}>
@@ -394,4 +400,3 @@ const styles = StyleSheet.create({
 });
 
 export default GuidesScreen;
-

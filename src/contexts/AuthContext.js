@@ -1,4 +1,5 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
+import { authService } from '../services/authService';
 
 const AuthContext = createContext();
 
@@ -19,30 +20,85 @@ export const AuthProvider = ({ children }) => {
   }, []);
 
   const initializeAuth = async () => {
-    // Auth complètement désactivée pour les tests
-    setLoading(false);
+    try {
+      // Écouter les changements d'état d'authentification
+      const unsubscribe = authService.onAuthStateChanged((firebaseUser) => {
+        if (firebaseUser) {
+          setUser({
+            uid: firebaseUser.uid,
+            email: firebaseUser.email,
+            displayName: firebaseUser.displayName,
+            photoURL: firebaseUser.photoURL
+          });
+        } else {
+          setUser(null);
+        }
+        setLoading(false);
+      });
+
+      return () => unsubscribe();
+    } catch (error) {
+      console.error('Erreur d\'initialisation auth:', error);
+      setLoading(false);
+    }
+  };
+
+  const signInWithEmail = async (email, password) => {
+    const result = await authService.signInWithEmail(email, password);
+    if (result.success) {
+      setUser(result.user);
+    }
+    return result;
+  };
+
+  const signUpWithEmail = async (email, password, displayName) => {
+    const result = await authService.signUpWithEmail(email, password, displayName);
+    if (result.success) {
+      setUser(result.user);
+    }
+    return result;
   };
 
   const signInWithGoogle = async () => {
-    // Désactivé pour les tests
-    return { success: false, error: 'Auth désactivée' };
+    const result = await authService.signInWithGoogle();
+    if (result.success) {
+      setUser(result.user);
+    }
+    return result;
   };
 
   const signInWithFacebook = async () => {
-    // Désactivé pour les tests
-    return { success: false, error: 'Auth désactivée' };
+    const result = await authService.signInWithFacebook();
+    if (result.success) {
+      setUser(result.user);
+    }
+    return result;
+  };
+
+  const signInWithDefault = async () => {
+    const result = await authService.signInWithDefault();
+    if (result.success) {
+      setUser(result.user);
+    }
+    return result;
   };
 
   const signOut = async () => {
-    // Désactivé pour les tests
-    setUser(null);
+    const result = await authService.signOut();
+    if (result.success) {
+      setUser(null);
+    }
+    return result;
   };
 
   const value = {
     user,
     loading,
+    signInWithEmail,
+    signUpWithEmail,
     signInWithGoogle,
     signInWithFacebook,
+    signInWithDefault,
     signOut,
   };
 

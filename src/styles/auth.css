@@ -1,0 +1,96 @@
+/* Styles CSS pour améliorer l'affichage de la page d'authentification */
+
+.auth-container {
+  background: linear-gradient(135deg, #6366F1 0%, #8B5CF6 100%);
+  min-height: 100vh;
+  min-width: 100vw;
+}
+
+.auth-input-container {
+  background-color: #FFFFFF !important;
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  border-radius: 12px;
+  padding: 0 16px;
+  height: 50px;
+  display: flex;
+  align-items: center;
+  margin-bottom: 16px;
+}
+
+.auth-toggle-container {
+  background-color: rgba(255, 255, 255, 0.2);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  border-radius: 25px;
+  padding: 4px;
+  display: flex;
+  margin-bottom: 24px;
+}
+
+.auth-toggle-button {
+  padding: 8px 24px;
+  border-radius: 20px;
+  flex: 1;
+  text-align: center;
+  transition: all 0.3s ease;
+}
+
+.auth-toggle-button.active {
+  background-color: #FFFFFF;
+  color: #6366F1;
+  font-weight: bold;
+}
+
+.auth-toggle-button:not(.active) {
+  color: #FFFFFF;
+}
+
+.auth-social-button {
+  background-color: #FFFFFF !important;
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  border-radius: 12px;
+  margin-bottom: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 12px;
+  transition: all 0.3s ease;
+}
+
+.auth-social-button:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.auth-google-button {
+  background-color: #FFFFFF !important;
+}
+
+.auth-facebook-button {
+  background-color: #4267B2 !important;
+  color: #FFFFFF !important;
+}
+
+.auth-demo-info {
+  background-color: rgba(255, 255, 255, 0.15);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  border-radius: 12px;
+  padding: 16px;
+  margin-bottom: 16px;
+  width: 100%;
+}
+
+.auth-demo-text {
+  color: #FFFFFF;
+  font-size: 14px;
+  font-weight: bold;
+  margin-bottom: 8px;
+  text-align: center;
+}
+
+.auth-demo-credentials {
+  color: #FFFFFF;
+  font-size: 12px;
+  text-align: center;
+  opacity: 0.8;
+  margin-bottom: 2px;
+}

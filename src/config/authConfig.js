@@ -1,14 +1,18 @@
 // Configuration d'authentification
-// Remplacez ces valeurs par vos vrais identifiants
-
 export const authConfig = {
   google: {
-    webClientId: 'YOUR_GOOGLE_WEB_CLIENT_ID',
-    iosClientId: 'YOUR_GOOGLE_IOS_CLIENT_ID',
+    webClientId: '300243750008-oba368e0050b8h1e89e3la0crlrlase3.apps.googleusercontent.com',
+    iosClientId: '300243750008-oba368e0050b8h1e89e3la0crlrlase3.apps.googleusercontent.com',
   },
   facebook: {
-    appId: 'YOUR_FACEBOOK_APP_ID',
-    clientToken: 'YOUR_FACEBOOK_CLIENT_TOKEN',
+    appId: 'YOUR_FACEBOOK_APP_ID', // À configurer si nécessaire
+    clientToken: 'YOUR_FACEBOOK_CLIENT_TOKEN', // À configurer si nécessaire
+  },
+  // Identifiants par défaut pour le développement
+  defaultCredentials: {
+    email: 'demo@moodtracker.com',
+    password: 'demo123',
+    username: 'demo_user'
   }
 };
 

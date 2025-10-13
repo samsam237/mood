@@ -9,14 +9,20 @@ import {
   StatusBar,
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
-import NativePDFViewer from '../components/NativePDFViewer';
+import UniversalPDFViewer from '../components/UniversalPDFViewer';
 import { theme } from '../constants/theme';
 
 const PDFViewerScreen = ({ route }) => {
-  const { pdfSource, pdfTitle = 'Document PDF' } = route.params;
+  const { pdfSource, pdfUrl, pdfTitle = 'Document PDF', pdfFile } = route.params || {};
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const navigation = useNavigation();
+
+  // Déterminer la source PDF à utiliser
+  const finalSource = pdfSource || { uri: pdfUrl };
+  
+  console.log('🔍 Paramètres reçus:', { pdfSource, pdfUrl, pdfTitle, pdfFile });
+  console.log('📄 Source finale:', finalSource);
 
   const handleLoadComplete = (numberOfPages, filePath) => {
     console.log(`✅ PDF prêt: ${filePath}`);
@@ -52,27 +58,13 @@ const PDFViewerScreen = ({ route }) => {
         <View style={styles.placeholder} />
       </View>
 
-      {/* PDF Viewer */}
-      <NativePDFViewer
-        source={pdfSource}
+      {/* PDF Viewer Universel */}
+      <UniversalPDFViewer
+        source={finalSource}
         onLoadComplete={handleLoadComplete}
         onError={handleError}
+        style={{ flex: 1 }}
       />
-      
-      {/* Loading Overlay */}
-      {loading && (
-        <View style={styles.loadingOverlay}>
-          <ActivityIndicator size="large" color={theme.colors.primary} />
-          <Text style={styles.loadingText}>Préparation du PDF...</Text>
-        </View>
-      )}
-      
-      {/* Error Overlay */}
-      {error && (
-        <View style={styles.errorOverlay}>
-          <Text style={styles.errorText}>{error}</Text>
-        </View>
-      )}
     </SafeAreaView>
   );
 };
@@ -118,38 +110,6 @@ const styles = StyleSheet.create({
   },
   placeholder: {
     width: 60,
-  },
-  loadingOverlay: {
-    position: 'absolute',
-    top: 0,
-    left: 0,
-    right: 0,
-    bottom: 0,
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: theme.colors.overlay,
-  },
-  loadingText: {
-    marginTop: theme.spacing.md,
-    fontSize: 16,
-    color: theme.colors.white,
-    fontWeight: '600',
-  },
-  errorOverlay: {
-    position: 'absolute',
-    top: 100,
-    left: 20,
-    right: 20,
-    backgroundColor: theme.colors.error,
-    padding: theme.spacing.md,
-    borderRadius: theme.borderRadius.lg,
-    alignItems: 'center',
-  },
-  errorText: {
-    color: theme.colors.white,
-    fontSize: 14,
-    fontWeight: '500',
-    textAlign: 'center',
   },
 });
 

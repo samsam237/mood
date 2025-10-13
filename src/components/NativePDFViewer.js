@@ -2,22 +2,39 @@ import React from 'react';
 import { StyleSheet, View, Text, TouchableOpacity, Linking } from 'react-native';
 import * as Print from 'expo-print';
 
-const SimplePDFViewer = ({ source, onError }) => {
+const SimplePDFViewer = ({ source, onLoadComplete, onError }) => {
   const openPDF = async () => {
     try {
-      // Solution directe - expo-print peut parfois gérer les require() directement
-      await Print.printAsync({
-        uri: source, // ou source.uri selon votre structure
-      });
+      console.log('🔄 Tentative d\'ouverture PDF:', source);
+      
+      // Vérifier le type de source
+      let uri = source;
+      if (source && source.uri) {
+        uri = source.uri;
+      }
+      
+      // Si c'est un require (asset), essayer expo-print
+      if (typeof uri === 'number') {
+        console.log('📄 Asset PDF détecté');
+        await Print.printAsync({
+          uri: uri,
+        });
+      } else if (typeof uri === 'string') {
+        // Si c'est une URL, ouvrir dans le navigateur
+        console.log('🌐 URL PDF détectée:', uri);
+        await Linking.openURL(uri);
+      }
+      
+      // Appeler le callback de succès
+      if (onLoadComplete) {
+        onLoadComplete(1, uri);
+      }
+      
+      console.log('✅ PDF ouvert avec succès');
     } catch (err) {
       console.error('❌ Erreur ouverture PDF:', err);
       if (onError) {
         onError(err);
-      }
-      
-      // Fallback: Ouvrir dans le navigateur si c'est une URL
-      if (typeof source === 'string' && source.startsWith('http')) {
-        Linking.openURL(source);
       }
     }
   };

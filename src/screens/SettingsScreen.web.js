@@ -5,13 +5,37 @@ import {
   StyleSheet,
   ScrollView,
   TouchableOpacity,
+  Alert,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { MaterialIcons } from '@expo/vector-icons';
 import Card from '../components/common/Card';
 import { theme } from '../constants/theme';
+import { useAuth } from '../contexts/AuthContext';
 
 const SettingsScreen = ({ navigation }) => {
+  const { user, signOut } = useAuth();
+
+  const handleSignOut = async () => {
+    Alert.alert(
+      'Déconnexion',
+      'Êtes-vous sûr de vouloir vous déconnecter ?',
+      [
+        { text: 'Annuler', style: 'cancel' },
+        {
+          text: 'Déconnexion',
+          style: 'destructive',
+          onPress: async () => {
+            const result = await signOut();
+            if (!result.success) {
+              Alert.alert('Erreur', 'Impossible de se déconnecter');
+            }
+          },
+        },
+      ]
+    );
+  };
+
   const menuItems = [
     {
       id: 1,
@@ -67,6 +91,31 @@ const SettingsScreen = ({ navigation }) => {
               </Card>
             </TouchableOpacity>
           ))}
+        </View>
+
+        {/* User Info */}
+        {user && (
+          <View style={styles.userInfoContainer}>
+            <Card style={styles.userCard}>
+              <View style={styles.userInfo}>
+                <MaterialIcons name="person" size={24} color={theme.colors.primary} />
+                <View style={styles.userDetails}>
+                  <Text style={styles.userName}>
+                    {user.displayName || 'Utilisateur'}
+                  </Text>
+                  <Text style={styles.userEmail}>{user.email}</Text>
+                </View>
+              </View>
+            </Card>
+          </View>
+        )}
+
+        {/* Sign Out Button */}
+        <View style={styles.signOutContainer}>
+          <TouchableOpacity style={styles.signOutButton} onPress={handleSignOut}>
+            <MaterialIcons name="logout" size={24} color={theme.colors.error} />
+            <Text style={styles.signOutText}>Se déconnecter</Text>
+          </TouchableOpacity>
         </View>
 
         {/* Version */}
@@ -129,6 +178,52 @@ const styles = StyleSheet.create({
   menuDescription: {
     fontSize: 13,
     color: theme.colors.textSecondary,
+  },
+  userInfoContainer: {
+    paddingHorizontal: theme.spacing.md,
+    marginTop: theme.spacing.md,
+  },
+  userCard: {
+    padding: theme.spacing.md,
+  },
+  userInfo: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  userDetails: {
+    marginLeft: theme.spacing.md,
+    flex: 1,
+  },
+  userName: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: theme.colors.text,
+    marginBottom: theme.spacing.xs,
+  },
+  userEmail: {
+    fontSize: 14,
+    color: theme.colors.textSecondary,
+  },
+  signOutContainer: {
+    paddingHorizontal: theme.spacing.md,
+    marginTop: theme.spacing.lg,
+  },
+  signOutButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: theme.colors.error + '10',
+    paddingVertical: theme.spacing.md,
+    paddingHorizontal: theme.spacing.lg,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: theme.colors.error + '30',
+  },
+  signOutText: {
+    marginLeft: theme.spacing.sm,
+    fontSize: 16,
+    fontWeight: '600',
+    color: theme.colors.error,
   },
   versionContainer: {
     alignItems: 'center',
