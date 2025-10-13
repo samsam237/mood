@@ -33,7 +33,7 @@ yarn-error.log*
 # Optional eslint cache
 .eslintcache
 
-# Android build files
+jle # Android build files
 android/app/build/
 android/app/.cxx/
 android/build/
@@ -50,3 +50,19 @@ android/app/src/main/assets/index.android.map
 
 # Capacitor
 android/app/src/main/assets/public/
+android/app/src/main/assets/
+
+# Build logs
+*.log
+android/*.log
+
+# Backup folders
+backup_*/
+*_backup/
+claude refactoring/
+
+# Large files
+*.wav
+*.mp3
+*.mp4
+*.mov

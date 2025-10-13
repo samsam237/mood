@@ -1,9 +1,0 @@
-.reminders-list {
-    padding: 16px;
-}
-
-.save-button-light-green {
-    --background: #a2e8a2; /* Vert clair */
-    --background-hover: #8cdb8c;
-    --color: #000000; /* Texte noir pour un bon contraste */
-}
