@@ -32,3 +32,21 @@ yarn-error.log*
 
 # Optional eslint cache
 .eslintcache
+
+# Android build files
+android/app/build/
+android/app/.cxx/
+android/build/
+*.apk
+*.aab
+
+# React Native
+android/app/src/main/assets/index.android.bundle
+android/app/src/main/assets/index.android.map
+
+# Expo
+.expo/
+.expo-shared/
+
+# Capacitor
+android/app/src/main/assets/public/
