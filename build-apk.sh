@@ -18,8 +18,8 @@ echo -e "${BLUE}📦 Nettoyage du projet...${NC}"
 ./gradlew clean
 
 echo ""
-echo -e "${BLUE}🔨 Compilation de l'APK de debug...${NC}"
-./gradlew assembleDebug
+echo -e "${BLUE}🔨 Compilation de l'APK de release...${NC}"
+./gradlew assembleRelease
 
 # Vérifier si la compilation a réussi
 if [ $? -eq 0 ]; then
@@ -27,7 +27,7 @@ if [ $? -eq 0 ]; then
     echo -e "${GREEN}✅ Compilation réussie !${NC}"
     echo ""
     echo "📱 L'APK se trouve ici :"
-    APK_PATH="$(pwd)/app/build/outputs/apk/debug/app-debug.apk"
+    APK_PATH="$(pwd)/app/build/outputs/apk/release/app-release.apk"
     echo -e "${GREEN}${APK_PATH}${NC}"
     echo ""
     

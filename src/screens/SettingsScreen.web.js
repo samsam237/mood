@@ -12,18 +12,21 @@ import { MaterialIcons } from '@expo/vector-icons';
 import Card from '../components/common/Card';
 import { theme } from '../constants/theme';
 import { useAuth } from '../contexts/AuthContext';
+import { useTranslation } from '../hooks/useTranslation';
 
 const SettingsScreen = ({ navigation }) => {
+  console.log('⚙️ SettingsScreen WEB version loaded!');
   const { user, signOut } = useAuth();
+  const { t } = useTranslation();
 
   const handleSignOut = async () => {
     Alert.alert(
-      'Déconnexion',
-      'Êtes-vous sûr de vouloir vous déconnecter ?',
+      t('settings.signOut'),
+      t('settings.confirmSignOut'),
       [
-        { text: 'Annuler', style: 'cancel' },
+        { text: t('common.cancel'), style: 'cancel' },
         {
-          text: 'Déconnexion',
+          text: t('settings.signOut'),
           style: 'destructive',
           onPress: async () => {
             const result = await signOut();
@@ -39,24 +42,24 @@ const SettingsScreen = ({ navigation }) => {
   const menuItems = [
     {
       id: 1,
-      title: 'Objectifs quotidiens',
-      description: 'Définir vos objectifs d\'eau et de mouvements',
+      title: t('settings.dailyGoals'),
+      description: t('settings.dailyGoalsDescription'),
       icon: 'flag',
       color: theme.colors.primary,
       screen: 'Goals',
     },
     {
       id: 2,
-      title: 'Informations personnelles',
-      description: 'Gérer votre profil et vos données',
+      title: t('settings.personalInfo'),
+      description: t('settings.personalInfoDescription'),
       icon: 'person',
       color: theme.colors.info,
       screen: 'Profile',
     },
     {
       id: 3,
-      title: 'Système',
-      description: 'Langue, thème, à propos et impact',
+      title: t('settings.system'),
+      description: t('settings.systemDescription'),
       icon: 'settings',
       color: theme.colors.success,
       screen: 'System',
@@ -68,8 +71,8 @@ const SettingsScreen = ({ navigation }) => {
       <ScrollView showsVerticalScrollIndicator={false}>
         {/* En-tête */}
         <View style={styles.header}>
-          <Text style={styles.title}>⚙️ Paramètres</Text>
-          <Text style={styles.subtitle}>Personnalisez votre expérience</Text>
+          <Text style={styles.title}>⚙️ {t('settings.title')}</Text>
+          <Text style={styles.subtitle}>{t('settings.subtitle')}</Text>
         </View>
 
         {/* Menu principal */}
@@ -120,7 +123,11 @@ const SettingsScreen = ({ navigation }) => {
 
         {/* Version */}
         <View style={styles.versionContainer}>
-          <Text style={styles.versionText}>MOOD - Version 1.0.0</Text>
+          <Text style={styles.versionText}>
+            <Text style={styles.moText}>mo</Text>
+            <Text style={styles.odText}>od</Text>
+            {' '}- Version 1.0.0
+          </Text>
           <Text style={styles.versionSubtext}>Mouvement pour la Santé</Text>
         </View>
 
@@ -232,6 +239,16 @@ const styles = StyleSheet.create({
   versionText: {
     fontSize: 14,
     color: theme.colors.textSecondary,
+    fontWeight: '600',
+  },
+  moText: {
+    color: '#059669', // Vert foncé
+    fontSize: 14,
+    fontWeight: '600',
+  },
+  odText: {
+    color: '#10B981', // Vert clair
+    fontSize: 14,
     fontWeight: '600',
   },
   versionSubtext: {

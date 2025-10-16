@@ -1,15 +1,21 @@
 export default {
   expo: {
-    name: 'Mood Tracker',
-    slug: 'mood-tracker',
+    name: 'MOOD',
+    slug: 'mood',
     version: '1.0.0',
     orientation: 'portrait',
-    icon: './assets/icon.png',
+    icon: './assets/logomood.png',
     userInterfaceStyle: 'light',
     splash: {
-      image: './assets/splash.png',
+      image: './assets/logomood.png',
       resizeMode: 'contain',
-      backgroundColor: '#6366F1'
+      backgroundColor: '#6366F1',
+      hideExponentText: true
+    },
+    extra: {
+      eas: {
+        projectId: "457b09f7-4e95-4831-a99f-2273d5227dac"
+      }
     },
     updates: {
       fallbackToCacheTimeout: 0
@@ -23,7 +29,7 @@ export default {
     },
     android: {
       adaptiveIcon: {
-        foregroundImage: './assets/adaptive-icon.png',
+        foregroundImage: './assets/logomood.png',
         backgroundColor: '#6366F1'
       },
       package: 'com.yourcompany.moodtracker',
@@ -37,7 +43,7 @@ export default {
       favicon: './assets/favicon.png'
     },
     notification: {
-      icon: './assets/icon.png',
+      icon: './assets/logomood.png',
       color: '#6366F1',
       androidMode: 'default',
       androidCollapsedTitle: 'Rappels MOOD',
@@ -46,9 +52,15 @@ export default {
       [
         'expo-notifications',
         {
-          icon: './assets/icon.png',
+          icon: './assets/logomood.png',
           color: '#6366F1',
           sounds: ['./public/digital_alarm_clock_151920.wav'],
+        }
+      ],
+      [
+        "@react-native-google-signin/google-signin",
+        {
+          iosUrlScheme: "com.googleusercontent.apps.300243750008-2tvafeivrod3t7qbblpuskefrrd70l5p"
         }
       ]
     ]

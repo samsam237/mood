@@ -13,9 +13,12 @@ import Card from '../components/common/Card';
 import Button from '../components/common/Button';
 import { theme } from '../constants/theme';
 import notificationService from '../services/notificationService';
+import { useTranslation } from '../hooks/useTranslation';
 
 const GoalsScreen = () => {
+  console.log('🎯 GoalsScreen WEB version loaded!');
   const { dailyGoals, userProfile, updateGoals, updateUserProfile } = useHealth();
+  const { t } = useTranslation();
   const [waterGoal, setWaterGoal] = useState(dailyGoals.water.toString());
   const [movementsGoal, setMovementsGoal] = useState(dailyGoals.movements.toString());
   const [waterFrequency, setWaterFrequency] = useState('30');

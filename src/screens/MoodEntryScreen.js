@@ -7,30 +7,37 @@ import {
   ScrollView,
   TextInput,
   TouchableOpacity,
-  Alert,
 } from 'react-native';
 import { useMood } from '../contexts/MoodContext';
 import Card from '../components/common/Card';
 import Button from '../components/common/Button';
 import { theme } from '../constants/theme';
+import { useTranslation } from '../hooks/useTranslation';
+import CustomAlert from '../components/common/CustomAlert';
+import { useCustomAlert } from '../hooks/useCustomAlert';
 
-const MOOD_OPTIONS = [
-  { value: 5, label: 'Excellent', emoji: '😍', color: '#10B981' },
-  { value: 4, label: 'Good', emoji: '😊', color: '#3B82F6' },
-  { value: 3, label: 'Okay', emoji: '😐', color: '#F59E0B' },
-  { value: 2, label: 'Bad', emoji: '😔', color: '#EF4444' },
-  { value: 1, label: 'Terrible', emoji: '😭', color: '#7C2D12' },
-];
+// Les options d'humeur seront créées dynamiquement avec les traductions
 
 const MoodEntryScreen = () => {
   const { saveMood } = useMood();
+  const { t } = useTranslation();
+  const { alert, showError, showSuccess, hideAlert } = useCustomAlert();
   const [selectedMood, setSelectedMood] = useState(null);
   const [note, setNote] = useState('');
   const [loading, setLoading] = useState(false);
 
+  // Options d'humeur avec traductions
+  const MOOD_OPTIONS = [
+    { value: 5, label: t('mood.excellent'), emoji: '😍', color: '#10B981' },
+    { value: 4, label: t('mood.good'), emoji: '😊', color: '#3B82F6' },
+    { value: 3, label: t('mood.okay'), emoji: '😐', color: '#F59E0B' },
+    { value: 2, label: t('mood.bad'), emoji: '😔', color: '#EF4444' },
+    { value: 1, label: t('mood.terrible'), emoji: '😭', color: '#7C2D12' },
+  ];
+
   const handleSaveMood = async () => {
     if (!selectedMood) {
-      Alert.alert('Error', 'Please select a mood');
+      showError(t('common.error'), t('mood.selectMood'));
       return;
     }
 
@@ -42,14 +49,11 @@ const MoodEntryScreen = () => {
     setLoading(false);
 
     if (result.success) {
-      Alert.alert('Success', 'Mood saved successfully!', [
-        { text: 'OK', onPress: () => {
-          setSelectedMood(null);
-          setNote('');
-        }}
-      ]);
+      showSuccess(t('common.success'), t('mood.savedSuccessfully'));
+      setSelectedMood(null);
+      setNote('');
     } else {
-      Alert.alert('Error', result.error || 'Failed to save mood');
+      showError(t('common.error'), result.error || t('mood.saveFailed'));
     }
   };
 
@@ -57,14 +61,14 @@ const MoodEntryScreen = () => {
     <SafeAreaView style={styles.container}>
       <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false}>
         <View style={styles.header}>
-          <Text style={styles.title}>How are you feeling?</Text>
+          <Text style={styles.title}>{t('mood.howAreYouFeeling')}</Text>
           <Text style={styles.subtitle}>
-            Take a moment to reflect on your current emotional state
+            {t('mood.reflectOnEmotionalState')}
           </Text>
         </View>
 
         <Card>
-          <Text style={styles.sectionTitle}>Select Your Mood</Text>
+          <Text style={styles.sectionTitle}>{t('mood.selectYourMood')}</Text>
           <View style={styles.moodGrid}>
             {MOOD_OPTIONS.map((mood) => (
               <TouchableOpacity
@@ -87,10 +91,10 @@ const MoodEntryScreen = () => {
         </Card>
 
         <Card>
-          <Text style={styles.sectionTitle}>Add a Note (Optional)</Text>
+          <Text style={styles.sectionTitle}>{t('mood.addNoteOptional')}</Text>
           <TextInput
             style={styles.noteInput}
-            placeholder="What's on your mind? How was your day?"
+            placeholder={t('mood.whatsOnYourMind')}
             value={note}
             onChangeText={setNote}
             multiline
@@ -119,7 +123,7 @@ const MoodEntryScreen = () => {
         )}
 
         <Button
-          title="Save Mood"
+          title={t('mood.saveMood')}
           onPress={handleSaveMood}
           loading={loading}
           disabled={!selectedMood}
@@ -128,6 +132,15 @@ const MoodEntryScreen = () => {
           style={styles.saveButton}
         />
       </ScrollView>
+      
+      {/* Alerte personnalisée */}
+      <CustomAlert
+        visible={alert.visible}
+        onClose={hideAlert}
+        title={alert.title}
+        message={alert.message}
+        type={alert.type}
+      />
     </SafeAreaView>
   );
 };

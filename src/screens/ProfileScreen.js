@@ -1,341 +1,384 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
   StyleSheet,
   ScrollView,
-  Image,
+  TextInput,
   TouchableOpacity,
-  Alert,
-  Switch,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { useAuth } from '../contexts/AuthContext';
-import { useMood } from '../contexts/MoodContext';
-import { useTheme } from '../contexts/ThemeContext';
+import { MaterialIcons } from '@expo/vector-icons';
+import { useHealth } from '../contexts/HealthContext';
 import Card from '../components/common/Card';
 import Button from '../components/common/Button';
-import { theme as defaultTheme } from '../constants/theme';
-import { MaterialIcons as Icon } from '@expo/vector-icons';
+import { theme } from '../constants/theme';
+import notificationService from '../services/notificationService';
+import { useTranslation } from '../hooks/useTranslation';
+import CustomNotification from '../components/common/CustomNotification';
+import { useCustomNotification } from '../hooks/useCustomNotification';
 
 const ProfileScreen = () => {
-  const { user, signOut } = useAuth();
-  const { moods } = useMood();
-  const { theme, isDarkMode, toggleTheme } = useTheme();
-  const [notificationsEnabled, setNotificationsEnabled] = useState(true);
+  const { userProfile, updateUserProfile } = useHealth();
+  const { t } = useTranslation();
+  const { notification, showSuccess, showError, hideNotification } = useCustomNotification();
+  
+  const [name, setName] = useState('');
+  const [age, setAge] = useState('');
+  const [weight, setWeight] = useState('');
+  const [height, setHeight] = useState('');
+  const [wakeTime, setWakeTime] = useState('07:00');
+  const [sleepTime, setSleepTime] = useState('23:00');
 
-  const handleSignOut = () => {
-    Alert.alert(
-      'Sign Out',
-      'Are you sure you want to sign out?',
-      [
-        { text: 'Cancel', style: 'cancel' },
-        { text: 'Sign Out', onPress: signOut, style: 'destructive' },
-      ]
-    );
+  useEffect(() => {
+    // Charger le profil existant
+    if (userProfile) {
+      setName(userProfile.name || '');
+      setAge(userProfile.age ? userProfile.age.toString() : '');
+      setWeight(userProfile.weight ? userProfile.weight.toString() : '');
+      setHeight(userProfile.height ? userProfile.height.toString() : '');
+      setWakeTime(userProfile.wakeTime || '07:00');
+      setSleepTime(userProfile.sleepTime || '23:00');
+    }
+  }, [userProfile]);
+
+  const calculateBMI = () => {
+    if (weight && height) {
+      const heightInMeters = parseInt(height) / 100;
+      const bmi = parseInt(weight) / (heightInMeters * heightInMeters);
+      return bmi.toFixed(1);
+    }
+    return null;
   };
 
-  const handleExportData = () => {
-    Alert.alert(
-      'Export Data',
-      'This feature will export your mood data to a CSV file.',
-      [
-        { text: 'Cancel', style: 'cancel' },
-        { text: 'Export', onPress: () => console.log('Export data') },
-      ]
-    );
+  const getBMICategory = (bmi) => {
+    if (!bmi) return null;
+    if (bmi < 18.5) return { text: t('profile.bmiUnderweight'), color: theme.colors.warning };
+    if (bmi < 25) return { text: t('profile.bmiNormal'), color: theme.colors.success };
+    if (bmi < 30) return { text: t('profile.bmiOverweight'), color: theme.colors.warning };
+    return { text: t('profile.bmiObese'), color: theme.colors.error };
   };
 
-  const handleDeleteData = () => {
-    Alert.alert(
-      'Delete All Data',
-      'This action cannot be undone. All your mood entries will be permanently deleted.',
-      [
-        { text: 'Cancel', style: 'cancel' },
-        { 
-          text: 'Delete', 
-          onPress: () => console.log('Delete all data'),
-          style: 'destructive' 
-        },
-      ]
-    );
-  };
+  const bmi = calculateBMI();
+  const bmiCategory = getBMICategory(bmi);
 
-  const settingsOptions = [
-    {
-      title: 'Dark Mode',
-      icon: 'dark-mode',
-      type: 'switch',
-      value: isDarkMode,
-      onPress: toggleTheme,
-    },
-    {
-      title: 'Notifications',
-      icon: 'notifications',
-      type: 'switch',
-      value: notificationsEnabled,
-      onPress: () => setNotificationsEnabled(!notificationsEnabled),
-    },
-    {
-      title: 'Export Data',
-      icon: 'file-download',
-      type: 'action',
-      onPress: handleExportData,
-    },
-    {
-      title: 'Privacy Policy',
-      icon: 'privacy-tip',
-      type: 'action',
-      onPress: () => console.log('Privacy Policy'),
-    },
-    {
-      title: 'Terms of Service',
-      icon: 'description',
-      type: 'action',
-      onPress: () => console.log('Terms of Service'),
-    },
-    {
-      title: 'Help & Support',
-      icon: 'help',
-      type: 'action',
-      onPress: () => console.log('Help & Support'),
-    },
-  ];
+  const handleSaveProfile = async () => {
+    try {
+      // Sauvegarder le profil
+      await updateUserProfile({
+        name,
+        age: parseInt(age) || null,
+        weight: parseInt(weight) || null,
+        height: parseInt(height) || null,
+        wakeTime,
+        sleepTime,
+      });
+
+      // Initialiser les rappels avec les nouvelles heures
+      const result = await notificationService.initializeReminders();
+      
+      if (result.success) {
+        showSuccess(t('profile.profileSavedSuccess'));
+      } else {
+        showError(t('profile.profileSavedError', { error: result.error }));
+      }
+    } catch (error) {
+      showError(t('profile.saveError'));
+      console.error(error);
+    }
+  };
 
   return (
     <SafeAreaView style={styles.container}>
-      <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false}>
-        {/* User Profile Section */}
-        <Card style={styles.profileCard}>
-          <View style={styles.profileHeader}>
-            <Image
-              source={
-                user?.photo 
-                  ? { uri: user.photo }
-                  : require('../../assets/default-avatar.png')
-              }
-              style={styles.avatar}
-            />
-            <View style={styles.userInfo}>
-              <Text style={styles.userName}>{user?.name || 'User'}</Text>
-              <Text style={styles.userEmail}>{user?.email || 'user@example.com'}</Text>
-            </View>
+      <ScrollView showsVerticalScrollIndicator={false}>
+        {/* En-tête */}
+        <View style={styles.header}>
+          <View style={styles.avatarContainer}>
+            <MaterialIcons name="person" size={64} color={theme.colors.primary} />
           </View>
-        </Card>
-
-        {/* Stats Section */}
-        <Card>
-          <Text style={styles.cardTitle}>Your Journey</Text>
-          <View style={styles.statsRow}>
-            <View style={styles.statItem}>
-              <Text style={styles.statValue}>{moods.length}</Text>
-              <Text style={styles.statLabel}>Total Entries</Text>
-            </View>
-            <View style={styles.statItem}>
-              <Text style={styles.statValue}>
-                {Math.max(1, Math.floor(moods.length / 30))}
-              </Text>
-              <Text style={styles.statLabel}>Months Active</Text>
-            </View>
-            <View style={styles.statItem}>
-              <Text style={styles.statValue}>
-                {moods.length > 0 ? calculateStreak(moods) : 0}
-              </Text>
-              <Text style={styles.statLabel}>Day Streak</Text>
-            </View>
-          </View>
-        </Card>
-
-        {/* Settings Section */}
-        <Card>
-          <Text style={styles.cardTitle}>Settings</Text>
-          {settingsOptions.map((option, index) => (
-            <TouchableOpacity
-              key={index}
-              style={styles.settingRow}
-              onPress={option.onPress}
-              disabled={option.type === 'switch'}
-              accessibilityRole={option.type === 'switch' ? 'switch' : 'button'}
-              accessibilityLabel={option.title}
-            >
-              <View style={styles.settingLeft}>
-                <Icon 
-                  name={option.icon} 
-                  size={24} 
-                  color={defaultTheme.colors.textSecondary} 
-                />
-                <Text style={styles.settingTitle}>{option.title}</Text>
-              </View>
-              {option.type === 'switch' ? (
-                <Switch
-                  value={option.value}
-                  onValueChange={option.onPress}
-                  trackColor={{ 
-                    false: defaultTheme.colors.border, 
-                    true: defaultTheme.colors.primary 
-                  }}
-                  thumbColor={defaultTheme.colors.white}
-                />
-              ) : (
-                <Icon 
-                  name="chevron-right" 
-                  size={24} 
-                  color={defaultTheme.colors.textSecondary} 
-                />
-              )}
-            </TouchableOpacity>
-          ))}
-        </Card>
-
-        {/* Danger Zone */}
-        <Card style={styles.dangerCard}>
-          <Text style={styles.cardTitle}>Danger Zone</Text>
-          <Button
-            title="Delete All Data"
-            onPress={handleDeleteData}
-            variant="outline"
-            style={[styles.dangerButton, { borderColor: defaultTheme.colors.error }]}
-          />
-        </Card>
-
-        {/* Sign Out Button */}
-        <Button
-          title="Sign Out"
-          onPress={handleSignOut}
-          variant="outline"
-          style={styles.signOutButton}
-        />
-
-        {/* App Version */}
-        <View style={styles.versionInfo}>
-          <Text style={styles.versionText}>Mood Tracker v1.0.0</Text>
-          <Text style={styles.versionText}>Made with ❤️</Text>
+          <Text style={styles.title}>{t('profile.title')}</Text>
+          <Text style={styles.subtitle}>{t('profile.subtitle')}</Text>
         </View>
+
+        {/* Informations de base */}
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>{t('profile.basicInfo')}</Text>
+          
+          <Card style={styles.inputCard}>
+            <Text style={styles.label}>{t('profile.fullName')}</Text>
+            <TextInput
+              style={styles.input}
+              value={name}
+              onChangeText={setName}
+              placeholder={t('profile.namePlaceholder')}
+              placeholderTextColor={theme.colors.textSecondary}
+            />
+        </Card>
+
+          <Card style={styles.inputCard}>
+            <Text style={styles.label}>{t('profile.age')}</Text>
+            <TextInput
+              style={styles.input}
+              value={age}
+              onChangeText={setAge}
+              placeholder={t('profile.agePlaceholder')}
+              keyboardType="numeric"
+              placeholderTextColor={theme.colors.textSecondary}
+            />
+          </Card>
+        </View>
+
+        {/* Horaires de rappel */}
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>{t('profile.reminderSchedule')}</Text>
+          
+          <Card style={styles.inputCard}>
+            <View style={styles.timeHeader}>
+              <MaterialIcons name="wb-sunny" size={24} color={theme.colors.warning} />
+              <Text style={styles.label}>{t('profile.wakeTime')}</Text>
+            </View>
+            <TextInput
+              style={styles.timeInput}
+              value={wakeTime}
+              onChangeText={setWakeTime}
+              placeholder="07:00"
+              placeholderTextColor={theme.colors.textSecondary}
+            />
+            <Text style={styles.helpText}>
+              {t('profile.timeFormat')}
+              </Text>
+          </Card>
+
+          <Card style={styles.inputCard}>
+            <View style={styles.timeHeader}>
+              <MaterialIcons name="nightlight" size={24} color={theme.colors.primary} />
+              <Text style={styles.label}>{t('profile.sleepTime')}</Text>
+            </View>
+            <TextInput
+              style={styles.timeInput}
+              value={sleepTime}
+              onChangeText={setSleepTime}
+              placeholder="23:00"
+              placeholderTextColor={theme.colors.textSecondary}
+            />
+            <Text style={styles.helpText}>
+              {t('profile.timeFormat')}
+            </Text>
+          </Card>
+
+          <Card style={styles.infoCard}>
+            <MaterialIcons name="info" size={20} color={theme.colors.info} />
+            <Text style={styles.infoText}>
+              {t('profile.reminderInfo')}
+              </Text>
+          </Card>
+            </View>
+
+        {/* Calculateur IMC */}
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>{t('profile.bmiCalculator')}</Text>
+          
+          <Card style={styles.inputCard}>
+            <Text style={styles.label}>{t('profile.weight')}</Text>
+            <TextInput
+              style={styles.input}
+              value={weight}
+              onChangeText={setWeight}
+              placeholder="70"
+              keyboardType="numeric"
+              placeholderTextColor={theme.colors.textSecondary}
+            />
+        </Card>
+
+          <Card style={styles.inputCard}>
+            <Text style={styles.label}>{t('profile.height')}</Text>
+            <TextInput
+              style={styles.input}
+              value={height}
+              onChangeText={setHeight}
+              placeholder="175"
+              keyboardType="numeric"
+              placeholderTextColor={theme.colors.textSecondary}
+            />
+          </Card>
+
+          {bmi && (
+            <Card style={styles.bmiCard}>
+              <View style={styles.bmiHeader}>
+                <MaterialIcons name="assessment" size={32} color={bmiCategory.color} />
+                <Text style={styles.bmiTitle}>{t('profile.yourBMI')}</Text>
+              </View>
+              <Text style={styles.bmiValue}>{bmi}</Text>
+              <View style={[styles.bmiCategory, { backgroundColor: bmiCategory.color + '20' }]}>
+                <Text style={[styles.bmiCategoryText, { color: bmiCategory.color }]}>
+                  {bmiCategory.text}
+                </Text>
+              </View>
+            </Card>
+          )}
+
+          <Card style={styles.infoCard}>
+            <MaterialIcons name="info" size={20} color={theme.colors.info} />
+            <Text style={styles.infoText}>
+              {t('profile.bmiInfo')}
+            </Text>
+        </Card>
+        </View>
+
+        {/* Bouton Enregistrer */}
+        <View style={styles.buttonContainer}>
+          <Button
+            title={t('profile.saveProfile')}
+            onPress={handleSaveProfile}
+            variant="primary"
+            size="large"
+          />
+        </View>
+
       </ScrollView>
+      
+      {/* Notification personnalisée */}
+      <CustomNotification
+        visible={notification.visible}
+        onClose={hideNotification}
+        title={notification.title}
+        message={notification.message}
+        type={notification.type}
+        duration={notification.duration}
+        position={notification.position}
+      />
     </SafeAreaView>
   );
-};
-
-// Helper function (reused from AnalyticsScreen)
-const calculateStreak = (moods) => {
-  if (moods.length === 0) return 0;
-  
-  let streak = 0;
-  const today = new Date();
-  
-  for (let i = 0; i < 30; i++) {
-    const checkDate = new Date(today);
-    checkDate.setDate(today.getDate() - i);
-    
-    const hasEntry = moods.some(mood => 
-      new Date(mood.timestamp).toDateString() === checkDate.toDateString()
-    );
-    
-    if (hasEntry) {
-      streak++;
-    } else {
-      break;
-    }
-  }
-  
-  return streak;
 };
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: defaultTheme.colors.background,
+    backgroundColor: theme.colors.background,
   },
-  scrollView: {
-    flex: 1,
-    paddingHorizontal: defaultTheme.spacing.md,
-  },
-  profileCard: {
-    marginTop: defaultTheme.spacing.md,
-  },
-  profileHeader: {
-    flexDirection: 'row',
+  header: {
     alignItems: 'center',
+    paddingVertical: theme.spacing.lg,
   },
-  avatar: {
-    width: 80,
-    height: 80,
-    borderRadius: 40,
-    marginRight: defaultTheme.spacing.md,
-    backgroundColor: defaultTheme.colors.surface,
+  avatarContainer: {
+    width: 100,
+    height: 100,
+    borderRadius: 50,
+    backgroundColor: theme.colors.primary + '20',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: theme.spacing.md,
   },
-  userInfo: {
-    flex: 1,
-  },
-  userName: {
+  title: {
     fontSize: 24,
     fontWeight: 'bold',
-    color: defaultTheme.colors.text,
-    marginBottom: defaultTheme.spacing.xs,
+    color: theme.colors.primary,
+    marginBottom: theme.spacing.xs,
   },
-  userEmail: {
-    fontSize: 16,
-    color: defaultTheme.colors.textSecondary,
+  subtitle: {
+    fontSize: 14,
+    color: theme.colors.textSecondary,
   },
-  cardTitle: {
+  section: {
+    paddingHorizontal: theme.spacing.md,
+    marginTop: theme.spacing.md,
+  },
+  sectionTitle: {
     fontSize: 18,
-    fontWeight: '600',
-    color: defaultTheme.colors.text,
-    marginBottom: defaultTheme.spacing.md,
-  },
-  statsRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-around',
-  },
-  statItem: {
-    alignItems: 'center',
-  },
-  statValue: {
-    fontSize: 24,
     fontWeight: 'bold',
-    color: defaultTheme.colors.primary,
-    marginBottom: defaultTheme.spacing.xs,
+    color: theme.colors.text,
+    marginBottom: theme.spacing.sm,
   },
-  statLabel: {
-    fontSize: 12,
-    color: defaultTheme.colors.textSecondary,
+  inputCard: {
+    padding: theme.spacing.md,
+    marginBottom: theme.spacing.md,
+  },
+  label: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: theme.colors.text,
+    marginBottom: theme.spacing.xs,
+  },
+  timeHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: theme.spacing.sm,
+  },
+  timeInput: {
+    borderWidth: 2,
+    borderColor: theme.colors.primary,
+    borderRadius: theme.borderRadius.sm,
+    padding: theme.spacing.md,
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: theme.colors.text,
+    backgroundColor: theme.colors.surface,
     textAlign: 'center',
   },
-  settingRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingVertical: defaultTheme.spacing.md,
-    borderBottomWidth: 1,
-    borderBottomColor: defaultTheme.colors.border,
-  },
-  settingLeft: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  settingTitle: {
-    fontSize: 16,
-    color: defaultTheme.colors.text,
-    marginLeft: defaultTheme.spacing.md,
-  },
-  dangerCard: {
-    borderColor: defaultTheme.colors.error + '20',
-    borderWidth: 1,
-  },
-  dangerButton: {
-    borderColor: defaultTheme.colors.error,
-  },
-  signOutButton: {
-    marginVertical: defaultTheme.spacing.lg,
-  },
-  versionInfo: {
-    alignItems: 'center',
-    paddingVertical: defaultTheme.spacing.xl,
-  },
-  versionText: {
+  helpText: {
     fontSize: 12,
-    color: defaultTheme.colors.textSecondary,
-    marginBottom: defaultTheme.spacing.xs,
+    color: theme.colors.textSecondary,
+    marginTop: theme.spacing.xs,
+  },
+  input: {
+    borderWidth: 1,
+    borderColor: theme.colors.border,
+    borderRadius: theme.borderRadius.sm,
+    padding: theme.spacing.sm,
+    fontSize: 16,
+    color: theme.colors.text,
+    backgroundColor: theme.colors.surface,
+  },
+  bmiCard: {
+    padding: theme.spacing.lg,
+    alignItems: 'center',
+    marginBottom: theme.spacing.md,
+    backgroundColor: theme.colors.primary + '05',
+  },
+  bmiHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: theme.spacing.md,
+  },
+  bmiTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: theme.colors.text,
+    marginLeft: theme.spacing.sm,
+  },
+  bmiValue: {
+    fontSize: 48,
+    fontWeight: 'bold',
+    color: theme.colors.primary,
+    marginBottom: theme.spacing.sm,
+  },
+  bmiCategory: {
+    paddingHorizontal: theme.spacing.md,
+    paddingVertical: theme.spacing.sm,
+    borderRadius: theme.borderRadius.md,
+  },
+  bmiCategoryText: {
+    fontSize: 16,
+    fontWeight: '600',
+  },
+  infoCard: {
+    flexDirection: 'row',
+    padding: theme.spacing.md,
+    backgroundColor: theme.colors.info + '15',
+    borderLeftWidth: 4,
+    borderLeftColor: theme.colors.info,
+    marginBottom: theme.spacing.md,
+  },
+  infoText: {
+    flex: 1,
+    fontSize: 13,
+    color: theme.colors.text,
+    marginLeft: theme.spacing.sm,
+    lineHeight: 18,
+  },
+  buttonContainer: {
+    paddingHorizontal: theme.spacing.md,
+    marginBottom: theme.spacing.xl,
   },
 });
 

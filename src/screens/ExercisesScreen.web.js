@@ -11,8 +11,11 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { MaterialIcons } from '@expo/vector-icons';
 import Card from '../components/common/Card';
 import { theme } from '../constants/theme';
+import { useTranslation } from '../hooks/useTranslation';
 
 const ExercisesScreen = () => {
+  console.log('🏃 ExercisesScreen WEB version loaded!');
+  const { t } = useTranslation();
   const exercises = [
     {
       id: 1,

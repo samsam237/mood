@@ -3,7 +3,6 @@ import {
   View,
   Text,
   StyleSheet,
-  SafeAreaView,
   Image,
   Alert,
   TextInput,
@@ -11,13 +10,19 @@ import {
   ScrollView,
   KeyboardAvoidingView,
   Platform,
+  Dimensions,
 } from 'react-native';
-import SimpleBackground from '../components/web/SimpleBackground';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { MaterialIcons } from '@expo/vector-icons';
 import { useAuth } from '../contexts/AuthContext';
-import Button from '../components/common/Button';
 import { theme } from '../constants/theme';
 import { authConfig } from '../config/authConfig';
+import SimpleBackground from '../components/web/SimpleBackground';
+import CustomAlert from '../components/common/CustomAlert';
+import { useCustomAlert } from '../hooks/useCustomAlert';
+import { useTranslation } from '../hooks/useTranslation';
+
+const { height } = Dimensions.get('window');
 
 const AuthScreen = () => {
   const { 
@@ -28,11 +33,14 @@ const AuthScreen = () => {
     signInWithDefault 
   } = useAuth();
   
+  const { alert, showError, showSuccess, hideAlert } = useCustomAlert();
+  const { t } = useTranslation();
+  
   const [isLogin, setIsLogin] = useState(true);
   const [loading, setLoading] = useState({ 
     email: false, 
     google: false, 
-    facebook: false, 
+    facebook: false,
     default: false 
   });
   
@@ -43,16 +51,29 @@ const AuthScreen = () => {
     confirmPassword: ''
   });
 
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+
+
   const handleEmailAuth = async () => {
     const { email, password, displayName, confirmPassword } = formData;
     
     if (!email || !password) {
-      Alert.alert('Erreur', 'Veuillez remplir tous les champs obligatoires');
+      showError('Champs obligatoires', 'Veuillez remplir tous les champs obligatoires');
+      return;
+    }
+
+    // Validation de l'email
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    const cleanEmail = email.trim();
+    
+    if (!emailRegex.test(cleanEmail)) {
+      showError('Format d\'email invalide', 'Veuillez saisir un email valide (ex: nom@exemple.com)');
       return;
     }
     
     if (!isLogin && password !== confirmPassword) {
-      Alert.alert('Erreur', 'Les mots de passe ne correspondent pas');
+      showError('Mots de passe différents', 'Les mots de passe ne correspondent pas');
       return;
     }
 
@@ -60,11 +81,27 @@ const AuthScreen = () => {
     
     try {
       const result = isLogin 
-        ? await signInWithEmail(email, password)
-        : await signUpWithEmail(email, password, displayName);
+        ? await signInWithEmail(cleanEmail, password)
+        : await signUpWithEmail(cleanEmail, password, displayName);
       
       if (!result.success) {
-        Alert.alert('Erreur', result.error);
+        // Message d'erreur générique pour la sécurité
+        let alertTitle = 'Erreur de connexion';
+        let alertMessage = 'Email ou mot de passe incorrect. Veuillez vérifier vos identifiants.';
+        
+        // Seules les erreurs de format d'email peuvent être spécifiques
+        if (result.error.includes('invalid-email')) {
+          alertTitle = 'Format d\'email invalide';
+          alertMessage = 'Veuillez saisir une adresse email valide (ex: nom@exemple.com)';
+        } else if (result.error.includes('weak-password')) {
+          alertTitle = 'Mot de passe trop faible';
+          alertMessage = 'Le mot de passe doit contenir au moins 6 caractères.';
+        } else if (result.error.includes('email-already-in-use')) {
+          alertTitle = 'Compte existant';
+          alertMessage = 'Un compte existe déjà avec cette adresse email. Essayez de vous connecter.';
+        }
+        
+        showError(alertTitle, alertMessage);
       }
     } finally {
       setLoading({ ...loading, email: false });
@@ -77,7 +114,18 @@ const AuthScreen = () => {
     setLoading({ ...loading, google: false });
     
     if (!result.success) {
-      Alert.alert('Erreur', result.error || 'Connexion Google échouée');
+      let alertTitle = 'Erreur Google';
+      let alertMessage = result.error || 'Connexion Google échouée';
+      
+      if (result.error.includes('popup-closed-by-user')) {
+        alertTitle = 'Connexion annulée';
+        alertMessage = 'Vous avez fermé la fenêtre de connexion Google. Réessayez si vous souhaitez vous connecter.';
+      } else if (result.error.includes('popup-blocked')) {
+        alertTitle = 'Fenêtre bloquée';
+        alertMessage = 'Votre navigateur a bloqué la fenêtre de connexion Google. Autorisez les popups pour ce site.';
+      }
+      
+      Alert.alert(alertTitle, alertMessage);
     }
   };
 
@@ -87,9 +135,21 @@ const AuthScreen = () => {
     setLoading({ ...loading, facebook: false });
     
     if (!result.success) {
-      Alert.alert('Erreur', result.error || 'Connexion Facebook échouée');
+      let alertTitle = 'Erreur Facebook';
+      let alertMessage = result.error || 'Connexion Facebook échouée';
+      
+      if (result.error.includes('popup-closed-by-user')) {
+        alertTitle = 'Connexion annulée';
+        alertMessage = 'Vous avez fermé la fenêtre de connexion Facebook. Réessayez si vous souhaitez vous connecter.';
+      } else if (result.error.includes('popup-blocked')) {
+        alertTitle = 'Fenêtre bloquée';
+        alertMessage = 'Votre navigateur a bloqué la fenêtre de connexion Facebook. Autorisez les popups pour ce site.';
+      }
+      
+      Alert.alert(alertTitle, alertMessage);
     }
   };
+
 
   const handleDefaultSignIn = async () => {
     setLoading({ ...loading, default: true });
@@ -102,169 +162,238 @@ const AuthScreen = () => {
   };
 
   return (
-    <SafeAreaView style={styles.container}>
-      <SimpleBackground
-        colors={[theme.colors.primary, theme.colors.secondary]}
-        style={styles.gradient}
+    <SafeAreaView style={styles.container} edges={['top']}>
+      <KeyboardAvoidingView 
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        style={styles.keyboardView}
+        keyboardVerticalOffset={0}
       >
-        <KeyboardAvoidingView 
-          behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-          style={styles.keyboardView}
+        <ScrollView 
+          contentContainerStyle={styles.scrollContent}
+          showsVerticalScrollIndicator={false}
+          bounces={false}
         >
-          <ScrollView contentContainerStyle={styles.scrollContent}>
-            <View style={styles.content}>
-              <View style={styles.header}>
-                <View style={styles.logoPlaceholder}>
-                  <Text style={styles.logoText}>📱</Text>
-                </View>
-                <Text style={styles.title}>Mood Tracker</Text>
-                <Text style={styles.subtitle}>
-                  Suivez vos activités et comprenez votre parcours de santé
+          {/* Header Section */}
+          <View style={styles.header}>
+            <View style={styles.logoContainer}>
+              <Image
+                source={require('../../assets/logo.png')}
+                style={styles.logo}
+                resizeMode="contain"
+              />
+            </View>
+            <Text style={styles.title}>
+              <Text style={styles.moText}>mo</Text>
+              <Text style={styles.odText}>od</Text>
+            </Text>
+            <Text style={styles.subtitle}>
+               Luttez contre la sédentarité avec des{'\n'}exercices réguliers et une hydratation optimale
+            </Text>
+          </View>
+
+          {/* Auth Card */}
+          <View style={styles.authCard}>
+            {/* Toggle Login/Signup */}
+            <View style={styles.toggleContainer}>
+              <TouchableOpacity
+                style={[styles.toggleButton, isLogin && styles.toggleButtonActive]}
+                onPress={() => setIsLogin(true)}
+                activeOpacity={0.8}
+              >
+                <Text style={[styles.toggleText, isLogin && styles.toggleTextActive]}>
+                  {t('auth.login')}
                 </Text>
-              </View>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={[styles.toggleButton, !isLogin && styles.toggleButtonActive]}
+                onPress={() => setIsLogin(false)}
+                activeOpacity={0.8}
+              >
+                <Text style={[styles.toggleText, !isLogin && styles.toggleTextActive]}>
+                  {t('auth.signup')}
+                </Text>
+              </TouchableOpacity>
+            </View>
 
-              {/* Toggle Login/Signup */}
-              <View style={styles.toggleContainer}>
-                <TouchableOpacity
-                  style={[styles.toggleButton, isLogin && styles.toggleButtonActive]}
-                  onPress={() => setIsLogin(true)}
-                >
-                  <Text style={[styles.toggleText, isLogin && styles.toggleTextActive]}>
-                    Connexion
-                  </Text>
-                </TouchableOpacity>
-                <TouchableOpacity
-                  style={[styles.toggleButton, !isLogin && styles.toggleButtonActive]}
-                  onPress={() => setIsLogin(false)}
-                >
-                  <Text style={[styles.toggleText, !isLogin && styles.toggleTextActive]}>
-                    Inscription
-                  </Text>
-                </TouchableOpacity>
-              </View>
-
-              {/* Email/Password Form */}
-              <View style={styles.formContainer}>
-                {!isLogin && (
+            {/* Email/Password Form */}
+            <View style={styles.formContainer}>
+              {!isLogin && (
+                <View style={styles.inputWrapper}>
                   <View style={styles.inputContainer}>
-                    <MaterialIcons name="person" size={20} color={theme.colors.textSecondary} />
+                    <MaterialIcons name="person" size={22} color={theme.colors.primary} />
                     <TextInput
                       style={styles.input}
-                      placeholder="Nom d'utilisateur"
+                      placeholder={t('auth.username')}
+                      placeholderTextColor="#999"
                       value={formData.displayName}
                       onChangeText={(text) => setFormData({ ...formData, displayName: text })}
                       autoCapitalize="words"
                     />
                   </View>
-                )}
+                </View>
+              )}
 
+              <View style={styles.inputWrapper}>
                 <View style={styles.inputContainer}>
-                  <MaterialIcons name="email" size={20} color={theme.colors.textSecondary} />
+                  <MaterialIcons name="email" size={22} color={theme.colors.primary} />
                   <TextInput
                     style={styles.input}
-                    placeholder="Email"
+                    placeholder={t('auth.email')}
+                    placeholderTextColor="#999"
                     value={formData.email}
                     onChangeText={(text) => setFormData({ ...formData, email: text })}
                     keyboardType="email-address"
                     autoCapitalize="none"
                   />
                 </View>
+              </View>
 
+              <View style={styles.inputWrapper}>
                 <View style={styles.inputContainer}>
-                  <MaterialIcons name="lock" size={20} color={theme.colors.textSecondary} />
+                  <MaterialIcons name="lock" size={22} color={theme.colors.primary} />
                   <TextInput
                     style={styles.input}
-                    placeholder="Mot de passe"
+                    placeholder={t('auth.password')}
+                    placeholderTextColor="#999"
                     value={formData.password}
                     onChangeText={(text) => setFormData({ ...formData, password: text })}
-                    secureTextEntry
+                    secureTextEntry={!showPassword}
                   />
+                  <TouchableOpacity
+                    style={styles.eyeIcon}
+                    onPress={() => setShowPassword(!showPassword)}
+                  >
+                    <MaterialIcons 
+                      name={showPassword ? "visibility" : "visibility-off"} 
+                      size={20} 
+                      color={theme.colors.textSecondary} 
+                    />
+                  </TouchableOpacity>
                 </View>
+              </View>
 
-                {!isLogin && (
+              {!isLogin && (
+                <View style={styles.inputWrapper}>
                   <View style={styles.inputContainer}>
-                    <MaterialIcons name="lock" size={20} color={theme.colors.textSecondary} />
+                    <MaterialIcons name="lock" size={22} color={theme.colors.primary} />
                     <TextInput
                       style={styles.input}
-                      placeholder="Confirmer le mot de passe"
+                      placeholder={t('auth.confirmPassword')}
+                      placeholderTextColor="#999"
                       value={formData.confirmPassword}
                       onChangeText={(text) => setFormData({ ...formData, confirmPassword: text })}
-                      secureTextEntry
+                      secureTextEntry={!showConfirmPassword}
                     />
+                    <TouchableOpacity
+                      style={styles.eyeIcon}
+                      onPress={() => setShowConfirmPassword(!showConfirmPassword)}
+                    >
+                      <MaterialIcons 
+                        name={showConfirmPassword ? "visibility" : "visibility-off"} 
+                        size={20} 
+                        color={theme.colors.textSecondary} 
+                      />
+                    </TouchableOpacity>
                   </View>
-                )}
+                </View>
+              )}
 
-                <Button
-                  title={isLogin ? 'Se connecter' : 'S\'inscrire'}
-                  onPress={handleEmailAuth}
-                  loading={loading.email}
-                  variant="primary"
-                  size="large"
-                  style={styles.emailButton}
-                />
-              </View>
-
-              {/* Divider */}
-              <View style={styles.divider}>
-                <View style={styles.dividerLine} />
-                <Text style={styles.dividerText}>OU</Text>
-                <View style={styles.dividerLine} />
-              </View>
-
-              {/* Social Login Buttons */}
-              <View style={styles.socialContainer}>
-                <Button
-                  title="Continuer avec Google"
-                  onPress={handleGoogleSignIn}
-                  loading={loading.google}
-                  variant="secondary"
-                  size="large"
-                  style={[styles.socialButton, styles.googleButton]}
-                  icon={<MaterialIcons name="google" size={20} color="#DB4437" />}
-                />
-                
-                <Button
-                  title="Continuer avec Facebook"
-                  onPress={handleFacebookSignIn}
-                  loading={loading.facebook}
-                  variant="secondary"
-                  size="large"
-                  style={[styles.socialButton, styles.facebookButton]}
-                  icon={<MaterialIcons name="facebook" size={20} color="#4267B2" />}
-                />
-
-                {/* Bouton de connexion rapide pour le développement */}
-                <Button
-                  title="Connexion rapide (Demo)"
-                  onPress={handleDefaultSignIn}
-                  loading={loading.default}
-                  variant="outline"
-                  size="large"
-                  style={[styles.socialButton, styles.defaultButton]}
-                  icon={<MaterialIcons name="flash-on" size={20} color={theme.colors.primary} />}
-                />
-              </View>
-
-              {/* Demo Credentials Info */}
-              <View style={styles.demoInfo}>
-                <Text style={styles.demoText}>
-                  Identifiants de démonstration:
-                </Text>
-                <Text style={styles.demoCredentials}>
-                  Email: {authConfig.defaultCredentials.email}
-                </Text>
-                <Text style={styles.demoCredentials}>
-                  Mot de passe: {authConfig.defaultCredentials.password}
-                </Text>
-              </View>
-
-              <Text style={styles.disclaimer}>
-                En continuant, vous acceptez nos Conditions d'utilisation et notre Politique de confidentialité
-              </Text>
+               <TouchableOpacity
+                 style={styles.emailButton}
+                 onPress={handleEmailAuth}
+                 disabled={loading.email}
+                 activeOpacity={0.8}
+               >
+                 {loading.email ? (
+                   <Text style={styles.emailButtonText}>{t('auth.loading')}</Text>
+                 ) : (
+                   <Text style={styles.emailButtonText}>
+                     {isLogin ? t('auth.loginButton') : t('auth.signupButton')}
+                   </Text>
+                 )}
+               </TouchableOpacity>
             </View>
-          </ScrollView>
-        </KeyboardAvoidingView>
-      </SimpleBackground>
+
+            {/* Divider */}
+            <View style={styles.divider}>
+              <View style={styles.dividerLine} />
+              <Text style={styles.dividerText}>{t('auth.or')}</Text>
+              <View style={styles.dividerLine} />
+            </View>
+
+            {/* Social Login Buttons */}
+            <View style={styles.socialContainer}>
+              <TouchableOpacity 
+                style={styles.socialButton}
+              onPress={handleGoogleSignIn}
+                disabled={loading.google}
+                activeOpacity={0.8}
+              >
+                 <MaterialIcons name="search" size={24} color="#DB4437" />
+                <Text style={styles.socialButtonText}>{t('auth.googleLogin')}</Text>
+              </TouchableOpacity>
+              
+              <TouchableOpacity 
+                style={[styles.socialButton, styles.facebookButton]}
+              onPress={handleFacebookSignIn}
+                disabled={loading.facebook}
+                activeOpacity={0.8}
+              >
+                <MaterialIcons name="facebook" size={24} color="#FFFFFF" />
+                <Text style={[styles.socialButtonText, styles.facebookText]}>
+                  {t('auth.facebookLogin')}
+                </Text>
+              </TouchableOpacity>
+
+               {/* Bouton de connexion rapide - Seulement en mode connexion */}
+               {isLogin && (
+                 <TouchableOpacity 
+                   style={[styles.socialButton, styles.defaultButton]}
+                   onPress={handleDefaultSignIn}
+                   disabled={loading.default}
+                   activeOpacity={0.8}
+                 >
+                   <MaterialIcons name="flash-on" size={24} color={theme.colors.primary} />
+                   <Text style={styles.socialButtonText}>{t('auth.quickLogin')}</Text>
+                 </TouchableOpacity>
+               )}
+             </View>
+
+             {/* Demo Credentials Info - Seulement en mode connexion */}
+             {isLogin && (
+               <View style={styles.demoInfo}>
+                 <Text style={styles.demoTitle}>{t('auth.demoTitle')}</Text>
+                 <View style={styles.demoCredentialsContainer}>
+                   <Text style={styles.demoCredentials}>
+                     {t('auth.demoEmail', { email: authConfig.defaultCredentials.email })}
+                   </Text>
+                   <Text style={styles.demoCredentials}>
+                     {t('auth.demoPassword', { password: authConfig.defaultCredentials.password })}
+                   </Text>
+                 </View>
+               </View>
+             )}
+          </View>
+
+          {/* Footer */}
+          <Text style={styles.disclaimer}>
+            En continuant, vous acceptez nos{' '}
+            <Text style={styles.disclaimerLink}>Conditions d'utilisation</Text>
+            {' '}et notre{' '}
+            <Text style={styles.disclaimerLink}>Politique de confidentialité</Text>
+          </Text>
+
+        </ScrollView>
+      </KeyboardAvoidingView>
+      
+      {/* Alerte personnalisée */}
+      <CustomAlert
+        visible={alert.visible}
+        onClose={hideAlert}
+        title={alert.title}
+        message={alert.message}
+        type={alert.type}
+      />
     </SafeAreaView>
   );
 };
@@ -272,177 +401,238 @@ const AuthScreen = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-  },
-  gradient: {
-    flex: 1,
+    backgroundColor: theme.colors.primary,
   },
   keyboardView: {
     flex: 1,
   },
   scrollContent: {
     flexGrow: 1,
-    justifyContent: 'center',
-    paddingBottom: theme.spacing.xl,
-  },
-  content: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    paddingHorizontal: theme.spacing.xl,
-    maxWidth: 400,
-    alignSelf: 'center',
+    paddingHorizontal: 20,
+    paddingTop: 20,
+    paddingBottom: 30,
   },
   header: {
     alignItems: 'center',
-    marginBottom: theme.spacing.lg,
+    marginBottom: 24,
   },
-  logoPlaceholder: {
-    width: 100,
-    height: 100,
-    borderRadius: 50,
-    backgroundColor: 'rgba(255, 255, 255, 0.2)',
+  logoContainer: {
+    width: 90,
+    height: 90,
+    borderRadius: 45,
+    backgroundColor: 'rgba(255, 255, 255, 0.15)',
     justifyContent: 'center',
     alignItems: 'center',
-    marginBottom: theme.spacing.md,
+    marginBottom: 16,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.1,
+    shadowRadius: 8,
+    elevation: 5,
   },
-  logoText: {
-    fontSize: 40,
+  logo: {
+    width: 60,
+    height: 60,
   },
   title: {
-    fontSize: 28,
+    fontSize: 32,
     fontWeight: 'bold',
-    color: theme.colors.white,
-    marginBottom: theme.spacing.sm,
+    marginBottom: 8,
     textAlign: 'center',
+    letterSpacing: 0.5,
+  },
+  moText: {
+    color: '#059669', // Vert foncé
+    fontSize: 32,
+    fontWeight: 'bold',
+  },
+  odText: {
+    color: '#10B981', // Vert clair
+    fontSize: 32,
+    fontWeight: 'bold',
   },
   subtitle: {
-    fontSize: 14,
+    fontSize: 15,
     color: theme.colors.white,
     textAlign: 'center',
-    opacity: 0.9,
-    lineHeight: 20,
+    opacity: 0.95,
+    lineHeight: 22,
+    paddingHorizontal: 20,
+  },
+  authCard: {
+    backgroundColor: '#FFFFFF',
+    borderRadius: 24,
+    padding: 24,
+    marginBottom: 20,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.15,
+    shadowRadius: 16,
+    elevation: 8,
   },
   toggleContainer: {
     flexDirection: 'row',
-    backgroundColor: 'rgba(255, 255, 255, 0.2)',
-    borderRadius: 25,
+    backgroundColor: '#F5F5F5',
+    borderRadius: 12,
     padding: 4,
-    marginBottom: theme.spacing.lg,
-    borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.3)',
+    marginBottom: 24,
   },
   toggleButton: {
-    paddingHorizontal: theme.spacing.lg,
-    paddingVertical: theme.spacing.sm,
-    borderRadius: 20,
+    paddingVertical: 12,
+    borderRadius: 10,
     flex: 1,
     alignItems: 'center',
   },
   toggleButtonActive: {
-    backgroundColor: theme.colors.white,
+    backgroundColor: theme.colors.primary,
+    shadowColor: theme.colors.primary,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.3,
+    shadowRadius: 4,
+    elevation: 3,
   },
   toggleText: {
-    color: theme.colors.white,
-    fontSize: 16,
-    fontWeight: '500',
+    color: '#666',
+    fontSize: 15,
+    fontWeight: '600',
   },
   toggleTextActive: {
-    color: theme.colors.primary,
+    color: '#FFFFFF',
     fontWeight: 'bold',
   },
   formContainer: {
-    width: '100%',
-    marginBottom: theme.spacing.lg,
+    marginBottom: 20,
+  },
+  inputWrapper: {
+    marginBottom: 16,
   },
   inputContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#FFFFFF',
-    borderRadius: 12,
-    paddingHorizontal: theme.spacing.md,
-    marginBottom: theme.spacing.md,
-    height: 50,
-    borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.3)',
+    backgroundColor: '#F8F9FA',
+    borderRadius: 14,
+    paddingHorizontal: 16,
+    height: 56,
+    borderWidth: 2,
+    borderColor: '#E9ECEF',
   },
   input: {
     flex: 1,
-    marginLeft: theme.spacing.sm,
+    marginLeft: 12,
+    marginRight: 12,
     fontSize: 16,
     color: theme.colors.text,
+    fontWeight: '500',
+  },
+  eyeIcon: {
+    padding: 4,
+    position: 'absolute',
+    right: 16,
   },
   emailButton: {
-    marginTop: theme.spacing.sm,
-    backgroundColor: theme.colors.white,
+    marginTop: 8,
+    backgroundColor: theme.colors.primary,
+    borderRadius: 14,
+    height: 56,
+    justifyContent: 'center',
+    alignItems: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.2,
+    shadowRadius: 4,
+    elevation: 3,
+  },
+  emailButtonText: {
+    color: '#FFFFFF',
+    fontSize: 16,
+    fontWeight: 'bold',
   },
   divider: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginVertical: theme.spacing.lg,
-    width: '100%',
+    marginVertical: 24,
   },
   dividerLine: {
     flex: 1,
     height: 1,
-    backgroundColor: 'rgba(255, 255, 255, 0.3)',
+    backgroundColor: '#E0E0E0',
   },
   dividerText: {
-    color: theme.colors.white,
-    paddingHorizontal: theme.spacing.md,
-    fontSize: 14,
-    fontWeight: '500',
+    color: '#999',
+    paddingHorizontal: 16,
+    fontSize: 13,
+    fontWeight: '600',
   },
   socialContainer: {
-    width: '100%',
-    marginBottom: theme.spacing.lg,
+    marginBottom: 20,
   },
   socialButton: {
-    marginBottom: theme.spacing.md,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
     backgroundColor: '#FFFFFF',
-    borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.3)',
+    borderRadius: 14,
+    paddingVertical: 14,
+    marginBottom: 12,
+    borderWidth: 2,
+    borderColor: '#E9ECEF',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.05,
+    shadowRadius: 4,
+    elevation: 2,
   },
-  googleButton: {
-    backgroundColor: '#FFFFFF',
+  socialButtonText: {
+    fontSize: 15,
+    fontWeight: '600',
+    color: '#333',
+    marginLeft: 12,
   },
   facebookButton: {
     backgroundColor: '#4267B2',
+    borderColor: '#4267B2',
+  },
+  facebookText: {
+    color: '#FFFFFF',
   },
   defaultButton: {
-    backgroundColor: 'transparent',
+    backgroundColor: '#F8F9FA',
+    borderColor: theme.colors.primary,
     borderWidth: 2,
-    borderColor: theme.colors.white,
   },
   demoInfo: {
-    backgroundColor: 'rgba(255, 255, 255, 0.15)',
-    borderRadius: 12,
-    padding: theme.spacing.md,
-    marginBottom: theme.spacing.md,
-    width: '100%',
+    backgroundColor: '#F0F8FF',
+    borderRadius: 14,
+    padding: 16,
     borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.3)',
+    borderColor: '#D0E8FF',
   },
-  demoText: {
-    color: theme.colors.white,
+  demoTitle: {
     fontSize: 14,
     fontWeight: 'bold',
-    marginBottom: theme.spacing.sm,
+    color: theme.colors.primary,
+    marginBottom: 12,
     textAlign: 'center',
+  },
+  demoCredentialsContainer: {
+    gap: 6,
   },
   demoCredentials: {
-    color: theme.colors.white,
-    fontSize: 12,
+    fontSize: 13,
+    color: '#555',
     textAlign: 'center',
-    opacity: 0.8,
-    marginBottom: 2,
+    fontWeight: '500',
   },
   disclaimer: {
-    fontSize: 11,
-    color: theme.colors.white,
+    fontSize: 12,
+    color: 'rgba(255, 255, 255, 0.9)',
     textAlign: 'center',
-    opacity: 0.7,
-    lineHeight: 16,
-    paddingHorizontal: theme.spacing.md,
+    lineHeight: 18,
+    paddingHorizontal: 10,
+  },
+  disclaimerLink: {
+    fontWeight: '600',
+    textDecorationLine: 'underline',
   },
 });
 

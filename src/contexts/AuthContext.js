@@ -75,10 +75,13 @@ export const AuthProvider = ({ children }) => {
     return result;
   };
 
+
   const signInWithDefault = async () => {
     const result = await authService.signInWithDefault();
     if (result.success) {
       setUser(result.user);
+      // Sauvegarder les données utilisateur
+      await authService.saveUserData(result.user);
     }
     return result;
   };
@@ -87,6 +90,8 @@ export const AuthProvider = ({ children }) => {
     const result = await authService.signOut();
     if (result.success) {
       setUser(null);
+      // Nettoyer les données utilisateur
+      await authService.clearUserData();
     }
     return result;
   };

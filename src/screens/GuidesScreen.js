@@ -11,11 +11,13 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { MaterialIcons } from '@expo/vector-icons';
 import Card from '../components/common/Card';
 import { theme } from '../constants/theme';
+import { useTranslation } from '../hooks/useTranslation';
 
 // Import du catalogue généré automatiquement
 import pdfCatalog from '../../assets/data/pdf-catalog.json';
 
 const GuidesScreen = ({ navigation }) => {
+  const { t } = useTranslation();
   const [selectedCategory, setSelectedCategory] = useState('hydratation');
   const [hydratationDocs, setHydratationDocs] = useState([]);
   const [exercisesDocs, setExercisesDocs] = useState([]);
@@ -60,7 +62,7 @@ const GuidesScreen = ({ navigation }) => {
       <SafeAreaView style={styles.container}>
         <View style={styles.loadingContainer}>
           <ActivityIndicator size="large" color={theme.colors.primary} />
-          <Text style={styles.loadingText}>Chargement des guides...</Text>
+          <Text style={styles.loadingText}>{t('guides.loading')}</Text>
         </View>
       </SafeAreaView>
     );
@@ -71,8 +73,8 @@ const GuidesScreen = ({ navigation }) => {
       <ScrollView showsVerticalScrollIndicator={false}>
         {/* En-tête */}
         <View style={styles.header}>
-          <Text style={styles.title}>📚 Guides Santé</Text>
-          <Text style={styles.subtitle}>Documentation pour votre bien-être</Text>
+          <Text style={styles.title}>📚 {t('guides.title')}</Text>
+          <Text style={styles.subtitle}>{t('guides.subtitle')}</Text>
         </View>
 
         {/* Sélecteur de catégorie */}
@@ -93,7 +95,7 @@ const GuidesScreen = ({ navigation }) => {
               styles.categoryButtonText,
               selectedCategory === 'hydratation' && styles.categoryButtonTextActive
             ]}>
-              Hydratation
+              {t('guides.hydration')}
             </Text>
             <View style={[
               styles.badge,
@@ -124,7 +126,7 @@ const GuidesScreen = ({ navigation }) => {
               styles.categoryButtonText,
               selectedCategory === 'exercices' && styles.categoryButtonTextActive
             ]}>
-              Exercices
+              {t('guides.exercises')}
             </Text>
             <View style={[
               styles.badge,
@@ -145,8 +147,8 @@ const GuidesScreen = ({ navigation }) => {
           <MaterialIcons name="info" size={20} color={getCategoryColor()} />
           <Text style={styles.infoText}>
             {selectedCategory === 'hydratation' 
-              ? "Découvrez l'importance de l'hydratation pour votre santé et comment bien vous hydrater au quotidien."
-              : "Apprenez des exercices simples pour lutter contre la sédentarité et rester actif tout au long de la journée."
+              ? t('guides.hydrationDescription')
+              : t('guides.exercisesDescription')
             }
           </Text>
         </Card>
@@ -167,7 +169,7 @@ const GuidesScreen = ({ navigation }) => {
                     <Text style={styles.docTitle}>{doc.title}</Text>
                     <View style={styles.docMeta}>
                       <MaterialIcons name="picture-as-pdf" size={14} color={theme.colors.textSecondary} />
-                      <Text style={styles.docType}>Document PDF</Text>
+                      <Text style={styles.docType}>{t('guides.documentPDF')}</Text>
                     </View>
                   </View>
                   <MaterialIcons name="chevron-right" size={24} color={theme.colors.textSecondary} />
@@ -177,9 +179,9 @@ const GuidesScreen = ({ navigation }) => {
           ) : (
             <Card style={styles.emptyCard}>
               <MaterialIcons name="folder-open" size={48} color={theme.colors.textSecondary} />
-              <Text style={styles.emptyTitle}>Aucun document disponible</Text>
+              <Text style={styles.emptyTitle}>{t('guides.noDocumentsAvailable')}</Text>
               <Text style={styles.emptyText}>
-                Les documents pour cette catégorie seront ajoutés prochainement.
+                {t('guides.documentsComingSoon')}
               </Text>
             </Card>
           )}
@@ -189,22 +191,22 @@ const GuidesScreen = ({ navigation }) => {
         <Card style={styles.statsCard}>
           <View style={styles.statsHeader}>
             <MaterialIcons name="library-books" size={24} color={theme.colors.primary} />
-            <Text style={styles.statsTitle}>Bibliothèque complète</Text>
+            <Text style={styles.statsTitle}>{t('guides.completeLibrary')}</Text>
           </View>
           <View style={styles.statsContent}>
             <View style={styles.statItem}>
               <Text style={styles.statValue}>{hydratationDocs.length + exercisesDocs.length}</Text>
-              <Text style={styles.statLabel}>Guides totaux</Text>
+              <Text style={styles.statLabel}>{t('guides.totalGuides')}</Text>
             </View>
             <View style={styles.statDivider} />
             <View style={styles.statItem}>
               <Text style={styles.statValue}>{selectedCategory === 'hydratation' ? hydratationDocs.length : exercisesDocs.length}</Text>
-              <Text style={styles.statLabel}>Dans cette catégorie</Text>
+              <Text style={styles.statLabel}>{t('guides.inThisCategory')}</Text>
             </View>
             <View style={styles.statDivider} />
             <View style={styles.statItem}>
               <Text style={styles.statValue}>100%</Text>
-              <Text style={styles.statLabel}>Gratuit</Text>
+              <Text style={styles.statLabel}>{t('guides.free')}</Text>
             </View>
           </View>
         </Card>

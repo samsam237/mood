@@ -11,9 +11,12 @@ import { MaterialIcons } from '@expo/vector-icons';
 import { useHealth } from '../contexts/HealthContext';
 import Card from '../components/common/Card';
 import { theme } from '../constants/theme';
+import { useTranslation } from '../hooks/useTranslation';
 
 const StatisticsScreen = () => {
+  console.log('📊 StatisticsScreen WEB version loaded!');
   const { history, dailyGoals, waterIntake, movements } = useHealth();
+  const { t } = useTranslation();
 
   // Obtenir les 7 derniers jours
   const getLast7Days = () => {
@@ -79,13 +82,13 @@ const StatisticsScreen = () => {
           <Card style={styles.summaryCard}>
             <MaterialIcons name="directions-run" size={24} color={theme.colors.success} />
             <Text style={styles.summaryValue}>{avgMovements}</Text>
-            <Text style={styles.summaryLabel}>Moyenne mouvements/jour</Text>
+            <Text style={styles.summaryLabel}>{t('statistics.avgMovementsPerDay')}</Text>
           </Card>
           
           <Card style={styles.summaryCard}>
             <MaterialIcons name="emoji-events" size={24} color={theme.colors.warning} />
             <Text style={styles.summaryValue}>{successRate}/7</Text>
-            <Text style={styles.summaryLabel}>Objectifs atteints</Text>
+            <Text style={styles.summaryLabel}>{t('statistics.goalsAchieved')}</Text>
           </Card>
         </View>
 
@@ -93,13 +96,13 @@ const StatisticsScreen = () => {
         <Card style={styles.chartCard}>
           <View style={styles.chartHeader}>
             <MaterialIcons name="local-drink" size={28} color={theme.colors.info} />
-            <Text style={styles.chartTitle}>Hydratation (mL)</Text>
+            <Text style={styles.chartTitle}>{t('statistics.hydration')} (mL)</Text>
           </View>
           
           {/* Ligne d'objectif */}
           <View style={styles.goalLineContainer}>
             <View style={styles.goalLine} />
-            <Text style={styles.goalLineText}>Objectif: {dailyGoals.water} mL</Text>
+            <Text style={styles.goalLineText}>{t('statistics.goal')}: {dailyGoals.water} mL</Text>
           </View>
 
           <View style={styles.chartContainer}>

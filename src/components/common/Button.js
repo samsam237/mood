@@ -1,5 +1,5 @@
 import React from 'react';
-import { TouchableOpacity, Text, StyleSheet, ActivityIndicator } from 'react-native';
+import { TouchableOpacity, Text, StyleSheet, ActivityIndicator, View } from 'react-native';
 import { theme } from '../../constants/theme';
 
 const Button = ({ 
@@ -10,6 +10,7 @@ const Button = ({
   disabled = false,
   loading = false,
   style,
+  icon,
   ...props 
 }) => {
   const buttonStyle = [
@@ -39,7 +40,10 @@ const Button = ({
       {loading ? (
         <ActivityIndicator color={variant === 'primary' ? theme.colors.white : theme.colors.primary} />
       ) : (
-        <Text style={textStyle}>{title}</Text>
+        <View style={styles.buttonContent}>
+          {icon && <View style={styles.iconContainer}>{icon}</View>}
+          <Text style={textStyle}>{title}</Text>
+        </View>
       )}
     </TouchableOpacity>
   );
@@ -51,6 +55,14 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     borderRadius: theme.borderRadius.md,
     ...theme.shadows.small,
+  },
+  buttonContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  iconContainer: {
+    marginRight: 8,
   },
   primary: {
     backgroundColor: theme.colors.primary,

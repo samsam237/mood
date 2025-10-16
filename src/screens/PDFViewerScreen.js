@@ -9,11 +9,13 @@ import {
   StatusBar,
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
-import UniversalPDFViewer from '../components/UniversalPDFViewer';
+import DirectPDFViewer from '../components/DirectPDFViewer';
 import { theme } from '../constants/theme';
+import { useTranslation } from '../hooks/useTranslation';
 
 const PDFViewerScreen = ({ route }) => {
   const { pdfSource, pdfUrl, pdfTitle = 'Document PDF', pdfFile } = route.params || {};
+  const { t } = useTranslation();
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const navigation = useNavigation();
@@ -32,13 +34,10 @@ const PDFViewerScreen = ({ route }) => {
 
   const handleError = (error) => {
     console.error('❌ PDF Error:', error);
-    setError('Impossible de charger le PDF. Veuillez réessayer.');
+    setError(t('pdf.loadingError'));
     setLoading(false);
   };
 
-  const handleBack = () => {
-    navigation.goBack();
-  };
 
   return (
     <SafeAreaView style={styles.container}>
@@ -46,20 +45,14 @@ const PDFViewerScreen = ({ route }) => {
       
       {/* Header */}
       <View style={styles.header}>
-        <TouchableOpacity onPress={handleBack} style={styles.backButton}>
-          <Text style={styles.backButtonText}>‹ Retour</Text>
-        </TouchableOpacity>
-        
         <View style={styles.titleContainer}>
-          <Text style={styles.title} numberOfLines={1}>{pdfTitle}</Text>
-          <Text style={styles.subtitle}>Prêt à visualiser</Text>
+          <Text style={styles.title} numberOfLines={2}>{pdfTitle}</Text>
+          <Text style={styles.subtitle}>{t('pdf.readyToView')}</Text>
         </View>
-        
-        <View style={styles.placeholder} />
       </View>
 
-      {/* PDF Viewer Universel */}
-      <UniversalPDFViewer
+      {/* PDF Viewer Direct */}
+      <DirectPDFViewer
         source={finalSource}
         onLoadComplete={handleLoadComplete}
         onError={handleError}
@@ -75,25 +68,15 @@ const styles = StyleSheet.create({
     backgroundColor: theme.colors.background,
   },
   header: {
-    flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'space-between',
+    justifyContent: 'center',
     paddingHorizontal: 16,
     paddingVertical: 12,
     backgroundColor: theme.colors.background,
     borderBottomWidth: 1,
     borderBottomColor: theme.colors.border,
   },
-  backButton: {
-    padding: 8,
-  },
-  backButtonText: {
-    fontSize: 16,
-    color: theme.colors.primary,
-    fontWeight: '600',
-  },
   titleContainer: {
-    flex: 1,
     alignItems: 'center',
     paddingHorizontal: 12,
   },
@@ -107,9 +90,7 @@ const styles = StyleSheet.create({
     fontSize: 12,
     color: theme.colors.textSecondary,
     marginTop: 2,
-  },
-  placeholder: {
-    width: 60,
+    textAlign: 'center',
   },
 });
 

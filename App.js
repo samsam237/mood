@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { View, Text, TouchableOpacity } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
 import { NavigationContainer } from '@react-navigation/native';
@@ -7,53 +7,84 @@ import { createStackNavigator } from '@react-navigation/stack';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { MaterialIcons } from '@expo/vector-icons';
 
-// Import screens
-import HomeScreen from './src/screens/HomeScreen.web';
-import StatisticsScreen from './src/screens/StatisticsScreen.web';
-import ExercisesScreen from './src/screens/ExercisesScreen.web';
-import GuidesScreen from './src/screens/GuidesScreen.web';
+// Import de l'internationalisation
+import './src/config/i18n';
+
+// Import du splash screen personnalisé
+import CustomSplashScreen from './src/components/common/CustomSplashScreen';
+
+// Import screens avec détection de plateforme
+import HomeScreenWeb from './src/screens/HomeScreen.web';
+import HomeScreenMobile from './src/screens/HomeScreen.js';
+import StatisticsScreenWeb from './src/screens/StatisticsScreen.web';
+import StatisticsScreenMobile from './src/screens/StatisticsScreen.js';
+import ExercisesScreenWeb from './src/screens/ExercisesScreen.web';
+import ExercisesScreenMobile from './src/screens/ExercisesScreen.js';
+import GuidesScreenWeb from './src/screens/GuidesScreen.web';
+import GuidesScreenMobile from './src/screens/GuidesScreen.js';
 import { PDFViewerScreen } from './src/utils/platform';
-import SettingsScreen from './src/screens/SettingsScreen.web';
-import GoalsScreen from './src/screens/GoalsScreen.web';
-import ProfileScreen from './src/screens/ProfileScreen.web';
-import SystemScreen from './src/screens/SystemScreen.web';
-import AuthScreen from './src/screens/AuthScreen.web';
+import SettingsScreenWeb from './src/screens/SettingsScreen.web';
+import SettingsScreenMobile from './src/screens/SettingsScreen.js';
+import GoalsScreenWeb from './src/screens/GoalsScreen.web';
+import GoalsScreenMobile from './src/screens/GoalsScreen.js';
+import ProfileScreenWeb from './src/screens/ProfileScreen.web';
+import ProfileScreenMobile from './src/screens/ProfileScreen.js';
+import SystemScreenWeb from './src/screens/SystemScreen.web';
+import SystemScreenMobile from './src/screens/SystemScreen.js';
+import AuthScreenWeb from './src/screens/AuthScreen.web';
+import AuthScreenMobile from './src/screens/AuthScreen.js';
 
 // Import contexts
 import { AuthProvider, useAuth } from './src/contexts/AuthContext';
 import { HealthProvider } from './src/contexts/HealthContext';
 import { ThemeProvider } from './src/contexts/ThemeContext';
+import { MoodProvider } from './src/contexts/MoodContext';
 
 // Import hooks
 import { useNotificationHandler } from './src/hooks/useNotificationHandler';
+import { useTranslation } from './src/hooks/useTranslation';
 
 // Import theme
 import { theme } from './src/constants/theme';
+import { Platform } from 'react-native';
 
 const Tab = createBottomTabNavigator();
 const Stack = createStackNavigator();
 
+// Sélection des bons écrans selon la plateforme
+const AuthScreen = Platform.OS === 'web' ? AuthScreenWeb : AuthScreenMobile;
+const HomeScreen = Platform.OS === 'web' ? HomeScreenWeb : HomeScreenMobile;
+const StatisticsScreen = Platform.OS === 'web' ? StatisticsScreenWeb : StatisticsScreenMobile;
+const ExercisesScreen = Platform.OS === 'web' ? ExercisesScreenWeb : ExercisesScreenMobile;
+const GuidesScreen = Platform.OS === 'web' ? GuidesScreenWeb : GuidesScreenMobile;
+const SettingsScreen = Platform.OS === 'web' ? SettingsScreenWeb : SettingsScreenMobile;
+const GoalsScreen = Platform.OS === 'web' ? GoalsScreenWeb : GoalsScreenMobile;
+const ProfileScreen = Platform.OS === 'web' ? ProfileScreenWeb : ProfileScreenMobile;
+const SystemScreen = Platform.OS === 'web' ? SystemScreenWeb : SystemScreenMobile;
+
 // Main Tab Navigator
 const MainTabNavigator = () => {
+  const { t } = useTranslation();
+  
   return (
     <Tab.Navigator
       screenOptions={({ route }) => ({
         tabBarIcon: ({ focused, color, size }) => {
           let iconName;
           switch (route.name) {
-            case 'Accueil':
+            case 'Home':
               iconName = 'home';
               break;
-            case 'Statistiques':
+            case 'Statistics':
               iconName = 'bar-chart';
               break;
-            case 'Exercices':
+            case 'Exercises':
               iconName = 'fitness-center';
               break;
             case 'Guides':
               iconName = 'menu-book';
               break;
-            case 'Paramètres':
+            case 'Settings':
               iconName = 'settings';
               break;
             default:
@@ -80,11 +111,46 @@ const MainTabNavigator = () => {
         },
       })}
     >
-      <Tab.Screen name="Accueil" component={HomeScreen} options={{ headerShown: false }} />
-      <Tab.Screen name="Statistiques" component={StatisticsScreen} options={{ headerShown: false }} />
-      <Tab.Screen name="Exercices" component={ExercisesScreen} options={{ headerShown: false }} />
-      <Tab.Screen name="Guides" component={GuidesScreen} options={{ headerShown: false }} />
-      <Tab.Screen name="Paramètres" component={SettingsScreen} options={{ headerShown: false }} />
+      <Tab.Screen 
+        name="Home" 
+        component={HomeScreen} 
+        options={{ 
+          headerShown: false,
+          title: t('navigation.home')
+        }} 
+      />
+      <Tab.Screen 
+        name="Statistics" 
+        component={StatisticsScreen} 
+        options={{ 
+          headerShown: false,
+          title: t('navigation.statistics')
+        }} 
+      />
+      <Tab.Screen 
+        name="Exercises" 
+        component={ExercisesScreen} 
+        options={{ 
+          headerShown: false,
+          title: t('navigation.exercises')
+        }} 
+      />
+      <Tab.Screen 
+        name="Guides" 
+        component={GuidesScreen} 
+        options={{ 
+          headerShown: false,
+          title: t('navigation.guides')
+        }} 
+      />
+      <Tab.Screen 
+        name="Settings" 
+        component={SettingsScreen} 
+        options={{ 
+          headerShown: false,
+          title: t('navigation.settings')
+        }} 
+      />
     </Tab.Navigator>
   );
 };
@@ -93,6 +159,7 @@ const MainTabNavigator = () => {
 const AuthenticatedStackNavigator = () => {
   // Activer le gestionnaire de notifications
   useNotificationHandler();
+  const { t } = useTranslation();
 
   return (
     <Stack.Navigator>
@@ -105,7 +172,7 @@ const AuthenticatedStackNavigator = () => {
         name="PDFViewer" 
         component={PDFViewerScreen}
         options={{ 
-          title: 'Guide Santé',
+          title: t('navigation.guides'),
           headerStyle: { backgroundColor: theme.colors.primary },
           headerTintColor: theme.colors.white,
         }}
@@ -114,7 +181,7 @@ const AuthenticatedStackNavigator = () => {
         name="Goals" 
         component={GoalsScreen}
         options={{ 
-          title: 'Objectifs Quotidiens',
+          title: t('navigation.goals'),
           headerStyle: { backgroundColor: theme.colors.primary },
           headerTintColor: theme.colors.white,
         }}
@@ -123,7 +190,7 @@ const AuthenticatedStackNavigator = () => {
         name="Profile" 
         component={ProfileScreen}
         options={{ 
-          title: 'Profil',
+          title: t('navigation.profile'),
           headerStyle: { backgroundColor: theme.colors.primary },
           headerTintColor: theme.colors.white,
         }}
@@ -132,7 +199,7 @@ const AuthenticatedStackNavigator = () => {
         name="System" 
         component={SystemScreen}
         options={{ 
-          title: 'Système',
+          title: t('navigation.system'),
           headerStyle: { backgroundColor: theme.colors.primary },
           headerTintColor: theme.colors.white,
         }}
@@ -145,6 +212,7 @@ const AuthenticatedStackNavigator = () => {
 const AppNavigator = () => {
   const { user, loading } = useAuth();
 
+  // Écran de chargement pendant la vérification de l'authentification
   if (loading) {
     return (
       <View style={{ 
@@ -160,11 +228,14 @@ const AppNavigator = () => {
     );
   }
 
+  // Navigation conditionnelle basée sur l'état d'authentification
   return (
     <Stack.Navigator screenOptions={{ headerShown: false }}>
       {user ? (
+        // Utilisateur connecté : afficher l'application principale
         <Stack.Screen name="Authenticated" component={AuthenticatedStackNavigator} />
       ) : (
+        // Utilisateur non connecté : afficher l'écran d'authentification
         <Stack.Screen name="Auth" component={AuthScreen} />
       )}
     </Stack.Navigator>
@@ -173,18 +244,31 @@ const AppNavigator = () => {
 
 // Main App Component
 export default function App() {
+  const [showSplash, setShowSplash] = useState(true);
+
+  const handleSplashFinish = () => {
+    setShowSplash(false);
+  };
+
   return (
     <SafeAreaProvider>
       <ThemeProvider>
         <AuthProvider>
           <HealthProvider>
-            <NavigationContainer>
-              <StatusBar style="light" backgroundColor={theme.colors.primary} />
-              <AppNavigator />
-            </NavigationContainer>
+            <MoodProvider>
+              <NavigationContainer>
+                <StatusBar style="light" backgroundColor={theme.colors.primary} />
+                <AppNavigator />
+              </NavigationContainer>
+            </MoodProvider>
           </HealthProvider>
         </AuthProvider>
       </ThemeProvider>
+      
+      {/* Splash Screen Personnalisé */}
+      {showSplash && (
+        <CustomSplashScreen onFinish={handleSplashFinish} />
+      )}
     </SafeAreaProvider>
   );
 }

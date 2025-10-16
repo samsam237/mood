@@ -132,37 +132,46 @@ const MobilePDFViewer = ({ source, onLoadComplete, onError, style }) => {
             }
           }
         } else {
-          // Sur Android, utiliser la copie de fichier
-          console.log('🤖 Android: Copie vers répertoire documents');
+          // Sur Android, utiliser la conversion base64 (même approche que iOS)
+          console.log('🤖 Android: Conversion base64 vers fichier');
           
-          const filename = `temp_pdf_${Date.now()}.pdf`;
-          const filePath = `${FileSystem.documentDirectory}${filename}`;
-          
-          // Copier l'asset vers le répertoire des documents
-          await FileSystem.copyAsync({
-            from: pdfAsset,
-            to: filePath
-          });
-          
-          console.log('✅ Asset copié vers:', filePath);
-          
-          // Essayer d'abord avec expo-sharing (plus fiable)
-          if (await Sharing.isAvailableAsync()) {
-            await Sharing.shareAsync(filePath, {
-              mimeType: 'application/pdf',
-              dialogTitle: 'Ouvrir le PDF avec...',
-              UTI: 'com.adobe.pdf'
+          try {
+            // Convertir l'asset en base64
+            const base64 = await FileSystem.readAsStringAsync(pdfAsset, {
+              encoding: FileSystem.EncodingType.Base64,
             });
-            console.log('✅ PDF partagé avec succès');
-            return;
+            
+            const filename = `temp_pdf_${Date.now()}.pdf`;
+            const filePath = `${FileSystem.documentDirectory}${filename}`;
+            
+            // Sauvegarder le base64 comme fichier PDF
+            await FileSystem.writeAsStringAsync(filePath, base64, {
+              encoding: FileSystem.EncodingType.Base64,
+            });
+            
+            console.log('✅ Asset converti en base64 et sauvegardé:', filePath);
+            
+            // Essayer d'abord avec expo-sharing
+            if (await Sharing.isAvailableAsync()) {
+              await Sharing.shareAsync(filePath, {
+                mimeType: 'application/pdf',
+                dialogTitle: 'Ouvrir le PDF avec...',
+                UTI: 'com.adobe.pdf'
+              });
+              console.log('✅ PDF partagé avec succès sur Android');
+              return;
+            }
+            
+            // Fallback: essayer avec expo-print
+            await Print.printAsync({
+              uri: filePath,
+            });
+            
+            console.log('✅ PDF ouvert avec expo-print sur Android');
+          } catch (base64Error) {
+            console.error('❌ Erreur conversion base64 Android:', base64Error);
+            throw base64Error;
           }
-          
-          // Fallback: essayer avec expo-print
-          await Print.printAsync({
-            uri: filePath,
-          });
-          
-          console.log('✅ PDF ouvert avec expo-print');
         }
       } else {
         // Si ce n'est pas un asset require, essayer directement

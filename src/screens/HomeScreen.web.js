@@ -12,10 +12,29 @@ import { useHealth } from '../contexts/HealthContext';
 import Card from '../components/common/Card';
 import { theme } from '../constants/theme';
 import notificationService from '../services/notificationService';
+import { useTranslation } from '../hooks/useTranslation';
 
 const HomeScreen = () => {
-  const { waterIntake, movements, dailyGoals, todayTip, userProfile, addWater, addMovement, getStats } = useHealth();
+  console.log('🌐 HomeScreen WEB version loaded!');
+  const { waterIntake, movements, dailyGoals, userProfile, addWater, addMovement, getStats } = useHealth();
+  const { t } = useTranslation();
   const stats = getStats();
+  
+  // Conseils traduits selon la langue
+  const getDailyTip = () => {
+    const tips = [
+      t('home.tip1'),
+      t('home.tip2'),
+      t('home.tip3'),
+      t('home.tip4'),
+      t('home.tip5'),
+      t('home.tip6'),
+      t('home.tip7'),
+    ];
+    
+    const dayOfYear = Math.floor((new Date() - new Date(new Date().getFullYear(), 0, 0)) / 86400000);
+    return tips[dayOfYear % tips.length];
+  };
   const [nextWater, setNextWater] = useState(null);
   const [nextMove, setNextMove] = useState(null);
   const [timeUntilWater, setTimeUntilWater] = useState('');
@@ -66,7 +85,10 @@ const HomeScreen = () => {
       <ScrollView showsVerticalScrollIndicator={false}>
         {/* En-tête */}
         <View style={styles.header}>
-          <Text style={styles.title}>💪 MOOD</Text>
+          <Text style={styles.title}>💪 
+            <Text style={styles.moText}>mo</Text>
+            <Text style={styles.odText}>od</Text>
+          </Text>
           <Text style={styles.subtitle}>Mouvement pour la Santé</Text>
           <Text style={styles.date}>{formattedDate}</Text>
         </View>
@@ -74,8 +96,8 @@ const HomeScreen = () => {
         {/* Conseil du jour */}
         <Card style={styles.tipCard}>
           <MaterialIcons name="lightbulb" size={24} color={theme.colors.warning} />
-          <Text style={styles.tipTitle}>Conseil santé du jour</Text>
-          <Text style={styles.tipText}>{todayTip}</Text>
+          <Text style={styles.tipTitle}>{t('home.dailyTip')}</Text>
+          <Text style={styles.tipText}>{getDailyTip()}</Text>
         </Card>
 
         {/* Hydratation */}
@@ -200,8 +222,17 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 32,
     fontWeight: 'bold',
-    color: theme.colors.primary,
     marginBottom: theme.spacing.xs,
+  },
+  moText: {
+    color: '#059669', // Vert foncé
+    fontSize: 32,
+    fontWeight: 'bold',
+  },
+  odText: {
+    color: '#10B981', // Vert clair
+    fontSize: 32,
+    fontWeight: 'bold',
   },
   subtitle: {
     fontSize: 14,

@@ -56,22 +56,23 @@ const SystemScreen = () => {
           <Card style={styles.themeCard}>
             <View style={styles.themeContent}>
               <MaterialIcons 
-                name={isDarkMode ? "dark-mode" : "light-mode"} 
+                name="light-mode" 
                 size={24} 
-                color={theme.colors.primary} 
+                color="#B0B0B0" 
               />
               <View style={styles.themeInfo}>
                 <Text style={styles.themeTitle}>Mode sombre</Text>
                 <Text style={styles.themeDescription}>
-                  {isDarkMode ? 'Activé' : 'Désactivé'}
+                  Désactivé
                 </Text>
               </View>
             </View>
             <Switch
-              value={isDarkMode}
-              onValueChange={toggleTheme}
-              trackColor={{ false: theme.colors.border, true: theme.colors.primary }}
-              thumbColor="#fff"
+              value={false}
+              onValueChange={() => {}} // Désactivé
+              trackColor={{ false: '#E0E0E0', true: '#E0E0E0' }}
+              thumbColor="#B0B0B0"
+              disabled={true}
             />
           </Card>
         </View>
@@ -82,7 +83,10 @@ const SystemScreen = () => {
           
           <Card style={styles.aboutCard}>
             <View style={styles.aboutHeader}>
-              <Text style={styles.appName}>💪 MOOD</Text>
+              <Text style={styles.appName}>💪 
+                <Text style={styles.moText}>mo</Text>
+                <Text style={styles.odText}>od</Text>
+              </Text>
               <Text style={styles.version}>Version 1.0.0</Text>
             </View>
             
@@ -243,6 +247,16 @@ const styles = StyleSheet.create({
     fontSize: 32,
     fontWeight: 'bold',
     marginBottom: theme.spacing.xs,
+  },
+  moText: {
+    color: '#059669', // Vert foncé
+    fontSize: 32,
+    fontWeight: 'bold',
+  },
+  odText: {
+    color: '#10B981', // Vert clair
+    fontSize: 32,
+    fontWeight: 'bold',
   },
   version: {
     fontSize: 14,

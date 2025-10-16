@@ -62,18 +62,9 @@ export const HealthProvider = ({ children }) => {
   };
 
   const loadDailyTip = () => {
-    const tips = [
-      "Marcher 15 minutes par jour réduit la mortalité de 14%",
-      "150 minutes d'activité par semaine pour sauver votre vie",
-      "30 minutes de marche quotidienne réduisent de 50% le risque de maladies cardiaques",
-      "Boire suffisamment d'eau améliore la concentration et l'énergie",
-      "Se lever toutes les heures réduit les risques de diabète",
-      "L'activité physique régulière améliore la qualité du sommeil",
-      "Rester assis 8h par jour augmente de 40% le risque de mortalité précoce",
-    ];
-    
-    const dayOfYear = Math.floor((new Date() - new Date(new Date().getFullYear(), 0, 0)) / 86400000);
-    setTodayTip(tips[dayOfYear % tips.length]);
+    // Les conseils seront chargés dynamiquement selon la langue
+    // Pour l'instant, on utilise un conseil par défaut
+    setTodayTip("Conseil santé du jour");
   };
 
   const loadUserProfile = async () => {

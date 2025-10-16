@@ -11,11 +11,13 @@ import { LineChart, BarChart, PieChart } from 'react-native-chart-kit';
 import { useMood } from '../contexts/MoodContext';
 import Card from '../components/common/Card';
 import { theme } from '../constants/theme';
+import { useTranslation } from '../hooks/useTranslation';
 
 const { width: screenWidth } = Dimensions.get('window');
 
 const AnalyticsScreen = () => {
   const { moods, getMoodAnalytics } = useMood();
+  const { t } = useTranslation();
   const [analytics, setAnalytics] = useState(null);
 
   useEffect(() => {
@@ -27,7 +29,7 @@ const AnalyticsScreen = () => {
       <SafeAreaView style={styles.container}>
         <View style={styles.emptyState}>
           <Text style={styles.emptyText}>
-            No mood data available yet. Start tracking your moods to see analytics!
+            {t('analytics.noDataAvailable')}
           </Text>
         </View>
       </SafeAreaView>
@@ -106,25 +108,25 @@ const AnalyticsScreen = () => {
       <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false}>
         {/* Summary Stats */}
         <Card>
-          <Text style={styles.cardTitle}>Your Mood Summary</Text>
+          <Text style={styles.cardTitle}>{t('analytics.moodSummary')}</Text>
           <View style={styles.statsGrid}>
             <View style={styles.statItem}>
               <Text style={styles.statValue}>
                 {analytics.averageMood.toFixed(1)}
               </Text>
-              <Text style={styles.statLabel}>Average Mood</Text>
+              <Text style={styles.statLabel}>{t('analytics.averageMood')}</Text>
             </View>
             <View style={styles.statItem}>
               <Text style={styles.statValue}>
                 {moods.length}
               </Text>
-              <Text style={styles.statLabel}>Total Entries</Text>
+              <Text style={styles.statLabel}>{t('analytics.totalEntries')}</Text>
             </View>
             <View style={styles.statItem}>
               <Text style={styles.statValue}>
                 {analytics.weeklyAverage.toFixed(1)}
               </Text>
-              <Text style={styles.statLabel}>This Week</Text>
+              <Text style={styles.statLabel}>{t('analytics.thisWeek')}</Text>
             </View>
           </View>
         </Card>

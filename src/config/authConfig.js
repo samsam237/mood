@@ -1,8 +1,10 @@
 // Configuration d'authentification
 export const authConfig = {
   google: {
+    // Client ID pour Android et Web
     webClientId: '300243750008-oba368e0050b8h1e89e3la0crlrlase3.apps.googleusercontent.com',
-    iosClientId: '300243750008-oba368e0050b8h1e89e3la0crlrlase3.apps.googleusercontent.com',
+    // Client ID pour iOS
+    iosClientId: '300243750008-2tvafeivrod3t7qbblpuskefrrd70l5p.apps.googleusercontent.com',
   },
   facebook: {
     appId: 'YOUR_FACEBOOK_APP_ID', // À configurer si nécessaire
@@ -13,6 +15,11 @@ export const authConfig = {
     email: 'demo@moodtracker.com',
     password: 'demo123',
     username: 'demo_user'
+  },
+  // Configuration des packages
+  packages: {
+    android: 'com.actipop.adroid',
+    ios: 'com.actipop.ios'
   }
 };
 
