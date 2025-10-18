@@ -1,68 +1,21 @@
-# Dependencies
-node_modules/
-npm-debug.log*
-yarn-debug.log*
-yarn-error.log*
-
-# Expo
-.expo/
-dist/
-web-build/
-
-# Native
-*.orig.*
-*.jks
-*.p8
-*.p12
-*.key
-*.mobileprovision
-
-# Metro
-.metro-health-check*
-
-# Debug
-npm-debug.*
-yarn-debug.*
-yarn-error.*
-
-# macOS
-.DS_Store
-*.pem
-
-# local env files
-.env*.local
-
-# typescript
-*.tsbuildinfo
-
-# IDE
-.vscode/
-.idea/
-
-# OS
-Thumbs.db
-
-# Logs
+anode_modules
+.git
+.expo
+android/.gradle
+android/app/build
+android/build
+ios/build
 *.log
-
-# Documentation
+.DS_Store
+Thumbs.db
+*.tmp
+*.temp
+coverage
+.nyc_output
+docs
+README.md
 *.md
-docs/
-
-# Test files
-__tests__/
-*.test.js
-*.test.ts
-*.spec.js
-*.spec.ts
-
-# Build artifacts
-build/
-*.apk
-*.ipa
-*.aab
-
-# Temporary files
-tmp/
-temp/
-
+.env.local
+.env.development
+.env.test
+.env.production

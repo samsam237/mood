@@ -21,6 +21,10 @@ echo ""
 echo -e "${BLUE}🔨 Compilation de l'APK de release...${NC}"
 ./gradlew assembleRelease
 
+echo ""
+echo -e "${BLUE}🔐 Génération d'un APK signé...${NC}"
+./gradlew bundleRelease
+
 # Vérifier si la compilation a réussi
 if [ $? -eq 0 ]; then
     echo ""
@@ -49,4 +53,3 @@ else
     echo "Consultez les erreurs ci-dessus pour plus de détails."
     exit 1
 fi
-
