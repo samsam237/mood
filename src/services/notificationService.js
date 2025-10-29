@@ -3,9 +3,9 @@ import * as Device from 'expo-device';
 import { Platform } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
-// IDs pour différencier les types de notifications
-const WATER_REMINDER_ID_PREFIX = 'water_';
-const MOVE_REMINDER_ID_PREFIX = 'move_';
+// Types de notifications
+const NOTIFICATION_TYPE_WATER = 'water';
+const NOTIFICATION_TYPE_MOVE = 'movement';
 const DAILY_TIP_ID = 'daily_tip';
 
 // Conseils santé
@@ -71,60 +71,38 @@ export const requestPermissions = async () => {
 };
 
 /**
- * Planifier les rappels d'hydratation
+ * Planifier les rappels d'hydratation (120 minutes par défaut)
  */
-export const scheduleWaterReminders = async (wakeTime, sleepTime, intervalMinutes) => {
+export const scheduleWaterReminders = async (wakeTime, sleepTime, intervalMinutes = 120) => {
   try {
     // Annuler les anciens rappels d'eau
-    await cancelRemindersByPrefix(WATER_REMINDER_ID_PREFIX);
+    await cancelRemindersByType(NOTIFICATION_TYPE_WATER);
 
     const [wakeHour, wakeMinute] = wakeTime.split(':').map(Number);
     const [sleepHour, sleepMinute] = sleepTime.split(':').map(Number);
 
-    const notifications = [];
+    // Calculer la prochaine notification dans la fenêtre réveil/coucher
     const now = new Date();
-    const startTime = new Date(now.getFullYear(), now.getMonth(), now.getDate(), wakeHour, wakeMinute);
-    const endTime = new Date(now.getFullYear(), now.getMonth(), now.getDate(), sleepHour, sleepMinute);
+    const nextAt = calculateNextNotification(now, wakeHour, wakeMinute, sleepHour, sleepMinute, intervalMinutes);
 
-    if (endTime <= startTime) {
-      endTime.setDate(endTime.getDate() + 1);
+    if (!nextAt) {
+      return { success: false, error: 'Aucune prochaine notification calculée' };
     }
 
-    let currentTime = new Date(startTime);
-    let counter = 0;
+    await Notifications.scheduleNotificationAsync({
+      content: {
+        title: "💧 Il est temps de s'hydrater !",
+        body: "Buvez un verre d'eau pour rester en bonne santé",
+        sound: 'default',
+        vibrate: [0, 500, 200, 500],
+        priority: Notifications.AndroidNotificationPriority.MAX,
+        data: { type: NOTIFICATION_TYPE_WATER, amount: 250 },
+      },
+      trigger: { date: nextAt }, // one-shot
+    });
 
-    while (currentTime < endTime) {
-      notifications.push({
-        content: {
-          title: "💧 Il est temps de s'hydrater !",
-          body: "Buvez un verre d'eau pour rester en bonne santé",
-          sound: 'default',
-          vibrate: [0, 500, 200, 500],
-          priority: Notifications.AndroidNotificationPriority.MAX,
-          data: { type: 'water', amount: 250 }, // Données pour identifier le type de rappel
-        },
-        trigger: {
-          hour: currentTime.getHours(),
-          minute: currentTime.getMinutes(),
-          repeats: true,
-        },
-      });
-
-      currentTime.setMinutes(currentTime.getMinutes() + intervalMinutes);
-      counter++;
-    }
-
-    console.log(`Scheduling ${notifications.length} water reminders`);
-
-    for (let i = 0; i < notifications.length; i++) {
-      const id = `${WATER_REMINDER_ID_PREFIX}${i}`;
-      await Notifications.scheduleNotificationAsync({
-        identifier: id,
-        ...notifications[i],
-      });
-    }
-
-    return { success: true, count: notifications.length };
+    console.log(`💧 Prochain rappel eau planifié à ${nextAt.toString()} (intervalle: ${intervalMinutes}min)`);
+    return { success: true, count: 1 };
   } catch (error) {
     console.error('Error scheduling water reminders:', error);
     return { success: false, error: error.message };
@@ -132,60 +110,38 @@ export const scheduleWaterReminders = async (wakeTime, sleepTime, intervalMinute
 };
 
 /**
- * Planifier les rappels de mouvement
+ * Planifier les rappels de mouvement (60 minutes par défaut)
  */
-export const scheduleMoveReminders = async (wakeTime, sleepTime, intervalMinutes) => {
+export const scheduleMoveReminders = async (wakeTime, sleepTime, intervalMinutes = 60) => {
   try {
     // Annuler les anciens rappels de mouvement
-    await cancelRemindersByPrefix(MOVE_REMINDER_ID_PREFIX);
+    await cancelRemindersByType(NOTIFICATION_TYPE_MOVE);
 
     const [wakeHour, wakeMinute] = wakeTime.split(':').map(Number);
     const [sleepHour, sleepMinute] = sleepTime.split(':').map(Number);
 
-    const notifications = [];
+    // Calculer la prochaine notification dans la fenêtre réveil/coucher
     const now = new Date();
-    const startTime = new Date(now.getFullYear(), now.getMonth(), now.getDate(), wakeHour, wakeMinute);
-    const endTime = new Date(now.getFullYear(), now.getMonth(), now.getDate(), sleepHour, sleepMinute);
+    const nextAt = calculateNextNotification(now, wakeHour, wakeMinute, sleepHour, sleepMinute, intervalMinutes);
 
-    if (endTime <= startTime) {
-      endTime.setDate(endTime.getDate() + 1);
+    if (!nextAt) {
+      return { success: false, error: 'Aucune prochaine notification calculée' };
     }
 
-    let currentTime = new Date(startTime);
-    let counter = 0;
+    await Notifications.scheduleNotificationAsync({
+      content: {
+        title: "💪 Un petit mouvement s'impose !",
+        body: "Levez-vous et bougez pendant 2-3 minutes",
+        sound: 'default',
+        vibrate: [0, 500, 200, 500],
+        priority: Notifications.AndroidNotificationPriority.MAX,
+        data: { type: NOTIFICATION_TYPE_MOVE },
+      },
+      trigger: { date: nextAt }, // one-shot
+    });
 
-    while (currentTime < endTime) {
-      notifications.push({
-        content: {
-          title: "💪 Un petit mouvement s'impose !",
-          body: "Levez-vous et bougez pendant 2-3 minutes",
-          sound: 'default',
-          vibrate: [0, 500, 200, 500],
-          priority: Notifications.AndroidNotificationPriority.MAX,
-          data: { type: 'movement' }, // Données pour identifier le type de rappel
-        },
-        trigger: {
-          hour: currentTime.getHours(),
-          minute: currentTime.getMinutes(),
-          repeats: true,
-        },
-      });
-
-      currentTime.setMinutes(currentTime.getMinutes() + intervalMinutes);
-      counter++;
-    }
-
-    console.log(`Scheduling ${notifications.length} move reminders`);
-
-    for (let i = 0; i < notifications.length; i++) {
-      const id = `${MOVE_REMINDER_ID_PREFIX}${i}`;
-      await Notifications.scheduleNotificationAsync({
-        identifier: id,
-        ...notifications[i],
-      });
-    }
-
-    return { success: true, count: notifications.length };
+    console.log(`💪 Prochain rappel mouvement planifié à ${nextAt.toString()} (intervalle: ${intervalMinutes}min)`);
+    return { success: true, count: 1 };
   } catch (error) {
     console.error('Error scheduling move reminders:', error);
     return { success: false, error: error.message };
@@ -252,12 +208,12 @@ export const initializeReminders = async () => {
     // Planifier le conseil quotidien
     await scheduleDailyTip();
 
-    // Planifier les rappels d'eau
-    const waterInterval = profile. waterReminderFrequency || 30; // 30min par défaut
+    // Planifier les rappels d'eau (120min par défaut)
+    const waterInterval = profile.waterReminderFrequency || 120;
     await scheduleWaterReminders(profile.wakeTime, profile.sleepTime, waterInterval);
 
-    // Planifier les rappels de mouvement
-    const moveInterval = profile.moveReminderFrequency || 30; // 30min par défaut
+    // Planifier les rappels de mouvement (60min par défaut)
+    const moveInterval = profile.moveReminderFrequency || 60;
     await scheduleMoveReminders(profile.wakeTime, profile.sleepTime, moveInterval);
 
     console.log('✅ Tous les rappels ont été planifiés');
@@ -270,20 +226,18 @@ export const initializeReminders = async () => {
 };
 
 /**
- * Annuler les rappels par préfixe
+ * Annuler les rappels par type exact (water | movement)
  */
-const cancelRemindersByPrefix = async (prefix) => {
+const cancelRemindersByType = async (type) => {
   try {
     const scheduled = await Notifications.getAllScheduledNotificationsAsync();
-    const toCancel = scheduled.filter(n => n.identifier.startsWith(prefix));
-    
+    const toCancel = scheduled.filter(n => n.content?.data?.type === type);
     for (const notification of toCancel) {
       await Notifications.cancelScheduledNotificationAsync(notification.identifier);
     }
-    
-    console.log(`Cancelled ${toCancel.length} notifications with prefix: ${prefix}`);
+    console.log(`Cancelled ${toCancel.length} notifications of type: ${type}`);
   } catch (error) {
-    console.error('Error cancelling notifications:', error);
+    console.error('Error cancelling notifications by type:', error);
   }
 };
 
@@ -307,7 +261,7 @@ export const getNextNotificationTimes = async () => {
     const now = new Date();
 
     const waterInterval = profile.waterReminderFrequency || 120;
-    const moveInterval = profile.moveReminderFrequency || 120;
+    const moveInterval = profile.moveReminderFrequency || 60;
 
     const nextWater = calculateNextNotification(now, wakeHour, wakeMinute, sleepHour, sleepMinute, waterInterval);
     const nextMove = calculateNextNotification(now, wakeHour, wakeMinute, sleepHour, sleepMinute, moveInterval);
@@ -325,7 +279,7 @@ export const getNextNotificationTimes = async () => {
 const calculateNextNotification = (now, wakeHour, wakeMinute, sleepHour, sleepMinute, intervalMinutes) => {
   const today = new Date();
   const startTime = new Date(today.getFullYear(), today.getMonth(), today.getDate(), wakeHour, wakeMinute);
-  const endTime = new Date(today.getFullYear(), today.getMonth(), today.getDate(), sleepHour, sleepMinute);
+  let endTime = new Date(today.getFullYear(), today.getMonth(), today.getDate(), sleepHour, sleepMinute);
 
   if (endTime <= startTime) {
     endTime.setDate(endTime.getDate() + 1);
@@ -359,6 +313,34 @@ const calculateNextNotification = (now, wakeHour, wakeMinute, sleepHour, sleepMi
 };
 
 /**
+ * Replanifier automatiquement après une action utilisateur
+ */
+export const rescheduleNextReminder = async (type) => {
+  try {
+    const profileData = await AsyncStorage.getItem('user_profile');
+    if (!profileData) {
+      return { success: false, error: 'Profil non trouvé' };
+    }
+
+    const profile = JSON.parse(profileData);
+    if (!profile.wakeTime || !profile.sleepTime) {
+      return { success: false, error: 'Heures non configurées' };
+    }
+
+    if (type === 'water') {
+      await scheduleWaterReminders(profile.wakeTime, profile.sleepTime, profile.waterReminderFrequency || 120);
+    } else if (type === 'movement') {
+      await scheduleMoveReminders(profile.wakeTime, profile.sleepTime, profile.moveReminderFrequency || 60);
+    }
+
+    return { success: true };
+  } catch (error) {
+    console.error('Error rescheduling reminder:', error);
+    return { success: false, error: error.message };
+  }
+};
+
+/**
  * Annuler tous les rappels
  */
 export const cancelAllReminders = async () => {
@@ -380,5 +362,5 @@ export default {
   scheduleDailyTip,
   getNextNotificationTimes,
   cancelAllReminders,
+  rescheduleNextReminder,
 };
-

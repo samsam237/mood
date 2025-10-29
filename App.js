@@ -22,7 +22,8 @@ import ExercisesScreenWeb from './src/screens/ExercisesScreen.web';
 import ExercisesScreenMobile from './src/screens/ExercisesScreen.js';
 import GuidesScreenWeb from './src/screens/GuidesScreen.web';
 import GuidesScreenMobile from './src/screens/GuidesScreen.js';
-import { PDFViewerScreen } from './src/utils/platform';
+import PDFViewerScreenMobile from './src/screens/PDFViewerScreen.js';
+import PDFViewerScreenWeb from './src/screens/PDFViewerScreen.web.js';
 import SettingsScreenWeb from './src/screens/SettingsScreen.web';
 import SettingsScreenMobile from './src/screens/SettingsScreen.js';
 import GoalsScreenWeb from './src/screens/GoalsScreen.web';
@@ -61,6 +62,7 @@ const SettingsScreen = Platform.OS === 'web' ? SettingsScreenWeb : SettingsScree
 const GoalsScreen = Platform.OS === 'web' ? GoalsScreenWeb : GoalsScreenMobile;
 const ProfileScreen = Platform.OS === 'web' ? ProfileScreenWeb : ProfileScreenMobile;
 const SystemScreen = Platform.OS === 'web' ? SystemScreenWeb : SystemScreenMobile;
+const PDFViewerScreen = Platform.OS === 'web' ? PDFViewerScreenWeb : PDFViewerScreenMobile;
 
 // Main Tab Navigator
 const MainTabNavigator = () => {

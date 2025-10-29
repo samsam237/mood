@@ -13,23 +13,21 @@ import { auth } from '../config/firebaseConfig';
 import { authConfig } from '../config/authConfig';
 import { Platform } from 'react-native';
 
-// Import conditionnel pour GoogleSignin (évite l'erreur en mode développement)
+// Import conditionnel pour GoogleSignin
 let GoogleSignin = null;
 let configureGoogleSignIn = null;
 
 try {
-  if (Platform.OS === 'web' || !__DEV__) {
-    const googleSigninModule = require('@react-native-google-signin/google-signin');
-    GoogleSignin = googleSigninModule.GoogleSignin;
-    configureGoogleSignIn = require('../config/googleSigninConfig').configureGoogleSignIn;
+  const googleSigninModule = require('@react-native-google-signin/google-signin');
+  GoogleSignin = googleSigninModule.GoogleSignin;
+  configureGoogleSignIn = require('../config/googleSigninConfig').configureGoogleSignIn;
+  
+  // Configurer Google Sign-In
+  if (configureGoogleSignIn) {
+    configureGoogleSignIn();
   }
 } catch (error) {
-  console.log('GoogleSignin non disponible en mode développement:', error.message);
-}
-
-// Configurer Google Sign-In (seulement si disponible)
-if (configureGoogleSignIn) {
-  configureGoogleSignIn();
+  console.log('GoogleSignin non disponible:', error.message);
 }
 
 export const authService = {
@@ -93,19 +91,13 @@ export const authService = {
       console.log('Tentative de connexion Google...');
       console.log('Plateforme détectée:', Platform.OS);
       
-      // Vérifier si GoogleSignin est disponible
-      if (!GoogleSignin && Platform.OS !== 'web') {
-        console.log('GoogleSignin non disponible - utilisation de la connexion par défaut');
-        return await this.signInWithDefault();
-      }
-      
-      // Vérifier si on est sur le web
-      if (Platform.OS === 'web') {
-        // Version web - utiliser signInWithPopup
-        console.log('Utilisation de signInWithPopup pour le web');
+      // Vérifier si on est sur le web ou iOS (utiliser signInWithPopup)
+      if (Platform.OS === 'web' || Platform.OS === 'ios') {
+        // Version web/iOS - utiliser signInWithPopup
+        console.log('Utilisation de signInWithPopup pour', Platform.OS);
         const provider = new GoogleAuthProvider();
         const result = await signInWithPopup(auth, provider);
-        console.log('Connexion Google réussie (web):', result.user.email);
+        console.log('Connexion Google réussie (' + Platform.OS + '):', result.user.email);
         return { 
           success: true, 
           user: {
@@ -121,7 +113,32 @@ export const authService = {
         
         // Vérifier si Google Play Services est disponible (Android)
         if (Platform.OS === 'android') {
-          await GoogleSignin.hasPlayServices();
+          try {
+            // Vérifier si GoogleSignin est disponible avant d'appeler hasPlayServices
+            if (GoogleSignin && GoogleSignin.hasPlayServices) {
+              await GoogleSignin.hasPlayServices();
+              console.log('✅ Google Play Services disponible');
+            } else {
+              console.warn('GoogleSignin.hasPlayServices non disponible');
+              // Continuer sans vérification
+            }
+          } catch (error) {
+            console.error('Google Play Services non disponible:', error);
+            // Si Play Services n'est pas disponible, donner un message clair
+            if (error.code === 2) {
+              throw new Error('Google Play Services non installé. Installez-le depuis le Google Play Store.');
+            } else if (error.code === 3) {
+              throw new Error('Google Play Services obsolète. Mettez-le à jour depuis le Google Play Store.');
+            } else {
+              throw new Error('Google Play Services non disponible: ' + error.message);
+            }
+          }
+        }
+        
+        // Vérifier que GoogleSignin est disponible avant d'essayer de se connecter
+        if (!GoogleSignin) {
+          console.error('❌ GoogleSignin module non disponible');
+          throw new Error('Google Sign-In non disponible sur cet appareil. Utilisez un appareil physique ou connectez-vous avec email/mot de passe.');
         }
         
         // Effectuer la connexion
@@ -129,7 +146,7 @@ export const authService = {
         console.log('GoogleSignin réussi, userInfo:', userInfo);
         
         // Créer un credential Firebase
-        const googleCredential = GoogleAuthProvider.credential(userInfo.idToken);
+        const googleCredential = GoogleAuthProvider.credential(userInfo.data?.idToken);
         
         // Se connecter à Firebase
         const result = await signInWithCredential(auth, googleCredential);
@@ -149,9 +166,30 @@ export const authService = {
       console.error('Erreur de connexion Google:', error);
       console.error('Code d\'erreur:', error.code);
       console.error('Message d\'erreur:', error.message);
+      
+      // Gestion spécifique des erreurs Google Sign-In
+      let errorMessage = 'Une erreur est survenue lors de la connexion Google';
+      
+      if (error.code) {
+        errorMessage = this.getErrorMessage(error.code);
+      } else if (error.message) {
+        // Gestion des erreurs spécifiques Google Sign-In
+        if (error.message.includes('SIGN_IN_CANCELLED')) {
+          errorMessage = 'Connexion Google annulée par l\'utilisateur';
+        } else if (error.message.includes('PLAY_SERVICES_NOT_AVAILABLE')) {
+          errorMessage = 'Google Play Services non disponible sur cet appareil';
+        } else if (error.message.includes('NETWORK_ERROR')) {
+          errorMessage = 'Erreur de réseau lors de la connexion Google';
+        } else if (error.message.includes('SIGN_IN_FAILED')) {
+          errorMessage = 'Échec de la connexion Google';
+        } else {
+          errorMessage = error.message;
+        }
+      }
+      
       return { 
         success: false, 
-        error: this.getErrorMessage(error.code) || error.message
+        error: errorMessage
       };
     }
   },
@@ -246,6 +284,13 @@ export const authService = {
       'auth/missing-verification-code': 'Code de vérification requis',
       'auth/missing-verification-id': 'ID de vérification requis',
       'auth/quota-exceeded': 'Quota SMS dépassé',
+      // Erreurs spécifiques Google Sign-In
+      'SIGN_IN_CANCELLED': 'Connexion Google annulée par l\'utilisateur',
+      'IN_PROGRESS': 'Une connexion Google est déjà en cours',
+      'PLAY_SERVICES_NOT_AVAILABLE': 'Google Play Services non disponible',
+      'SIGN_IN_REQUIRED': 'Connexion Google requise',
+      'NETWORK_ERROR': 'Erreur de réseau lors de la connexion Google',
+      'SIGN_IN_FAILED': 'Échec de la connexion Google',
     };
     return errorMessages[errorCode] || 'Une erreur est survenue';
   },

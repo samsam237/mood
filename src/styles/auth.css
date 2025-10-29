@@ -94,3 +94,26 @@
   opacity: 0.8;
   margin-bottom: 2px;
 }
+
+/* Styles pour les boutons sociaux désactivés */
+.auth-social-button.disabled {
+  background-color: #F5F5F5 !important;
+  border-color: #E0E0E0 !important;
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.auth-social-button.disabled:hover {
+  transform: none;
+  box-shadow: none;
+}
+
+.auth-google-button.disabled {
+  background-color: #F5F5F5 !important;
+  color: #999999 !important;
+}
+
+.auth-facebook-button.disabled {
+  background-color: #F5F5F5 !important;
+  color: #999999 !important;
+}

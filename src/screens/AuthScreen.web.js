@@ -324,23 +324,23 @@ const AuthScreen = () => {
             {/* Social Login Buttons */}
             <View style={styles.socialContainer}>
               <TouchableOpacity 
-                style={styles.socialButton}
+                style={[styles.socialButton, styles.disabledSocialButton]}
               onPress={handleGoogleSignIn}
-                disabled={loading.google}
+                disabled={true}
                 activeOpacity={0.8}
               >
-                 <MaterialIcons name="search" size={24} color="#DB4437" />
-                <Text style={styles.socialButtonText}>{t('auth.googleLogin')}</Text>
+                 <MaterialIcons name="search" size={24} color="#999999" />
+                <Text style={[styles.socialButtonText, styles.disabledSocialText]}>{t('auth.googleLogin')}</Text>
               </TouchableOpacity>
               
               <TouchableOpacity 
-                style={[styles.socialButton, styles.facebookButton]}
+                style={[styles.socialButton, styles.facebookButton, styles.disabledSocialButton]}
               onPress={handleFacebookSignIn}
-                disabled={loading.facebook}
+                disabled={true}
                 activeOpacity={0.8}
               >
-                <MaterialIcons name="facebook" size={24} color="#FFFFFF" />
-                <Text style={[styles.socialButtonText, styles.facebookText]}>
+                <MaterialIcons name="facebook" size={24} color="#999999" />
+                <Text style={[styles.socialButtonText, styles.facebookText, styles.disabledSocialText]}>
                   {t('auth.facebookLogin')}
                 </Text>
               </TouchableOpacity>
@@ -633,6 +633,14 @@ const styles = StyleSheet.create({
   disclaimerLink: {
     fontWeight: '600',
     textDecorationLine: 'underline',
+  },
+  disabledSocialButton: {
+    backgroundColor: '#F5F5F5',
+    borderColor: '#E0E0E0',
+    opacity: 0.6,
+  },
+  disabledSocialText: {
+    color: '#999999',
   },
 });
 

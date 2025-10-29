@@ -15,7 +15,7 @@ export const HealthProvider = ({ children }) => {
   const [waterIntake, setWaterIntake] = useState(0); // en mL
   const [movements, setMovements] = useState(0); // nombre de mouvements
   const [dailyGoals, setDailyGoals] = useState({
-    water: 2000, // mL par jour
+    water: 2000, // mL par jour (sera mis à jour automatiquement)
     movements: 12, // mouvements par jour
   });
   const [history, setHistory] = useState([]); // 7 derniers jours
@@ -23,8 +23,8 @@ export const HealthProvider = ({ children }) => {
   const [userProfile, setUserProfile] = useState({
     wakeTime: '07:00',
     sleepTime: '23:00',
-    waterReminderFrequency: 30, // minutes (30min)
-    moveReminderFrequency: 30, // minutes (30min)
+    waterReminderFrequency: 120, // minutes (120min = 2h)
+    moveReminderFrequency: 60, // minutes (60min = 1h)
   });
 
   // Charger les données au démarrage
@@ -33,6 +33,7 @@ export const HealthProvider = ({ children }) => {
     loadHistory();
     loadDailyTip();
     loadUserProfile();
+    loadDailyGoals();
   }, []);
 
   const loadTodayData = async () => {
@@ -42,11 +43,29 @@ export const HealthProvider = ({ children }) => {
       
       if (data) {
         const parsed = JSON.parse(data);
-        setWaterIntake(parsed.water || 0);
-        setMovements(parsed.movements || 0);
+        
+        // Vérifier et corriger les valeurs chargées
+        const safeWater = typeof parsed.water === 'number' && parsed.water >= 0 ? parsed.water : 0;
+        const safeMovements = typeof parsed.movements === 'number' && parsed.movements >= 0 ? parsed.movements : 0;
+        
+        setWaterIntake(safeWater);
+        setMovements(safeMovements);
+        
+        // Si les données étaient corrompues, les sauvegarder corrigées
+        if (parsed.water !== safeWater || parsed.movements !== safeMovements) {
+          await AsyncStorage.setItem(`health_${today}`, JSON.stringify({
+            water: safeWater,
+            movements: safeMovements,
+            date: today,
+          }));
+          console.log('Données du jour corrigées:', { water: safeWater, movements: safeMovements });
+        }
       }
     } catch (error) {
       console.error('Error loading today data:', error);
+      // En cas d'erreur, utiliser les valeurs par défaut
+      setWaterIntake(0);
+      setMovements(0);
     }
   };
 
@@ -75,6 +94,40 @@ export const HealthProvider = ({ children }) => {
       }
     } catch (error) {
       console.error('Error loading user profile:', error);
+    }
+  };
+
+  const loadDailyGoals = async () => {
+    try {
+      const goalsData = await AsyncStorage.getItem('daily_goals');
+      if (goalsData) {
+        const goals = JSON.parse(goalsData);
+        
+        // Vérifier et corriger les valeurs corrompues
+        const safeGoals = {
+          water: typeof goals.water === 'number' && goals.water > 0 ? goals.water : 2000,
+          movements: typeof goals.movements === 'number' && goals.movements > 0 ? goals.movements : 12
+        };
+        
+        setDailyGoals(safeGoals);
+        
+        // Si les données étaient corrompues, les sauvegarder corrigées
+        if (goals.water !== safeGoals.water || goals.movements !== safeGoals.movements) {
+          await AsyncStorage.setItem('daily_goals', JSON.stringify(safeGoals));
+          console.log('Objectifs quotidiens corrigés:', safeGoals);
+        }
+        
+        // Si l'objectif d'eau n'est pas défini, utiliser la valeur recommandée du profil
+        if (!safeGoals.water && userProfile.recommendedWaterGoal) {
+          const newGoals = { ...safeGoals, water: userProfile.recommendedWaterGoal };
+          setDailyGoals(newGoals);
+          await AsyncStorage.setItem('daily_goals', JSON.stringify(newGoals));
+        }
+      }
+    } catch (error) {
+      console.error('Error loading daily goals:', error);
+      // En cas d'erreur, utiliser les valeurs par défaut
+      setDailyGoals({ water: 2000, movements: 12 });
     }
   };
 
@@ -152,6 +205,15 @@ export const HealthProvider = ({ children }) => {
       const updatedProfile = { ...userProfile, ...newProfile };
       setUserProfile(updatedProfile);
       await AsyncStorage.setItem('user_profile', JSON.stringify(updatedProfile));
+      
+      // Mettre à jour automatiquement l'objectif d'eau si une quantité recommandée est fournie
+      if (newProfile.recommendedWaterGoal && newProfile.recommendedWaterGoal !== dailyGoals.water) {
+        const newGoals = { ...dailyGoals, water: newProfile.recommendedWaterGoal };
+        setDailyGoals(newGoals);
+        await AsyncStorage.setItem('daily_goals', JSON.stringify(newGoals));
+        console.log('Objectif d\'eau mis à jour automatiquement:', newProfile.recommendedWaterGoal, 'ml');
+      }
+      
       console.log('Profil utilisateur mis à jour:', updatedProfile);
     } catch (error) {
       console.error('Error updating user profile:', error);
@@ -159,11 +221,17 @@ export const HealthProvider = ({ children }) => {
   };
 
   const getStats = () => {
+    // Vérifier que toutes les valeurs sont valides
+    const safeWaterIntake = typeof waterIntake === 'number' ? waterIntake : 0;
+    const safeMovements = typeof movements === 'number' ? movements : 0;
+    const safeWaterGoal = typeof dailyGoals?.water === 'number' && dailyGoals.water > 0 ? dailyGoals.water : 2000;
+    const safeMovementsGoal = typeof dailyGoals?.movements === 'number' && dailyGoals.movements > 0 ? dailyGoals.movements : 12;
+    
     return {
-      waterPercentage: Math.min((waterIntake / dailyGoals.water) * 100, 100),
-      movementsPercentage: Math.min((movements / dailyGoals.movements) * 100, 100),
-      waterRemaining: Math.max(dailyGoals.water - waterIntake, 0),
-      movementsRemaining: Math.max(dailyGoals.movements - movements, 0),
+      waterPercentage: Math.min((safeWaterIntake / safeWaterGoal) * 100, 100),
+      movementsPercentage: Math.min((safeMovements / safeMovementsGoal) * 100, 100),
+      waterRemaining: Math.max(safeWaterGoal - safeWaterIntake, 0),
+      movementsRemaining: Math.max(safeMovementsGoal - safeMovements, 0),
     };
   };
 

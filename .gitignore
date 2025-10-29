@@ -66,3 +66,9 @@ claude refactoring/
 *.mp3
 *.mp4
 *.mov
+
+# Security - Files containing secrets
+*_SECRETS.txt
+*_CONFIG_SECRETS.txt
+*_KEYS.txt
+*_CREDENTIALS.txt

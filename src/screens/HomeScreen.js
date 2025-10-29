@@ -90,7 +90,7 @@ const HomeScreen = () => {
             <Text style={styles.moText}>mo</Text>
             <Text style={styles.odText}>od</Text>
           </Text>
-          <Text style={styles.subtitle}>{t('home.movementForHealth')}</Text>
+          <Text style={styles.subtitle}>{t('app.shortTagline')}</Text>
           <Text style={styles.date}>{formattedDate}</Text>
         </View>
 
@@ -106,7 +106,7 @@ const HomeScreen = () => {
           <View style={styles.cardHeader}>
             <MaterialIcons name="local-drink" size={32} color={theme.colors.info} />
             <Text style={styles.cardTitle}>{t('home.hydration')}</Text>
-          </View>
+            </View>
           
           <View style={styles.progressContainer}>
             <View style={styles.progressBar}>
@@ -164,8 +164,8 @@ const HomeScreen = () => {
             </View>
             <Text style={styles.progressText}>
               {t('home.movementsProgress', { current: movements, goal: dailyGoals.movements, percentage: Math.round(stats.movementsPercentage) })}
-            </Text>
-          </View>
+              </Text>
+            </View>
 
           <TouchableOpacity 
             style={[styles.actionButton, { backgroundColor: theme.colors.success }]}

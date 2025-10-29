@@ -50,13 +50,13 @@ const ExercisesScreen = () => {
   const locations = [
     {
       id: 1,
-      title: 'Bureau',
+      title: 'Au bureau',
       icon: 'business',
       tips: ['Marcher pendant les appels', 'Utiliser un bureau debout', 'Faire des étirements'],
     },
     {
       id: 2,
-      title: 'Maison',
+      title: 'À la maison',
       icon: 'home',
       tips: ['Faire des squats devant la TV', 'Jardiner', 'Monter les escaliers'],
     },

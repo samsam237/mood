@@ -1,0 +1,63 @@
+Configuration Google Sign-In - Projet Personnel
+===============================================
+Date de configuration : 18/10/2025
+
+IDs Clients Google Cloud Console :
+==================================
+- Web: [CONFIGURÉ - Voir src/config/googleSigninConfig.js]
+- Android: [CONFIGURÉ - Voir src/config/googleSigninConfig.js]
+- iOS: [CONFIGURÉ - Voir src/config/googleSigninConfig.js]
+
+Code Secret Web :
+=================
+[CONFIGURÉ - Voir src/config/googleSigninConfig.js]
+
+Informations Android :
+=====================
+Package Name: com.yourcompany.moodtracker
+SHA-1: 5E:8F:16:06:2E:A3:CD:2C:4A:0D:54:78:76:BA:A6:F3:8C:AB:F6:25
+
+URIs autorisées pour Web :
+==========================
+- http://localhost:19006 (développement)
+- https://votre-domaine.com (production - à ajouter si nécessaire)
+
+Fichiers modifiés :
+==================
+- src/config/googleSigninConfig.js (configuration mise à jour)
+- GOOGLE_CONFIG_INFO.txt (ce fichier)
+
+Statut :
+========
+✅ Configuration Google Sign-In terminée
+✅ IDs clients configurés
+✅ Prêt pour les tests
+
+Prochaines étapes :
+==================
+1. Tester l'application : npm start
+2. Tester sur mobile : npm run android
+3. Vérifier que l'authentification Google fonctionne
+
+Support :
+=========
+- Guide complet : GUIDE_GOOGLE_SIGNIN_PERSONNEL.md
+- Guide rapide : DEBUT_RAPIDE_GOOGLE.md
+- Script de configuration : setup-google-auth-personal.sh
+
+Notes importantes :
+==================
+- Gardez ce fichier en sécurité (contient des informations sensibles)
+- Ne partagez pas le code secret publiquement
+- Les IDs clients sont maintenant configurés dans l'application
+
+
+
+
+
+
+
+
+
+
+

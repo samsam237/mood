@@ -36,7 +36,15 @@ echo "🔑 SHA-1 Fingerprint pour le keystore debug :"
 echo "================================================"
 
 # Obtenir le SHA-1 du keystore debug
-keytool -list -v -keystore "$DEBUG_KEYSTORE" -alias androiddebugkey -storepass android -keypass android | grep SHA1
+SHA1_FINGERPRINT=$(keytool -list -v -keystore "$DEBUG_KEYSTORE" -alias androiddebugkey -storepass android -keypass android 2>/dev/null | grep -A 1 "Empreinte" | tail -1 | cut -d' ' -f3)
+
+if [ -n "$SHA1_FINGERPRINT" ]; then
+    echo "SHA-1: $SHA1_FINGERPRINT"
+else
+    echo "❌ Impossible d'obtenir le SHA-1 fingerprint"
+    echo "💡 Tentative alternative..."
+    keytool -list -v -keystore "$DEBUG_KEYSTORE" -alias androiddebugkey -storepass android -keypass android 2>/dev/null | grep -E "SHA1|SHA-1"
+fi
 
 echo ""
 echo "📋 Instructions :"

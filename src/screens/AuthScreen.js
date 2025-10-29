@@ -126,15 +126,25 @@ const AuthScreen = () => {
       let alertTitle = t('auth.errors.googleError');
       let alertMessage = result.error || t('auth.errors.googleErrorMessage');
       
-      if (result.error.includes('popup-closed-by-user')) {
+      // Gestion spécifique des erreurs Google Sign-In
+      if (result.error.includes('popup-closed-by-user') || result.error.includes('annulée par l\'utilisateur')) {
         alertTitle = t('auth.errors.connectionCancelled');
         alertMessage = t('auth.errors.connectionCancelledMessage');
       } else if (result.error.includes('popup-blocked')) {
         alertTitle = t('auth.errors.popupBlocked');
         alertMessage = t('auth.errors.popupBlockedMessage');
+      } else if (result.error.includes('Google Play Services non disponible')) {
+        alertTitle = 'Services Google non disponibles';
+        alertMessage = 'Google Play Services n\'est pas installé ou à jour sur cet appareil. Veuillez l\'installer depuis le Google Play Store.';
+      } else if (result.error.includes('Erreur de réseau')) {
+        alertTitle = 'Erreur de connexion';
+        alertMessage = 'Vérifiez votre connexion internet et réessayez.';
       } else if (result.error.includes('navigateur web')) {
         alertTitle = t('auth.errors.limitedFeature');
         alertMessage = t('auth.errors.googleWebOnly');
+      } else if (result.error.includes('Échec de la connexion Google')) {
+        alertTitle = 'Connexion Google échouée';
+        alertMessage = 'Impossible de se connecter avec Google. Vérifiez votre configuration et réessayez.';
       }
       
       showError(alertTitle, alertMessage);
@@ -364,23 +374,25 @@ const AuthScreen = () => {
               </View>
 
               <TouchableOpacity
-                style={[styles.googleButton, styles.disabledButton]}
+                style={[styles.googleButton, styles.disabledSocialButton]}
+                onPress={handleGoogleSignIn}
                 disabled={true}
-                activeOpacity={0.3}
+                activeOpacity={0.8}
               >
-                <MaterialIcons name="search" size={20} color="#999" />
-                <Text style={[styles.googleButtonText, styles.disabledText]}>
+                <MaterialIcons name="search" size={20} color="#999999" />
+                <Text style={[styles.googleButtonText, styles.disabledSocialText]}>
                   {t('auth.googleLogin')}
                 </Text>
               </TouchableOpacity>
               
               <TouchableOpacity
-                style={[styles.facebookButton, styles.disabledButton]}
+                style={[styles.facebookButton, styles.disabledSocialButton]}
+                onPress={handleFacebookSignIn}
                 disabled={true}
-                activeOpacity={0.3}
+                activeOpacity={0.8}
               >
-                <MaterialIcons name="facebook" size={20} color="#999" />
-                <Text style={[styles.facebookButtonText, styles.disabledText]}>
+                <MaterialIcons name="facebook" size={20} color="#999999" />
+                <Text style={[styles.facebookButtonText, styles.disabledSocialText]}>
                   {t('auth.facebookLogin')}
                 </Text>
               </TouchableOpacity>
@@ -807,6 +819,14 @@ const styles = StyleSheet.create({
   disclaimerLink: {
     fontWeight: '600',
     textDecorationLine: 'underline',
+  },
+  disabledSocialButton: {
+    backgroundColor: '#F5F5F5',
+    borderColor: '#E0E0E0',
+    opacity: 0.6,
+  },
+  disabledSocialText: {
+    color: '#999999',
   },
 });
 

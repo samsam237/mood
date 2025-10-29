@@ -1,185 +1,142 @@
-# Test et Dépannage - Authentification Google
+# 🧪 Test de l'Authentification Google Sign-In
 
-## ⚠️ Important : Limitations d'Expo Go
+## ✅ **Vérification de la Configuration**
 
-**L'authentification Google native ne fonctionne PAS avec Expo Go** car elle nécessite du code natif. Vous devez utiliser un **build de développement personnalisé**.
+### **1. Configuration des IDs Clients :**
+- ✅ **Web** : `829568384537-s85i6ko3ogs1jnmr9uc52tfb53vbcdnn.apps.googleusercontent.com`
+- ✅ **Android** : `829568384537-e38j38k7fsghvrmuh1frio2ugg0lmc16.apps.googleusercontent.com`
+- ✅ **iOS** : `829568384537-3a5fvvrl8anfp3bddn3hucjv612s64r2.apps.googleusercontent.com`
 
-## Méthodes de test
+### **2. Logique de Connexion Corrigée :**
+- ✅ **Service d'authentification** : `userInfo.data?.idToken` corrigé
+- ✅ **Gestion d'erreur** : Messages spécifiques Google Sign-In ajoutés
+- ✅ **Interface utilisateur** : Boutons Google/Facebook activés
+- ✅ **Gestion d'erreur UI** : Messages d'erreur spécifiques dans AuthScreen
 
-### Option 1 : Build de développement (Recommandé)
+---
 
-#### 1.1 Installer les dépendances
+## 🚀 **Tests à Effectuer**
+
+### **Test 1 : Application Web**
 ```bash
-# Exécuter le script de configuration
-./setup-google-auth.sh
-
-# Ou manuellement :
-npm install @react-native-google-signin/google-signin
-npm install -g @expo/eas-cli
+npm start
 ```
+1. Ouvrez `http://localhost:19006`
+2. Cliquez sur "Continuer avec Google"
+3. **Résultat attendu** : Popup Google s'ouvre
+4. **Si succès** : Connexion réussie
+5. **Si erreur** : Message d'erreur spécifique affiché
 
-#### 1.2 Configurer EAS
+### **Test 2 : Application Mobile (Android)**
 ```bash
-# Se connecter à Expo
-eas login
-
-# Configurer EAS Build
-eas build:configure
+npm run android
 ```
+1. Lancez l'application sur Android
+2. Cliquez sur "Continuer avec Google"
+3. **Résultat attendu** : Interface Google native s'ouvre
+4. **Si succès** : Connexion réussie
+5. **Si erreur** : Message d'erreur spécifique affiché
 
-#### 1.3 Créer un build de développement
-```bash
-# Pour Android
-eas build --profile development --platform android
+---
 
-# Pour iOS (nécessite un compte Apple Developer)
-eas build --profile development --platform ios
-```
+## 🔍 **Scénarios de Test**
 
-#### 1.4 Installer et tester
-1. Téléchargez le build depuis le lien fourni par EAS
-2. Installez-le sur votre appareil
-3. Testez l'authentification Google
+### **Scénario 1 : Connexion Réussie**
+- ✅ Popup/Interface Google s'ouvre
+- ✅ Utilisateur sélectionne son compte
+- ✅ Autorise l'application
+- ✅ Connexion réussie
+- ✅ Utilisateur connecté dans l'application
 
-### Option 2 : Test avec Expo Dev Client
+### **Scénario 2 : Connexion Annulée**
+- ✅ Popup/Interface Google s'ouvre
+- ✅ Utilisateur ferme la fenêtre
+- ✅ Message : "Connexion Google annulée par l'utilisateur"
 
-#### 2.1 Installer Expo Dev Client
-```bash
-# Sur Android
-npx expo install expo-dev-client
-npx expo run:android
+### **Scénario 3 : Erreur de Réseau**
+- ✅ Pas de connexion internet
+- ✅ Message : "Vérifiez votre connexion internet et réessayez"
 
-# Sur iOS
-npx expo install expo-dev-client
-npx expo run:ios
-```
+### **Scénario 4 : Google Play Services Non Disponible (Mobile)**
+- ✅ Sur émulateur sans Google Play Services
+- ✅ Message : "Google Play Services n'est pas installé ou à jour"
 
-#### 2.2 Tester l'authentification
-1. Ouvrez l'application sur votre appareil
-2. Allez à l'écran d'authentification
-3. Cliquez sur "Continuer avec Google"
-4. Vérifiez que la connexion fonctionne
+### **Scénario 5 : Popup Bloqué (Web)**
+- ✅ Navigateur bloque les popups
+- ✅ Message : "La fenêtre de connexion a été bloquée"
 
-## Dépannage
+---
 
-### Erreur : "Google Play Services not available"
-**Solution :** Assurez-vous que Google Play Services est installé et à jour sur votre appareil Android.
+## 🛠️ **Dépannage**
 
-### Erreur : "DEVELOPER_ERROR"
-**Causes possibles :**
-1. SHA-1 fingerprint incorrect
-2. Package name incorrect
-3. ID client OAuth incorrect
+### **Erreur "Invalid client" :**
+- Vérifiez que les IDs clients sont corrects dans Google Cloud Console
+- Vérifiez que le package name correspond : `com.yourcompany.moodtracker`
+- Vérifiez que le SHA-1 correspond : `5E:8F:16:06:2E:A3:CD:2C:4A:0D:54:78:76:BA:A6:F3:8C:AB:F6:25`
 
-**Solutions :**
-```bash
-# Obtenir le SHA-1 correct
-expo fetch:android:hashes
+### **Erreur "Access blocked" :**
+- Vérifiez que l'écran de consentement OAuth est configuré
+- Ajoutez votre email comme utilisateur de test
+- Vérifiez que les APIs sont activées
 
-# Vérifier le package name dans app.config.js
-# Vérifier les identifiants dans googleSigninConfig.js
-```
+### **Erreur "Redirect URI mismatch" :**
+- Ajoutez `http://localhost:19006` dans les URIs autorisées
+- Vérifiez que l'URI correspond exactement
 
-### Erreur : "Sign in failed"
-**Causes possibles :**
-1. Configuration Google Cloud Console incomplète
-2. Écran de consentement OAuth non configuré
-3. API Google Identity non activée
+### **Erreur "Google Play Services not available" :**
+- Installez Google Play Services sur l'émulateur
+- Utilisez un émulateur avec Google Play Store
+- Testez sur un appareil physique
 
-**Solutions :**
-1. Vérifiez la configuration dans Google Cloud Console
-2. Assurez-vous que l'écran de consentement OAuth est configuré
-3. Activez l'API Google Identity Platform
+---
 
-### Erreur : "Network error"
-**Solutions :**
-1. Vérifiez votre connexion internet
-2. Testez sur un autre réseau
-3. Vérifiez les paramètres de pare-feu
+## 📋 **Logs à Vérifier**
 
-### Erreur : "Invalid client"
-**Solutions :**
-1. Vérifiez que l'ID client est correct
-2. Assurez-vous que le package name correspond
-3. Vérifiez que l'application est bien configurée dans Google Cloud Console
-
-## Test de l'interface utilisateur
-
-### Vérifications à effectuer :
-1. ✅ Le bouton Google est visible et cliquable
-2. ✅ Le bouton affiche "Continuer avec Google" (pas "Web uniquement")
-3. ✅ Le bouton n'est pas grisé ou désactivé
-4. ✅ Le loading fonctionne lors du clic
-5. ✅ Les erreurs sont affichées correctement
-
-### Test du flux complet :
-1. Cliquer sur "Continuer avec Google"
-2. Sélectionner un compte Google
-3. Autoriser l'application
-4. Vérifier la connexion dans l'app
-5. Tester la déconnexion
-
-## Logs de débogage
-
-### Activer les logs détaillés :
+### **Console du Navigateur (Web) :**
 ```javascript
-// Dans googleSigninConfig.js
-GoogleSignin.configure({
-  // ... votre configuration
-  offlineAccess: true,
-  forceCodeForRefreshToken: true,
-});
-
-// Dans authService.js, ajoutez plus de logs :
-console.log('Google Sign-In configuré');
-console.log('Tentative de connexion...');
-console.log('Résultat:', userInfo);
+// Messages attendus :
+"Google Sign-In configuré avec succès - Projet personnel"
+"Tentative de connexion Google..."
+"Plateforme détectée: web"
+"Utilisation de signInWithPopup pour le web"
+"Connexion Google réussie (web): user@example.com"
 ```
 
-### Vérifier les logs :
-```bash
-# Pour Android
-npx react-native log-android
-
-# Pour iOS
-npx react-native log-ios
+### **Logs React Native (Mobile) :**
+```javascript
+// Messages attendus :
+"Google Sign-In configuré avec succès - Projet personnel"
+"Tentative de connexion Google..."
+"Plateforme détectée: android"
+"Utilisation de GoogleSignin pour mobile"
+"GoogleSignin réussi, userInfo: {...}"
+"Connexion Google réussie (mobile): user@example.com"
 ```
 
-## Configuration de test
+---
 
-### Identifiants de test :
-- **Web Client ID :** `300243750008-oba368e0050b8h1e89e3la0crlrlase3.apps.googleusercontent.com`
-- **iOS Client ID :** `300243750008-2tvafeivrod3t7qbblpuskefrrd70l5p.apps.googleusercontent.com`
-- **Package Name :** `com.yourcompany.moodtracker`
+## 🎯 **Résultats Attendus**
 
-### Vérifications de configuration :
-1. ✅ Google Cloud Console configuré
-2. ✅ Identifiants OAuth créés
-3. ✅ Écran de consentement configuré
-4. ✅ API Google Identity activée
-5. ✅ SHA-1 fingerprint ajouté
-6. ✅ Package name correct
+### **✅ Succès :**
+- Interface Google s'ouvre correctement
+- Connexion réussie
+- Utilisateur connecté
+- Données utilisateur récupérées (email, nom, photo)
 
-## Support
+### **❌ Échec :**
+- Message d'erreur spécifique affiché
+- Pas de crash de l'application
+- Interface reste fonctionnelle
+- Possibilité de réessayer
 
-Si vous rencontrez des problèmes :
+---
 
-1. **Consultez les logs** pour identifier l'erreur exacte
-2. **Vérifiez la configuration** Google Cloud Console
-3. **Testez avec un build de développement** (pas Expo Go)
-4. **Consultez la documentation** officielle :
-   - [Expo Google Auth](https://docs.expo.dev/guides/google-authentication/)
-   - [React Native Google Sign-In](https://github.com/react-native-google-signin/google-signin)
+## 📞 **Support**
 
-## Résumé des étapes de test
+Si les tests échouent :
+1. Vérifiez la configuration Google Cloud Console
+2. Consultez les logs de l'application
+3. Vérifiez que tous les fichiers sont correctement modifiés
+4. Redémarrez l'application après toute modification
 
-1. ✅ Installer les dépendances
-2. ✅ Configurer EAS Build
-3. ✅ Créer un build de développement
-4. ✅ Installer sur l'appareil
-5. ✅ Tester l'authentification
-6. ✅ Vérifier les logs
-7. ✅ Dépanner si nécessaire
-
-
-
+**L'authentification Google Sign-In devrait maintenant fonctionner parfaitement !** 🚀

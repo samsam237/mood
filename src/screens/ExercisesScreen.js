@@ -14,69 +14,57 @@ import { theme } from '../constants/theme';
 import { useTranslation } from '../hooks/useTranslation';
 
 const ExercisesScreen = () => {
-  console.log('🏃 ExercisesScreen MOBILE version loaded!');
+  console.log('🏃 ExercisesScreen WEB version loaded!');
   const { t } = useTranslation();
   const exercises = [
     {
       id: 1,
-      title: t('exercises.exerciseList.squats.title'),
-      duration: t('exercises.exerciseList.squats.duration'),
+      title: 'Squats',
+      duration: '2-3 minutes',
       icon: 'fitness-center',
-      description: t('exercises.exerciseList.squats.description'),
+      description: 'Flexions des jambes pour renforcer les muscles',
     },
     {
       id: 2,
-      title: t('exercises.exerciseList.stretching.title'),
-      duration: t('exercises.exerciseList.stretching.duration'),
+      title: 'Étirements',
+      duration: '5 minutes',
       icon: 'self-improvement',
-      description: t('exercises.exerciseList.stretching.description'),
+      description: 'Étirer bras, jambes et dos pour la flexibilité',
     },
     {
       id: 3,
-      title: t('exercises.exerciseList.walking.title'),
-      duration: t('exercises.exerciseList.walking.duration'),
+      title: 'Marche',
+      duration: '10-15 minutes',
       icon: 'directions-walk',
-      description: t('exercises.exerciseList.walking.description'),
+      description: 'Marcher autour du bureau ou à l\'extérieur',
     },
     {
       id: 4,
-      title: t('exercises.exerciseList.stairs.title'),
-      duration: t('exercises.exerciseList.stairs.duration'),
+      title: 'Escaliers',
+      duration: '3-5 minutes',
       icon: 'stairs',
-      description: t('exercises.exerciseList.stairs.description'),
+      description: 'Monter et descendre les escaliers',
     },
   ];
 
   const locations = [
     {
       id: 1,
-      title: t('exercises.locations.office.title'),
+      title: 'Au bureau',
       icon: 'business',
-      tips: [
-        t('exercises.locations.office.tips.0'),
-        t('exercises.locations.office.tips.1'),
-        t('exercises.locations.office.tips.2')
-      ],
+      tips: ['Marcher pendant les appels', 'Utiliser un bureau debout', 'Faire des étirements'],
     },
     {
       id: 2,
-      title: t('exercises.locations.home.title'),
+      title: 'À la maison',
       icon: 'home',
-      tips: [
-        t('exercises.locations.home.tips.0'),
-        t('exercises.locations.home.tips.1'),
-        t('exercises.locations.home.tips.2')
-      ],
+      tips: ['Faire des squats devant la TV', 'Jardiner', 'Monter les escaliers'],
     },
     {
       id: 3,
-      title: t('exercises.locations.outdoor.title'),
+      title: 'À l\'extérieur',
       icon: 'park',
-      tips: [
-        t('exercises.locations.outdoor.tips.0'),
-        t('exercises.locations.outdoor.tips.1'),
-        t('exercises.locations.outdoor.tips.2')
-      ],
+      tips: ['Promenade dans le parc', 'Vélo', 'Course légère'],
     },
   ];
 
@@ -85,13 +73,13 @@ const ExercisesScreen = () => {
       <ScrollView showsVerticalScrollIndicator={false}>
         {/* En-tête */}
         <View style={styles.header}>
-          <Text style={styles.title}>{t('exercises.title')}</Text>
-          <Text style={styles.subtitle}>{t('exercises.subtitle')}</Text>
+          <Text style={styles.title}>💪 Exercices</Text>
+          <Text style={styles.subtitle}>Des mouvements simples pour rester actif</Text>
         </View>
 
         {/* Exercices recommandés */}
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>{t('exercises.quickExercises')}</Text>
+          <Text style={styles.sectionTitle}>Exercices Rapides</Text>
           {exercises.map((exercise) => (
             <Card key={exercise.id} style={styles.exerciseCard}>
               <View style={styles.exerciseHeader}>
@@ -112,7 +100,7 @@ const ExercisesScreen = () => {
 
         {/* Lieux d'activité */}
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>{t('exercises.whereToMove')}</Text>
+          <Text style={styles.sectionTitle}>Où Bouger ?</Text>
           {locations.map((location) => (
             <Card key={location.id} style={styles.locationCard}>
               <View style={styles.locationHeader}>
@@ -134,9 +122,10 @@ const ExercisesScreen = () => {
         {/* Conseils */}
         <Card style={styles.tipsCard}>
           <MaterialIcons name="info" size={24} color={theme.colors.info} />
-          <Text style={styles.tipsTitle}>{t('exercises.didYouKnow')}</Text>
+          <Text style={styles.tipsTitle}>Le saviez-vous ?</Text>
           <Text style={styles.tipsText}>
-            {t('exercises.tipText')}
+            Même de petits mouvements de 2-3 minutes, répétés tout au long de la journée, 
+            ont un impact significatif sur votre santé et réduisent les risques liés à la sédentarité.
           </Text>
         </Card>
 
