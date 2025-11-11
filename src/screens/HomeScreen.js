@@ -1,27 +1,103 @@
-import React, { useState, useEffect } from 'react';
-import {
-  View,
-  Text,
-  StyleSheet,
-  ScrollView,
-  TouchableOpacity,
-} from 'react-native';
+// HomeScreen.js - VERSION STABLE SANS RE-RENDERS
+import React, { useEffect, useState, useMemo, useCallback, useRef } from 'react';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { MaterialIcons } from '@expo/vector-icons';
+
 import { useHealth } from '../contexts/HealthContext';
+import { useNotification } from '../contexts/NotificationContext';
 import Card from '../components/common/Card';
 import { theme } from '../constants/theme';
-import notificationService from '../services/notificationService';
 import { useTranslation } from '../hooks/useTranslation';
 
+// 🔥 COMPOSANT COUNTDOWN ISOLÉ ET STABLE
+const CountdownDisplay = React.memo(({ targetTime, label, color }) => {
+  const [displayTime, setDisplayTime] = useState('--:--');
+  const intervalRef = useRef(null);
+
+  useEffect(() => {
+    if (!targetTime) {
+      setDisplayTime('--:--');
+      return;
+    }
+
+    const updateDisplay = () => {
+      const now = new Date();
+      const diff = targetTime - now;
+      
+      if (diff <= 0) {
+        setDisplayTime('Maintenant!');
+        return;
+      }
+
+      const totalSeconds = Math.floor(diff / 1000);
+      const minutes = Math.floor(totalSeconds / 60);
+      const seconds = totalSeconds % 60;
+
+      setDisplayTime(`${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`);
+    };
+
+    // Mettre à jour immédiatement
+    updateDisplay();
+
+    // Intervalle chaque seconde
+    intervalRef.current = setInterval(updateDisplay, 1000);
+
+    return () => {
+      if (intervalRef.current) {
+        clearInterval(intervalRef.current);
+      }
+    };
+  }, [targetTime]);
+
+  return (
+    <View style={styles.nextReminderBox}>
+      <MaterialIcons name="alarm" size={16} color={color} />
+      <Text style={[styles.nextReminderText, { color }]}>
+        {label} {displayTime}
+      </Text>
+    </View>
+  );
+});
+
 const HomeScreen = () => {
-  console.log('🏠 HomeScreen MOBILE version loaded!');
-  const { waterIntake, movements, dailyGoals, userProfile, addWater, addMovement, getStats } = useHealth();
-  const { t } = useTranslation();
-  const stats = getStats();
+  console.log('🏠 HomeScreen RENDER!');
   
-  // Conseils traduits selon la langue
-  const getDailyTip = () => {
+  const { waterIntake, movements, dailyGoals, addWater, addMovement, getStats } = useHealth();
+  const { t } = useTranslation();
+  const { 
+    nextWater, 
+    nextMove, 
+    updateNextNotifications,
+    debugNotifications,
+    forceResetSystem,
+    forceReschedule
+  } = useNotification();
+  
+  const stats = getStats();
+  const [debugInfo, setDebugInfo] = useState('');
+  const renderCountRef = useRef(0);
+
+  // 🔥 COMPTEUR DE RENDER POUR DEBUG
+  useEffect(() => {
+    renderCountRef.current += 1;
+    console.log(`🏠 HomeScreen Render #${renderCountRef.current}`);
+  });
+
+  // 🔥 INITIALISATION UNE SEULE FOIS
+  useEffect(() => {
+    console.log('🏠 HomeScreen Monté - État global déjà géré');
+    
+    // Mettre à jour une fois au montage
+    const timer = setTimeout(() => {
+      updateNextNotifications();
+    }, 1000);
+    
+    return () => clearTimeout(timer);
+  }, []);
+
+  // 🔥 MÉMOISATION DES CALCULS COÛTEUX
+  const dailyTip = useMemo(() => {
     const tips = [
       t('home.tip1'),
       t('home.tip2'),
@@ -31,63 +107,50 @@ const HomeScreen = () => {
       t('home.tip6'),
       t('home.tip7'),
     ];
-    
     const dayOfYear = Math.floor((new Date() - new Date(new Date().getFullYear(), 0, 0)) / 86400000);
     return tips[dayOfYear % tips.length];
-  };
-  const [nextWater, setNextWater] = useState(null);
-  const [nextMove, setNextMove] = useState(null);
-  const [timeUntilWater, setTimeUntilWater] = useState('');
-  const [timeUntilMove, setTimeUntilMove] = useState('');
+  }, [t]);
 
-  // Mettre à jour les comptes à rebours toutes les minutes
-  useEffect(() => {
-    updateNextNotifications();
-    const interval = setInterval(updateNextNotifications, 60000); // Toutes les minutes
-    return () => clearInterval(interval);
-  }, [userProfile]);
+  const formattedDate = useMemo(() => {
+    const today = new Date();
+    const dateOptions = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
+    const locale = t('common.locale') || 'fr-FR';
+    return today.toLocaleDateString(locale, dateOptions);
+  }, [t]);
 
-  const updateNextNotifications = async () => {
-    const times = await notificationService.getNextNotificationTimes();
-    setNextWater(times.nextWater);
-    setNextMove(times.nextMove);
+  // 🔥 FONCTIONS MÉMOISÉES
+  const handleDebug = useCallback(async () => {
+    const result = await debugNotifications();
+    setDebugInfo(JSON.stringify(result, null, 2));
+  }, [debugNotifications]);
 
-    if (times.nextWater) {
-      setTimeUntilWater(formatTimeUntil(times.nextWater));
-    }
-    if (times.nextMove) {
-      setTimeUntilMove(formatTimeUntil(times.nextMove));
-    }
-  };
+  const handleForceReset = useCallback(async () => {
+    await forceResetSystem();
+  }, [forceResetSystem]);
 
-  const formatTimeUntil = (targetDate) => {
-    const now = new Date();
-    const diff = targetDate - now;
-    
-    if (diff < 0) return 'Bientôt';
-    
-    const hours = Math.floor(diff / (1000 * 60 * 60));
-    const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
-    
-    if (hours > 0) {
-      return `${hours}h ${minutes}min`;
-    }
-    return `${minutes} min`;
-  };
+  const handleRefresh = useCallback(async () => {
+    await updateNextNotifications();
+  }, [updateNextNotifications]);
 
-  // Obtenir la date du jour formatée selon la langue
-  const today = new Date();
-  const dateOptions = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
-  const locale = t('common.locale') || 'fr-FR';
-  const formattedDate = today.toLocaleDateString(locale, dateOptions);
+  const handleAddWater = useCallback(() => {
+    addWater(250);
+  }, [addWater]);
+
+  const handleAddMovement = useCallback(() => {
+    addMovement();
+  }, [addMovement]);
+
+  const handleTestReschedule = useCallback(async (type) => {
+    await forceReschedule(type);
+  }, [forceReschedule]);
 
   return (
     <SafeAreaView style={styles.container}>
       <ScrollView showsVerticalScrollIndicator={false}>
         {/* En-tête */}
         <View style={styles.header}>
-          <Text style={styles.title}>💪 
-            <Text style={styles.moText}>mo</Text>
+          <Text style={styles.title}>
+            💪 <Text style={styles.moText}>mo</Text>
             <Text style={styles.odText}>od</Text>
           </Text>
           <Text style={styles.subtitle}>{t('app.shortTagline')}</Text>
@@ -98,7 +161,7 @@ const HomeScreen = () => {
         <Card style={styles.tipCard}>
           <MaterialIcons name="lightbulb" size={24} color={theme.colors.warning} />
           <Text style={styles.tipTitle}>{t('home.dailyTip')}</Text>
-          <Text style={styles.tipText}>{getDailyTip()}</Text>
+          <Text style={styles.tipText}>{dailyTip}</Text>
         </Card>
 
         {/* Hydratation */}
@@ -106,15 +169,18 @@ const HomeScreen = () => {
           <View style={styles.cardHeader}>
             <MaterialIcons name="local-drink" size={32} color={theme.colors.info} />
             <Text style={styles.cardTitle}>{t('home.hydration')}</Text>
-            </View>
-          
+          </View>
+
           <View style={styles.progressContainer}>
             <View style={styles.progressBar}>
-              <View 
+              <View
                 style={[
                   styles.progressFill,
-                  { width: `${stats.waterPercentage}%`, backgroundColor: theme.colors.info }
-                ]} 
+                  {
+                    width: `${Math.min(stats.waterPercentage, 100)}%`,
+                    backgroundColor: theme.colors.info
+                  }
+                ]}
               />
             </View>
             <Text style={styles.progressText}>
@@ -122,9 +188,9 @@ const HomeScreen = () => {
             </Text>
           </View>
 
-          <TouchableOpacity 
+          <TouchableOpacity
             style={[styles.actionButton, { backgroundColor: theme.colors.info }]}
-            onPress={() => addWater(250)}
+            onPress={handleAddWater}
           >
             <MaterialIcons name="add" size={24} color="#fff" />
             <Text style={styles.buttonText}>{t('home.waterButton')}</Text>
@@ -136,14 +202,18 @@ const HomeScreen = () => {
             </Text>
           )}
 
-          {timeUntilWater && (
-            <View style={styles.nextReminderBox}>
-              <MaterialIcons name="alarm" size={16} color={theme.colors.info} />
-              <Text style={styles.nextReminderText}>
-                {t('home.nextWaterReminder', { time: timeUntilWater })}
-              </Text>
-            </View>
-          )}
+          <CountdownDisplay 
+            targetTime={nextWater}
+            label={t('home.nextWaterReminder')}
+            color={theme.colors.info}
+          />
+
+          <TouchableOpacity 
+            style={[styles.debugButton, { backgroundColor: 'orange', marginTop: 10 }]}
+            onPress={() => handleTestReschedule('water')}
+          >
+            <Text style={styles.debugButtonText}>Test Replanif Eau</Text>
+          </TouchableOpacity>
         </Card>
 
         {/* Mouvements */}
@@ -152,24 +222,31 @@ const HomeScreen = () => {
             <MaterialIcons name="directions-run" size={32} color={theme.colors.success} />
             <Text style={styles.cardTitle}>{t('home.movements')}</Text>
           </View>
-          
+
           <View style={styles.progressContainer}>
             <View style={styles.progressBar}>
-              <View 
+              <View
                 style={[
                   styles.progressFill,
-                  { width: `${stats.movementsPercentage}%`, backgroundColor: theme.colors.success }
-                ]} 
+                  {
+                    width: `${Math.min(stats.movementsPercentage, 100)}%`,
+                    backgroundColor: theme.colors.success
+                  }
+                ]}
               />
             </View>
             <Text style={styles.progressText}>
-              {t('home.movementsProgress', { current: movements, goal: dailyGoals.movements, percentage: Math.round(stats.movementsPercentage) })}
-              </Text>
-            </View>
+              {t('home.movementsProgress', {
+                current: movements,
+                goal: dailyGoals.movements,
+                percentage: Math.round(stats.movementsPercentage)
+              })}
+            </Text>
+          </View>
 
-          <TouchableOpacity 
+          <TouchableOpacity
             style={[styles.actionButton, { backgroundColor: theme.colors.success }]}
-            onPress={addMovement}
+            onPress={handleAddMovement}
           >
             <MaterialIcons name="add" size={24} color="#fff" />
             <Text style={styles.buttonText}>{t('home.moveButton')}</Text>
@@ -181,36 +258,60 @@ const HomeScreen = () => {
             </Text>
           )}
 
-          {timeUntilMove && (
-            <View style={styles.nextReminderBox}>
-              <MaterialIcons name="alarm" size={16} color={theme.colors.success} />
-              <Text style={styles.nextReminderText}>
-                {t('home.nextMoveReminder', { time: timeUntilMove })}
-              </Text>
-            </View>
-          )}
+          <CountdownDisplay 
+            targetTime={nextMove}
+            label={t('home.nextMoveReminder')}
+            color={theme.colors.success}
+          />
+
+          <TouchableOpacity 
+            style={[styles.debugButton, { backgroundColor: 'purple', marginTop: 10 }]}
+            onPress={() => handleTestReschedule('movement')}
+          >
+            <Text style={styles.debugButtonText}>Test Replanif Mouvement</Text>
+          </TouchableOpacity>
         </Card>
 
-        {/* Statistiques rapides */}
-        <View style={styles.quickStats}>
-          <Card style={styles.statCard}>
-            <MaterialIcons name="emoji-events" size={32} color={theme.colors.warning} />
-            <Text style={styles.statValue}>{movements + Math.floor(waterIntake / 250)}</Text>
-            <Text style={styles.statLabel}>{t('home.actionsToday')}</Text>
-          </Card>
+        {/* Section Debug */}
+        <Card style={styles.debugCard}>
+          <Text style={styles.debugTitle}>🔧 Debug - Système de Notifications</Text>
           
-          <Card style={styles.statCard}>
-            <MaterialIcons name="trending-up" size={32} color={theme.colors.primary} />
-            <Text style={styles.statValue}>{Math.round((stats.waterPercentage + stats.movementsPercentage) / 2)}%</Text>
-            <Text style={styles.statLabel}>{t('home.goalsAchieved')}</Text>
-          </Card>
-        </View>
+          <View style={styles.debugButtons}>
+            <TouchableOpacity 
+              style={[styles.debugButton, { backgroundColor: 'blue' }]}
+              onPress={handleRefresh}
+            >
+              <Text style={styles.debugButtonText}>Actualiser</Text>
+            </TouchableOpacity>
 
+            <TouchableOpacity 
+              style={[styles.debugButton, { backgroundColor: 'green' }]}
+              onPress={handleDebug}
+            >
+              <Text style={styles.debugButtonText}>Debug</Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity 
+              style={[styles.debugButton, { backgroundColor: 'red' }]}
+              onPress={handleForceReset}
+            >
+              <Text style={styles.debugButtonText}>RESET</Text>
+            </TouchableOpacity>
+          </View>
+
+          {debugInfo ? (
+            <View style={styles.debugInfoContainer}>
+              <Text style={styles.debugInfoTitle}>Informations:</Text>
+              <Text style={styles.debugInfo}>{debugInfo}</Text>
+            </View>
+          ) : null}
+        </Card>
       </ScrollView>
     </SafeAreaView>
   );
 };
 
+// Styles (inchangés)
 const styles = StyleSheet.create({
   container: {
     flex: 1,
@@ -226,12 +327,12 @@ const styles = StyleSheet.create({
     marginBottom: theme.spacing.xs,
   },
   moText: {
-    color: '#059669', // Vert foncé
+    color: '#059669',
     fontSize: 32,
     fontWeight: 'bold',
   },
   odText: {
-    color: '#10B981', // Vert clair
+    color: '#10B981',
     fontSize: 32,
     fontWeight: 'bold',
   },
@@ -333,28 +434,55 @@ const styles = StyleSheet.create({
     marginLeft: theme.spacing.xs,
     fontWeight: '600',
   },
-  quickStats: {
-    flexDirection: 'row',
-    marginHorizontal: theme.spacing.md,
-    marginBottom: theme.spacing.xl,
-  },
-  statCard: {
-    flex: 1,
-    alignItems: 'center',
+  debugCard: {
+    margin: theme.spacing.md,
     padding: theme.spacing.md,
-    marginHorizontal: theme.spacing.xs,
+    backgroundColor: '#f8f9fa',
+    borderLeftWidth: 4,
+    borderLeftColor: '#6c757d',
   },
-  statValue: {
-    fontSize: 24,
+  debugTitle: {
+    fontSize: 16,
     fontWeight: 'bold',
-    color: theme.colors.text,
-    marginVertical: theme.spacing.xs,
-  },
-  statLabel: {
-    fontSize: 12,
-    color: theme.colors.textSecondary,
+    color: '#6c757d',
+    marginBottom: theme.spacing.sm,
     textAlign: 'center',
+  },
+  debugButtons: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    justifyContent: 'space-between',
+    marginBottom: theme.spacing.sm,
+  },
+  debugButton: {
+    padding: theme.spacing.sm,
+    borderRadius: theme.borderRadius.sm,
+    marginBottom: theme.spacing.xs,
+  },
+  debugButtonText: {
+    color: '#fff',
+    fontSize: 12,
+    fontWeight: '600',
+    textAlign: 'center',
+  },
+  debugInfoContainer: {
+    marginTop: theme.spacing.sm,
+    padding: theme.spacing.sm,
+    backgroundColor: '#e9ecef',
+    borderRadius: theme.borderRadius.sm,
+  },
+  debugInfoTitle: {
+    fontSize: 12,
+    fontWeight: 'bold',
+    color: '#6c757d',
+    marginBottom: theme.spacing.xs,
+  },
+  debugInfo: {
+    fontSize: 11,
+    color: '#6c757d',
+    fontFamily: 'monospace',
+    lineHeight: 16,
   },
 });
 
-export default HomeScreen;
+export default React.memo(HomeScreen);
