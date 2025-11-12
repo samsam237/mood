@@ -1,4 +1,4 @@
-// contexts/NotificationContext.js - VERSION CORRIGÉE
+// contexts/NotificationContext.js - VERSION SIMPLIFIÉE (répétition automatique)
 import React, { createContext, useState, useContext, useEffect, useRef } from 'react';
 import * as Notifications from 'expo-notifications';
 import notificationService from '../services/notificationService';
@@ -18,86 +18,127 @@ export const NotificationProvider = ({ children }) => {
   const [nextMove, setNextMove] = useState(null);
   const [isInitialized, setIsInitialized] = useState(false);
   const [lastNotification, setLastNotification] = useState(null);
+  const [profileMissing, setProfileMissing] = useState(false); // 🔥 Nouvel état
   
   const mountedRef = useRef(true);
-  const notificationProcessedRef = useRef(new Set());
+  const updateIntervalRef = useRef(null);
 
-  // 🔥 INITIALISATION STABLE SANS INTERVALLE
+  // 🔥 INITIALISATION AU MONTAGE
   useEffect(() => {
-    console.log('🔔 NotificationProvider INIT');
+    console.log('🔔 NotificationProvider MONTÉ');
     mountedRef.current = true;
 
     const initialize = async () => {
       if (!isInitialized) {
-        console.log('🔄 Initialisation des rappels...');
+        /* console.log('🔄 Initialisation du système de notifications...');
         try {
-          await notificationService.initializeReminders();
-          await updateNextNotifications();
-          setIsInitialized(true);
-          console.log('✅ Initialisation terminée');
+          const result = await notificationService.initializeReminders();
+          
+          if (result.success) {
+            if (result.profileMissing) {
+              console.log('⚠️  Notifications non activées: profil manquant');
+              setProfileMissing(true); // 🔥 Marquer que le profil est manquant
+              setIsInitialized(true); // 🔥 On considère quand même le contexte comme initialisé
+            } else {
+              console.log('✅ Notifications initialisées avec succès');
+              await updateNextNotifications();
+              setIsInitialized(true);
+              setProfileMissing(false);
+            }
+          } else {
+            console.error('❌ Échec initialisation:', result.error);
+          }
         } catch (error) {
           console.error('❌ Erreur initialisation:', error);
+        } */
+      }
+    };
+
+
+    // Démarrer après un court délai
+    const initTimer = setTimeout(initialize, 2000);
+
+    // 🔥 LISTENER POUR REPLANIFIER APRÈS CHAQUE NOTIFICATION
+    // 🔥 CORRECTION - Modifiez le listener dans NotificationContext.js
+// 🔥 REMPLACEZ le listener de notifications
+const receivedSubscription = Notifications.addNotificationReceivedListener(async (notification) => {
+  if (!mountedRef.current) return;
+  
+  const type = notification.request.content.data?.type;
+  const isRepeating = notification.request.content.data?.isRepeating;
+  const interval = notification.request.content.data?.interval;
+  const timestamp = new Date().toLocaleTimeString();
+  
+  console.log(`🔔 Notification ${type} reçue à ${timestamp}`);
+  
+  setLastNotification({ 
+    type, 
+    timestamp, 
+    id: notification.request.identifier 
+  });
+  
+  // 🔥 CORRECTION : Vérifier que c'est une vraie notification utilisateur
+  // Ignorer les notifications de test ou les doublons
+  if (isRepeating && interval && (type === 'water' || type === 'movement')) {
+    console.log(`⏳ Attente de ${interval}s avant replanification...`);
+    
+    // 🔥 ATTENDRE l'intervalle complet avant de replanifier
+    setTimeout(async () => {
+      if (mountedRef.current) {
+        try {
+          console.log(`🔄 Replanification de ${type}`);
+          await notificationService.rescheduleNotification(type);
+          setTimeout(updateNextNotifications, 1000);
+        } catch (error) {
+          console.error(`❌ Erreur replanification ${type}:`, error);
         }
       }
-    };
-
-    // Démarrer l'initialisation après un court délai
-    setTimeout(initialize, 3000);
-
-    // 🔥 ÉCOUTEUR STABLE : Seulement pour les vraies notifications
-    const subscription = Notifications.addNotificationReceivedListener(async (notification) => {
+    }, interval * 1000); // 🔥 ATTENTION : interval en millisecondes
+  }
+});
+    // 🔥 LISTENER POUR LES INTERACTIONS (tap sur notification)
+    const responseSubscription = Notifications.addNotificationResponseReceivedListener((response) => {
       if (!mountedRef.current) return;
       
-      const type = notification.request.content.data?.type;
-      const notificationId = notification.request.identifier;
-      const timestamp = new Date().toLocaleTimeString();
+      const type = response.notification.request.content.data?.type;
+      console.log(`👆 Utilisateur a tapé sur notification ${type}`);
       
-      // Éviter les doublons
-      if (notificationProcessedRef.current.has(notificationId)) {
-        return;
-      }
-      
-      notificationProcessedRef.current.add(notificationId);
-      
-      console.log(`🔔 Notification ${type} reçue à ${timestamp}`);
-      setLastNotification({ type, timestamp, id: notificationId });
-      
-      // Reprogrammer SEULEMENT pour les types water/movement
-      if (type === 'water' || type === 'movement') {
-        console.log(`🔄 Reprogrammation planifiée pour ${type}`);
-        
-        // Délai avant reprogrammation
-        setTimeout(async () => {
-          if (mountedRef.current) {
-            try {
-              await notificationService.rescheduleNotification(type);
-              // 🔥 Mise à jour UNIQUE après reprogrammation
-              setTimeout(updateNextNotifications, 1000);
-            } catch (error) {
-              console.error(`❌ Erreur reprogrammation ${type}:`, error);
-            }
-          }
-        }, 2000);
-      }
-      
-      // Nettoyer les IDs après 1 minute
-      setTimeout(() => {
-        notificationProcessedRef.current.delete(notificationId);
-      }, 60000);
+      // Vous pouvez ajouter une logique ici (navigation, etc.)
     });
 
-    // 🔥 SUPPRIMER L'INTERVALLE QUI CAUSE LES RE-RENDERS
-    // Plus de setInterval ici !
+    // 🔥 MISE À JOUR PÉRIODIQUE DES TEMPS (toutes les 30 secondes)
+    // Pour garder l'affichage à jour sans trop de re-renders
+    const startPeriodicUpdate = () => {
+      if (updateIntervalRef.current) {
+        clearInterval(updateIntervalRef.current);
+      }
+      
+      updateIntervalRef.current = setInterval(() => {
+        if (mountedRef.current && isInitialized) {
+          updateNextNotifications();
+        }
+      }, 30000); // Toutes les 30 secondes
+    };
+
+    // Démarrer les mises à jour après initialisation
+    if (isInitialized) {
+      startPeriodicUpdate();
+    }
 
     return () => {
-      console.log('🔔 NotificationProvider CLEANUP');
+      console.log('🔔 NotificationProvider NETTOYAGE');
       mountedRef.current = false;
-      subscription.remove();
-      notificationProcessedRef.current.clear();
+      clearTimeout(initTimer);
+      receivedSubscription.remove();
+      responseSubscription.remove();
+      
+      if (updateIntervalRef.current) {
+        clearInterval(updateIntervalRef.current);
+      }
     };
-  }, []);
+  }, [isInitialized]);
 
-  // 🔥 FONCTION DE MISE À JOUR OPTIMISÉE
+  // 🔥 FONCTION DE MISE À JOUR DES TEMPS
   const updateNextNotifications = async () => {
     if (!mountedRef.current) return;
 
@@ -107,34 +148,44 @@ export const NotificationProvider = ({ children }) => {
       if (mountedRef.current) {
         setNextWater(times.nextWater);
         setNextMove(times.nextMove);
-        
-        console.log('🔔 Temps mis à jour:', {
-          nextWater: times.nextWater?.toLocaleTimeString(),
-          nextMove: times.nextMove?.toLocaleTimeString()
-        });
       }
     } catch (error) {
       console.error('❌ Erreur mise à jour notifications:', error);
     }
   };
 
-  // Fonctions de debug
+  // 🔥 FONCTIONS DE DEBUG ET MAINTENANCE
   const debugNotifications = async () => {
-    return await notificationService.debugScheduledNotifications();
+    const result = await notificationService.debugScheduledNotifications();
+    await updateNextNotifications();
+    return result;
   };
 
   const forceResetSystem = async () => {
-    console.log('💥 Reset forcé du système');
-    await notificationService.cancelAllReminders();
-    await new Promise(resolve => setTimeout(resolve, 2000));
-    await notificationService.initializeReminders();
-    await updateNextNotifications();
+    console.log('💥 RESET COMPLET DU SYSTÈME');
+    try {
+      await notificationService.cancelAllReminders();
+      await new Promise(resolve => setTimeout(resolve, 2000));
+      
+      const result = await notificationService.initializeReminders();
+      if (result.success) {
+        await updateNextNotifications();
+        console.log('✅ Système réinitialisé avec succès');
+      }
+    } catch (error) {
+      console.error('❌ Erreur reset système:', error);
+    }
   };
 
   const forceReschedule = async (type) => {
-    console.log(`🔧 Reprogrammation forcée pour ${type}`);
-    await notificationService.rescheduleNotification(type);
-    await updateNextNotifications();
+    console.log(`🔧 Reprogrammation manuelle pour ${type}`);
+    try {
+      await notificationService.rescheduleNotification(type);
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      await updateNextNotifications();
+    } catch (error) {
+      console.error(`❌ Erreur reprogrammation ${type}:`, error);
+    }
   };
 
   const value = {
@@ -145,7 +196,8 @@ export const NotificationProvider = ({ children }) => {
     updateNextNotifications,
     forceReschedule,
     debugNotifications,
-    forceResetSystem
+    forceResetSystem,
+    profileMissing, // 🔥 Exposer l'état du profil
   };
 
   return (

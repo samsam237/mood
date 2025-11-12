@@ -1,3 +1,4 @@
+// ProfileScreen.js - VERSION AVEC SAUVEGARDE INTELLIGENTE CORRIGÉE
 import React, { useState, useEffect } from 'react';
 import {
   View,
@@ -17,12 +18,19 @@ import notificationService from '../services/notificationService';
 import { useTranslation } from '../hooks/useTranslation';
 import CustomNotification from '../components/common/CustomNotification';
 import { useCustomNotification } from '../hooks/useCustomNotification';
+import { useNotification } from '../contexts/NotificationContext';
 
 const ProfileScreen = () => {
   const { userProfile, updateUserProfile, updateGoals } = useHealth();
   const { t } = useTranslation();
   const { notification, showSuccess, showError, hideNotification } = useCustomNotification();
+  const { updateNextNotifications } = useNotification(); 
   
+  // 🔥 ÉTAT POUR SUIVRE LES CHAMPS MODIFIÉS
+  const [modifiedFields, setModifiedFields] = useState({});
+  const [originalProfile, setOriginalProfile] = useState(null);
+  
+  // États pour chaque champ
   const [name, setName] = useState('');
   const [age, setAge] = useState('');
   const [weight, setWeight] = useState('');
@@ -36,9 +44,12 @@ const ProfileScreen = () => {
   const [gender, setGender] = useState('');
   const [useAutoCalculation, setUseAutoCalculation] = useState(true);
 
+  // 🔥 CHARGEMENT INITIAL DU PROFIL
   useEffect(() => {
-    // Charger le profil existant
-    if (userProfile) {
+    if (userProfile && !originalProfile) {
+      setOriginalProfile(userProfile);
+      
+      // Initialiser tous les champs
       setName(userProfile.name || '');
       setAge(userProfile.age ? userProfile.age.toString() : '');
       setWeight(userProfile.weight ? userProfile.weight.toString() : '');
@@ -51,8 +62,164 @@ const ProfileScreen = () => {
       setActivityLevel(userProfile.activityLevel || 'moderate');
       setGender(userProfile.gender || '');
       setUseAutoCalculation(userProfile.useAutoCalculation !== false);
+      
+      // Réinitialiser les champs modifiés
+      setModifiedFields({});
     }
-  }, [userProfile]);
+  }, [userProfile, originalProfile]);
+
+  // 🔥 FONCTIONS POUR DÉTECTER LES MODIFICATIONS
+  const handleFieldChange = (field, value, originalValue) => {
+    // Convertir pour la comparaison
+    const currentValue = value === '' ? null : value;
+    const origValue = originalValue === '' ? null : originalValue;
+    
+    // Vérifier si la valeur a changé
+    const hasChanged = currentValue !== origValue;
+    
+    setModifiedFields(prev => ({
+      ...prev,
+      [field]: hasChanged ? value : undefined
+    }));
+  };
+
+  // 🔥 HANDLERS POUR TOUS LES CHAMPS
+  const handleNameChange = (text) => {
+    setName(text);
+    handleFieldChange('name', text, originalProfile?.name || '');
+  };
+
+  const handleAgeChange = (text) => {
+    setAge(text);
+    handleFieldChange('age', text, originalProfile?.age?.toString() || '');
+  };
+
+  const handleWeightChange = (text) => {
+    setWeight(text);
+    handleFieldChange('weight', text, originalProfile?.weight?.toString() || '');
+  };
+
+  const handleHeightChange = (text) => {
+    setHeight(text);
+    handleFieldChange('height', text, originalProfile?.height?.toString() || '');
+  };
+
+  const handleWakeTimeChange = (text) => {
+    setWakeTime(text);
+    handleFieldChange('wakeTime', text, originalProfile?.wakeTime || '07:00');
+  };
+
+  const handleSleepTimeChange = (text) => {
+    setSleepTime(text);
+    handleFieldChange('sleepTime', text, originalProfile?.sleepTime || '23:00');
+  };
+
+  const handleSedentaryHoursChange = (text) => {
+    setSedentaryHours(text);
+    handleFieldChange('sedentaryHours', text, originalProfile?.sedentaryHours?.toString() || '');
+  };
+
+  const handleMuscleMassChange = (text) => {
+    setMuscleMass(text);
+    handleFieldChange('muscleMass', text, originalProfile?.muscleMass?.toString() || '');
+  };
+
+  const handleFatMassChange = (text) => {
+    setFatMass(text);
+    handleFieldChange('fatMass', text, originalProfile?.fatMass?.toString() || '');
+  };
+
+  const handleActivityLevelChange = (level) => {
+    setActivityLevel(level);
+    handleFieldChange('activityLevel', level, originalProfile?.activityLevel || 'moderate');
+  };
+
+  const handleGenderChange = (selectedGender) => {
+    setGender(selectedGender);
+    handleFieldChange('gender', selectedGender, originalProfile?.gender || '');
+  };
+
+  const handleUseAutoCalculationChange = (value) => {
+    setUseAutoCalculation(value);
+    handleFieldChange('useAutoCalculation', value, originalProfile?.useAutoCalculation !== false);
+  };
+
+  // 🔥 VERSION INTELLIGENTE DE handleSaveProfile
+  const handleSaveProfile = async () => {
+    try {
+      // 🔥 FILTRER SEULEMENT LES CHAMPS MODIFIÉS
+      const updates = {};
+      
+      if (modifiedFields.name !== undefined) updates.name = modifiedFields.name;
+      if (modifiedFields.age !== undefined) updates.age = parseInt(modifiedFields.age) || null;
+      if (modifiedFields.weight !== undefined) updates.weight = parseInt(modifiedFields.weight) || null;
+      if (modifiedFields.height !== undefined) updates.height = parseInt(modifiedFields.height) || null;
+      if (modifiedFields.wakeTime !== undefined) updates.wakeTime = modifiedFields.wakeTime;
+      if (modifiedFields.sleepTime !== undefined) updates.sleepTime = modifiedFields.sleepTime;
+      if (modifiedFields.sedentaryHours !== undefined) updates.sedentaryHours = parseFloat(modifiedFields.sedentaryHours) || null;
+      if (modifiedFields.activityLevel !== undefined) updates.activityLevel = modifiedFields.activityLevel;
+      if (modifiedFields.gender !== undefined) updates.gender = modifiedFields.gender;
+      if (modifiedFields.useAutoCalculation !== undefined) updates.useAutoCalculation = modifiedFields.useAutoCalculation;
+
+      // Gestion spéciale pour la composition corporelle
+      if (useAutoCalculation && bodyComposition) {
+        if (modifiedFields.weight !== undefined || modifiedFields.height !== undefined || modifiedFields.age !== undefined || modifiedFields.gender !== undefined) {
+          updates.muscleMass = bodyComposition.muscleMass;
+          updates.fatMass = bodyComposition.fatMass;
+        }
+      } else {
+        if (modifiedFields.muscleMass !== undefined) updates.muscleMass = parseFloat(modifiedFields.muscleMass) || null;
+        if (modifiedFields.fatMass !== undefined) updates.fatMass = parseFloat(modifiedFields.fatMass) || null;
+      }
+
+      // Calcul de l'hydratation recommandée si les données nécessaires ont changé
+      const hydrationFieldsChanged = modifiedFields.weight !== undefined || 
+                                   modifiedFields.height !== undefined || 
+                                   modifiedFields.activityLevel !== undefined ||
+                                   modifiedFields.gender !== undefined;
+      
+      if (hydrationFieldsChanged && recommendedWater) {
+        updates.recommendedWaterGoal = recommendedWater;
+      }
+
+      // 🔥 VÉRIFIER S'IL Y A DES MODIFICATIONS
+      if (Object.keys(updates).length === 0) {
+        showSuccess('Aucune modification à sauvegarder');
+        return;
+      }
+
+      console.log('📝 Champs à mettre à jour:', updates);
+
+      // Sauvegarder le profil
+      await updateUserProfile(updates);
+
+      // 🔥 RÉINITIALISER LES NOTIFICATIONS SEULEMENT SI LES HORAIRES ONT CHANGÉ
+      const scheduleChanged = modifiedFields.wakeTime !== undefined || modifiedFields.sleepTime !== undefined;
+      
+      if (scheduleChanged) {
+        const result = await notificationService.initializeReminders();
+        
+        if (result.success) {
+          showSuccess(t('profile.profileSavedSuccess'));
+          if (updateNextNotifications) {
+            setTimeout(updateNextNotifications, 1000);
+          }
+        } else {
+          showError(t('profile.profileSavedError', { error: result.error }));
+        }
+      } else {
+        showSuccess('Profil mis à jour avec succès');
+      }
+
+      // 🔥 RÉINITIALISER LES CHAMPS MODIFIÉS
+      setModifiedFields({});
+      setOriginalProfile({ ...originalProfile, ...updates });
+
+    } catch (error) {
+      showError(t('profile.saveError'));
+      console.error(error);
+    }
+  };
 
   const calculateBMI = () => {
     if (weight && height) {
@@ -218,39 +385,6 @@ const ProfileScreen = () => {
     }
   };
 
-  const handleSaveProfile = async () => {
-    try {
-      // Sauvegarder le profil
-      await updateUserProfile({
-        name,
-        age: parseInt(age) || null,
-        weight: parseInt(weight) || null,
-        height: parseInt(height) || null,
-        wakeTime,
-        sleepTime,
-        sedentaryHours: parseFloat(sedentaryHours) || null,
-        muscleMass: useAutoCalculation && bodyComposition ? bodyComposition.muscleMass : (parseFloat(muscleMass) || null),
-        fatMass: useAutoCalculation && bodyComposition ? bodyComposition.fatMass : (parseFloat(fatMass) || null),
-        activityLevel,
-        gender,
-        useAutoCalculation,
-        recommendedWaterGoal: recommendedWater || null,
-      });
-
-      // Initialiser les rappels avec les nouvelles heures
-      const result = await notificationService.initializeReminders();
-      
-      if (result.success) {
-        showSuccess(t('profile.profileSavedSuccess'));
-      } else {
-        showError(t('profile.profileSavedError', { error: result.error }));
-      }
-    } catch (error) {
-      showError(t('profile.saveError'));
-      console.error(error);
-    }
-  };
-
   return (
     <SafeAreaView style={styles.container}>
       <ScrollView showsVerticalScrollIndicator={false}>
@@ -261,7 +395,17 @@ const ProfileScreen = () => {
           </View>
           <Text style={styles.title}>{t('profile.title')}</Text>
           <Text style={styles.subtitle}>{t('profile.subtitle')}</Text>
+          {/* 🔥 INDICATEUR DE MODIFICATIONS */}
+          {Object.keys(modifiedFields).length > 0 && (
+            <View style={styles.modifiedIndicator}>
+              <MaterialIcons name="edit" size={16} color={theme.colors.warning} />
+              <Text style={styles.modifiedText}>
+                {Object.keys(modifiedFields).length} modification(s) en attente
+              </Text>
+            </View>
+          )}
         </View>
+        
 
         {/* Informations de base */}
         <View style={styles.section}>
@@ -272,7 +416,7 @@ const ProfileScreen = () => {
             <TextInput
               style={styles.input}
               value={name}
-              onChangeText={setName}
+              onChangeText={handleNameChange}
               placeholder={t('profile.namePlaceholder')}
               placeholderTextColor={theme.colors.textSecondary}
             />
@@ -283,7 +427,7 @@ const ProfileScreen = () => {
             <TextInput
               style={styles.input}
               value={age}
-              onChangeText={setAge}
+              onChangeText={handleAgeChange}
               placeholder={t('profile.agePlaceholder')}
               keyboardType="numeric"
               placeholderTextColor={theme.colors.textSecondary}
@@ -298,7 +442,7 @@ const ProfileScreen = () => {
                   styles.genderButton,
                   gender === 'male' && styles.genderButtonActive
                 ]}
-                onPress={() => setGender('male')}
+                onPress={() => handleGenderChange('male')}
               >
                 <Text style={[
                   styles.genderButtonText,
@@ -313,7 +457,7 @@ const ProfileScreen = () => {
                   styles.genderButton,
                   gender === 'female' && styles.genderButtonActive
                 ]}
-                onPress={() => setGender('female')}
+                onPress={() => handleGenderChange('female')}
               >
                 <Text style={[
                   styles.genderButtonText,
@@ -341,7 +485,7 @@ const ProfileScreen = () => {
             <TextInput
               style={styles.timeInput}
               value={wakeTime}
-              onChangeText={setWakeTime}
+              onChangeText={handleWakeTimeChange}
               placeholder="07:00"
               placeholderTextColor={theme.colors.textSecondary}
             />
@@ -358,7 +502,7 @@ const ProfileScreen = () => {
             <TextInput
               style={styles.timeInput}
               value={sleepTime}
-              onChangeText={setSleepTime}
+              onChangeText={handleSleepTimeChange}
               placeholder="23:00"
               placeholderTextColor={theme.colors.textSecondary}
             />
@@ -384,7 +528,7 @@ const ProfileScreen = () => {
             <TextInput
               style={styles.input}
               value={weight}
-              onChangeText={setWeight}
+              onChangeText={handleWeightChange}
               placeholder="70"
               keyboardType="numeric"
               placeholderTextColor={theme.colors.textSecondary}
@@ -396,7 +540,7 @@ const ProfileScreen = () => {
             <TextInput
               style={styles.input}
               value={height}
-              onChangeText={setHeight}
+              onChangeText={handleHeightChange}
               placeholder="175"
               keyboardType="numeric"
               placeholderTextColor={theme.colors.textSecondary}
@@ -435,7 +579,7 @@ const ProfileScreen = () => {
             <TextInput
               style={styles.input}
               value={sedentaryHours}
-              onChangeText={setSedentaryHours}
+              onChangeText={handleSedentaryHoursChange}
               placeholder={t('profile.sedentaryHoursPlaceholder')}
               keyboardType="numeric"
               placeholderTextColor={theme.colors.textSecondary}
@@ -495,7 +639,7 @@ const ProfileScreen = () => {
                   styles.toggleButton,
                   useAutoCalculation && styles.toggleButtonActive
                 ]}
-                onPress={() => setUseAutoCalculation(true)}
+                onPress={() => handleUseAutoCalculationChange(true)}
               >
                 <Text style={[
                   styles.toggleButtonText,
@@ -510,7 +654,7 @@ const ProfileScreen = () => {
                   styles.toggleButton,
                   !useAutoCalculation && styles.toggleButtonActive
                 ]}
-                onPress={() => setUseAutoCalculation(false)}
+                onPress={() => handleUseAutoCalculationChange(false)}
               >
                 <Text style={[
                   styles.toggleButtonText,
@@ -556,7 +700,7 @@ const ProfileScreen = () => {
                 <TextInput
                   style={styles.input}
                   value={muscleMass}
-                  onChangeText={setMuscleMass}
+                  onChangeText={handleMuscleMassChange}
                   placeholder={t('profile.muscleMassPlaceholder')}
                   keyboardType="numeric"
                   placeholderTextColor={theme.colors.textSecondary}
@@ -571,7 +715,7 @@ const ProfileScreen = () => {
                 <TextInput
                   style={styles.input}
                   value={fatMass}
-                  onChangeText={setFatMass}
+                  onChangeText={handleFatMassChange}
                   placeholder={t('profile.fatMassPlaceholder')}
                   keyboardType="numeric"
                   placeholderTextColor={theme.colors.textSecondary}
@@ -592,7 +736,7 @@ const ProfileScreen = () => {
                   styles.activityButton,
                   activityLevel === 'sedentary' && styles.activityButtonActive
                 ]}
-                onPress={() => setActivityLevel('sedentary')}
+                onPress={() => handleActivityLevelChange('sedentary')}
               >
                 <Text style={[
                   styles.activityButtonText,
@@ -607,7 +751,7 @@ const ProfileScreen = () => {
                   styles.activityButton,
                   activityLevel === 'moderate' && styles.activityButtonActive
                 ]}
-                onPress={() => setActivityLevel('moderate')}
+                onPress={() => handleActivityLevelChange('moderate')}
               >
                 <Text style={[
                   styles.activityButtonText,
@@ -622,7 +766,7 @@ const ProfileScreen = () => {
                   styles.activityButton,
                   activityLevel === 'intense' && styles.activityButtonActive
                 ]}
-                onPress={() => setActivityLevel('intense')}
+                onPress={() => handleActivityLevelChange('intense')}
               >
                 <Text style={[
                   styles.activityButtonText,
@@ -671,12 +815,16 @@ const ProfileScreen = () => {
           </Card>
         </View>
 
-        {/* Bouton Enregistrer */}
-        <View style={styles.buttonContainer}>
+           {/* Bouton Enregistrer avec indicateur */}
+           <View style={styles.buttonContainer}>
           <Button
-            title={t('profile.saveProfile')}
+            title={
+              Object.keys(modifiedFields).length > 0 
+                ? `Enregistrer les modifications (${Object.keys(modifiedFields).length})`
+                : t('profile.saveProfile')
+            }
             onPress={handleSaveProfile}
-            variant="primary"
+            variant={Object.keys(modifiedFields).length > 0 ? "primary" : "secondary"}
             size="large"
           />
         </View>
@@ -714,6 +862,21 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     marginBottom: theme.spacing.md,
+  },
+  modifiedIndicator: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: theme.colors.warning + '20',
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 16,
+    marginTop: 8,
+  },
+  modifiedText: {
+    fontSize: 12,
+    color: theme.colors.warning,
+    marginLeft: 4,
+    fontWeight: '600',
   },
   title: {
     fontSize: 24,

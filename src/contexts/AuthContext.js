@@ -1,4 +1,5 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { authService } from '../services/authService';
 
 const AuthContext = createContext();
@@ -11,6 +12,33 @@ export const useAuth = () => {
   return context;
 };
 
+// AuthContext.js - MODIFIEZ LES INTERVALLES
+const createInitialUserProfile = async (user) => {
+  try {
+    const defaultProfile = {
+      name: user.displayName || 'Utilisateur',
+      email: user.email,
+      water_goal: 2000,
+      movement_goal: 20,
+      reminder_intervals: {
+        water: 7200,    // 🔥 120 minutes en secondes (2 heures)
+        movement: 3600  // 🔥 60 minutes en secondes (1 heure)
+      },
+      wakeTime: '07:00',
+      sleepTime: '23:00',
+      activityLevel: 'moderate',
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString()
+    };
+    
+    await AsyncStorage.setItem('user_profile', JSON.stringify(defaultProfile));
+    console.log('✅ Profil utilisateur créé avec intervalles par défaut');
+    return defaultProfile;
+  } catch (error) {
+    console.error('❌ Erreur création profil:', error);
+    return null;
+  }
+};
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -47,6 +75,11 @@ export const AuthProvider = ({ children }) => {
     const result = await authService.signInWithEmail(email, password);
     if (result.success) {
       setUser(result.user);
+      // Vérifier si le profil existe déjà, sinon le créer
+      const existingProfile = await AsyncStorage.getItem('user_profile');
+      if (!existingProfile) {
+        await createInitialUserProfile(result.user);
+      }
     }
     return result;
   };
@@ -55,6 +88,8 @@ export const AuthProvider = ({ children }) => {
     const result = await authService.signUpWithEmail(email, password, displayName);
     if (result.success) {
       setUser(result.user);
+      // Création du profil pour les nouveaux utilisateurs
+      await createInitialUserProfile(result.user);
     }
     return result;
   };
@@ -63,6 +98,11 @@ export const AuthProvider = ({ children }) => {
     const result = await authService.signInWithGoogle();
     if (result.success) {
       setUser(result.user);
+      // Vérifier si le profil existe déjà, sinon le créer
+      const existingProfile = await AsyncStorage.getItem('user_profile');
+      if (!existingProfile) {
+        await createInitialUserProfile(result.user);
+      }
     }
     return result;
   };
@@ -71,17 +111,24 @@ export const AuthProvider = ({ children }) => {
     const result = await authService.signInWithFacebook();
     if (result.success) {
       setUser(result.user);
+      // Vérifier si le profil existe déjà, sinon le créer
+      const existingProfile = await AsyncStorage.getItem('user_profile');
+      if (!existingProfile) {
+        await createInitialUserProfile(result.user);
+      }
     }
     return result;
   };
-
 
   const signInWithDefault = async () => {
     const result = await authService.signInWithDefault();
     if (result.success) {
       setUser(result.user);
-      // Sauvegarder les données utilisateur
-      await authService.saveUserData(result.user);
+      // Vérifier si le profil existe déjà, sinon le créer
+      const existingProfile = await AsyncStorage.getItem('user_profile');
+      if (!existingProfile) {
+        await createInitialUserProfile(result.user);
+      }
     }
     return result;
   };

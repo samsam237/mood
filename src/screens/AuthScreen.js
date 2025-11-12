@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -11,6 +11,8 @@ import {
   KeyboardAvoidingView,
   Platform,
   Dimensions,
+  Animated,
+  Easing,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { MaterialIcons } from '@expo/vector-icons';
@@ -23,7 +25,7 @@ import { useTranslation } from '../hooks/useTranslation';
 import CustomNotification from '../components/common/CustomNotification';
 import { useCustomNotification } from '../hooks/useCustomNotification';
 
-const { height } = Dimensions.get('window');
+const { height, width } = Dimensions.get('window');
 
 const AuthScreen = () => {
   const { t } = useTranslation();
@@ -57,6 +59,83 @@ const AuthScreen = () => {
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [showMobileInfo, setShowMobileInfo] = useState(false);
 
+  // Animations
+  const fadeAnim = useState(new Animated.Value(0))[0];
+  const slideUpAnim = useState(new Animated.Value(50))[0];
+  const logoScale = useState(new Animated.Value(0.8))[0];
+  const cardOpacity = useState(new Animated.Value(0))[0];
+  const cardScale = useState(new Animated.Value(0.9))[0];
+  const togglePosition = useState(new Animated.Value(0))[0];
+  const inputFocusAnim = useState({})[0];
+
+  // Initialisation des animations d'input
+  Object.keys(formData).forEach(key => {
+    inputFocusAnim[key] = useState(new Animated.Value(0))[0];
+  });
+
+  useEffect(() => {
+    // Animation d'entrée
+    Animated.parallel([
+      Animated.timing(fadeAnim, {
+        toValue: 1,
+        duration: 800,
+        useNativeDriver: true,
+      }),
+      Animated.timing(slideUpAnim, {
+        toValue: 0,
+        duration: 800,
+        easing: Easing.out(Easing.cubic),
+        useNativeDriver: true,
+      }),
+      Animated.spring(logoScale, {
+        toValue: 1,
+        tension: 100,
+        friction: 8,
+        useNativeDriver: true,
+      }),
+      Animated.timing(cardOpacity, {
+        toValue: 1,
+        duration: 600,
+        delay: 300,
+        useNativeDriver: true,
+      }),
+      Animated.spring(cardScale, {
+        toValue: 1,
+        tension: 100,
+        friction: 8,
+        delay: 300,
+        useNativeDriver: true,
+      }),
+    ]).start();
+  }, []);
+
+  const handleToggle = (login) => {
+    setIsLogin(login);
+    Animated.spring(togglePosition, {
+      toValue: login ? 0 : 1,
+      tension: 150,
+      friction: 15,
+      useNativeDriver: true,
+    }).start();
+  };
+
+  const handleInputFocus = (fieldName) => {
+    Animated.timing(inputFocusAnim[fieldName], {
+      toValue: 1,
+      duration: 200,
+      useNativeDriver: true,
+    }).start();
+  };
+
+  const handleInputBlur = (fieldName) => {
+    if (!formData[fieldName]) {
+      Animated.timing(inputFocusAnim[fieldName], {
+        toValue: 0,
+        duration: 200,
+        useNativeDriver: true,
+      }).start();
+    }
+  };
 
   const handleEmailAuth = async () => {
     const { email, password, displayName, confirmPassword } = formData;
@@ -66,7 +145,6 @@ const AuthScreen = () => {
       return;
     }
 
-    // Validation de l'email
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     const cleanEmail = email.trim();
     
@@ -88,17 +166,14 @@ const AuthScreen = () => {
         : await signUpWithEmail(cleanEmail, password, displayName);
       
       if (result.success) {
-        // Connexion/inscription réussie
         showSuccessNotification(
           isLogin ? t('auth.loginSuccess') : t('auth.signupSuccess'),
           isLogin ? t('auth.welcomeBack') : t('auth.accountCreated')
         );
       } else {
-        // Message d'erreur générique pour la sécurité
         let alertTitle = t('auth.errors.connectionError');
         let alertMessage = t('auth.errors.connectionErrorMessage');
         
-        // Seules les erreurs de format d'email peuvent être spécifiques
         if (result.error.includes('invalid-email')) {
           alertTitle = t('auth.errors.invalidEmail');
           alertMessage = t('auth.errors.invalidEmailMessage');
@@ -117,73 +192,60 @@ const AuthScreen = () => {
     }
   };
 
-  const handleGoogleSignIn = async () => {
-    setLoading({ ...loading, google: true });
-    const result = await signInWithGoogle();
-    setLoading({ ...loading, google: false });
-    
-    if (!result.success) {
-      let alertTitle = t('auth.errors.googleError');
-      let alertMessage = result.error || t('auth.errors.googleErrorMessage');
-      
-      // Gestion spécifique des erreurs Google Sign-In
-      if (result.error.includes('popup-closed-by-user') || result.error.includes('annulée par l\'utilisateur')) {
-        alertTitle = t('auth.errors.connectionCancelled');
-        alertMessage = t('auth.errors.connectionCancelledMessage');
-      } else if (result.error.includes('popup-blocked')) {
-        alertTitle = t('auth.errors.popupBlocked');
-        alertMessage = t('auth.errors.popupBlockedMessage');
-      } else if (result.error.includes('Google Play Services non disponible')) {
-        alertTitle = 'Services Google non disponibles';
-        alertMessage = 'Google Play Services n\'est pas installé ou à jour sur cet appareil. Veuillez l\'installer depuis le Google Play Store.';
-      } else if (result.error.includes('Erreur de réseau')) {
-        alertTitle = 'Erreur de connexion';
-        alertMessage = 'Vérifiez votre connexion internet et réessayez.';
-      } else if (result.error.includes('navigateur web')) {
-        alertTitle = t('auth.errors.limitedFeature');
-        alertMessage = t('auth.errors.googleWebOnly');
-      } else if (result.error.includes('Échec de la connexion Google')) {
-        alertTitle = 'Connexion Google échouée';
-        alertMessage = 'Impossible de se connecter avec Google. Vérifiez votre configuration et réessayez.';
-      }
-      
-      showError(alertTitle, alertMessage);
-    }
-  };
+  const togglePositionInterpolate = togglePosition.interpolate({
+    inputRange: [0, 1],
+    outputRange: [0, width / 2 - 40]
+  });
 
-  const handleFacebookSignIn = async () => {
-    setLoading({ ...loading, facebook: true });
-    const result = await signInWithFacebook();
-    setLoading({ ...loading, facebook: false });
-    
-    if (!result.success) {
-      let alertTitle = t('auth.errors.facebookError');
-      let alertMessage = result.error || t('auth.errors.facebookErrorMessage');
-      
-      if (result.error.includes('popup-closed-by-user')) {
-        alertTitle = t('auth.errors.connectionCancelled');
-        alertMessage = t('auth.errors.connectionCancelledMessageFacebook');
-      } else if (result.error.includes('popup-blocked')) {
-        alertTitle = t('auth.errors.popupBlocked');
-        alertMessage = t('auth.errors.popupBlockedMessageFacebook');
-      } else if (result.error.includes('navigateur web')) {
-        alertTitle = t('auth.errors.limitedFeature');
-        alertMessage = t('auth.errors.facebookWebOnly');
-      }
-      
-      showError(alertTitle, alertMessage);
-    }
-  };
+  const renderAnimatedInput = (fieldName, placeholder, icon, secureTextEntry = false, showToggle = false) => {
+    const borderColor = inputFocusAnim[fieldName].interpolate({
+      inputRange: [0, 1],
+      outputRange: ['#E5E7EB', theme.colors.primary]
+    });
 
+    const scale = inputFocusAnim[fieldName].interpolate({
+      inputRange: [0, 1],
+      outputRange: [1, 1.02]
+    });
 
-  const handleDefaultSignIn = async () => {
-    setLoading({ ...loading, default: true });
-    const result = await signInWithDefault();
-    setLoading({ ...loading, default: false });
-    
-    if (!result.success) {
-      showError(t('auth.errors.defaultConnectionError'), result.error || t('auth.errors.defaultConnectionFailed'));
-    }
+    return (
+      <Animated.View 
+        style={[
+          styles.inputWrapper,
+          { 
+            transform: [{ scale }],
+            borderColor 
+          }
+        ]}
+      >
+        <View style={styles.inputContainer}>
+          <MaterialIcons name={icon} size={22} color={theme.colors.primary} />
+          <TextInput
+            style={styles.input}
+            placeholder={placeholder}
+            placeholderTextColor="#999"
+            value={formData[fieldName]}
+            onChangeText={(text) => setFormData({ ...formData, [fieldName]: text })}
+            onFocus={() => handleInputFocus(fieldName)}
+            onBlur={() => handleInputBlur(fieldName)}
+            secureTextEntry={secureTextEntry}
+            autoCapitalize={fieldName === 'email' ? 'none' : 'words'}
+          />
+          {showToggle && (
+            <TouchableOpacity
+              style={styles.eyeIcon}
+              onPress={() => fieldName === 'password' ? setShowPassword(!showPassword) : setShowConfirmPassword(!showConfirmPassword)}
+            >
+              <MaterialIcons 
+                name={(fieldName === 'password' ? showPassword : showConfirmPassword) ? "visibility" : "visibility-off"} 
+                size={20} 
+                color={theme.colors.textSecondary} 
+              />
+            </TouchableOpacity>
+          )}
+        </View>
+      </Animated.View>
+    );
   };
 
   return (
@@ -198,31 +260,52 @@ const AuthScreen = () => {
           showsVerticalScrollIndicator={false}
           bounces={false}
         >
-          {/* Header Section */}
-          <View style={styles.header}>
+          {/* Header Section avec Animations */}
+          <Animated.View style={[
+            styles.header,
+            {
+              opacity: fadeAnim,
+              transform: [
+                { translateY: slideUpAnim },
+                { scale: logoScale }
+              ]
+            }
+          ]}>
             <View style={styles.logoContainer}>
-            <Image
+              <Image
                 source={require('../../assets/logomood.png')}
-              style={styles.logo}
-              resizeMode="contain"
-            />
+                style={styles.logo}
+                resizeMode="contain"
+              />
             </View>
             <Text style={styles.title}>
               <Text style={styles.moText}>mo</Text>
               <Text style={styles.odText}>od</Text>
             </Text>
             <Text style={styles.subtitle}>
-            {t('auth.subtitle')}
+              {t('auth.subtitle')}
             </Text>
-          </View>
+          </Animated.View>
 
-          {/* Auth Card */}
-          <View style={styles.authCard}>
-            {/* Toggle Login/Signup */}
+          {/* Auth Card avec Animation */}
+          <Animated.View style={[
+            styles.authCard,
+            {
+              opacity: cardOpacity,
+              transform: [{ scale: cardScale }]
+            }
+          ]}>
+            {/* Toggle Login/Signup avec Animation */}
             <View style={styles.toggleContainer}>
+              <Animated.View 
+                style={[
+                  styles.toggleSlider,
+                  { transform: [{ translateX: togglePositionInterpolate }] }
+                ]} 
+              />
               <TouchableOpacity
-                style={[styles.toggleButton, isLogin && styles.toggleButtonActive]}
-                onPress={() => setIsLogin(true)}
+                style={styles.toggleButton}
+                onPress={() => handleToggle(true)}
                 activeOpacity={0.8}
               >
                 <Text style={[styles.toggleText, isLogin && styles.toggleTextActive]}>
@@ -230,8 +313,8 @@ const AuthScreen = () => {
                 </Text>
               </TouchableOpacity>
               <TouchableOpacity
-                style={[styles.toggleButton, !isLogin && styles.toggleButtonActive]}
-                onPress={() => setIsLogin(false)}
+                style={styles.toggleButton}
+                onPress={() => handleToggle(false)}
                 activeOpacity={0.8}
               >
                 <Text style={[styles.toggleText, !isLogin && styles.toggleTextActive]}>
@@ -240,116 +323,48 @@ const AuthScreen = () => {
               </TouchableOpacity>
             </View>
 
-            {/* Email/Password Form */}
+            {/* Formulaire avec entrées animées */}
             <View style={styles.formContainer}>
-              {!isLogin && (
-                <View style={styles.inputWrapper}>
-                  <View style={styles.inputContainer}>
-                    <MaterialIcons name="person" size={22} color={theme.colors.primary} />
-                    <TextInput
-                      style={styles.input}
-                      placeholder={t('auth.username')}
-                      placeholderTextColor="#999"
-                      value={formData.displayName}
-                      onChangeText={(text) => setFormData({ ...formData, displayName: text })}
-                      autoCapitalize="words"
-                    />
-                  </View>
-                </View>
-              )}
+              {!isLogin && renderAnimatedInput('displayName', t('auth.username'), 'person')}
+              
+              {renderAnimatedInput('email', t('auth.email'), 'email')}
+              
+              {renderAnimatedInput('password', t('auth.password'), 'lock', !showPassword, true)}
+              
+              {!isLogin && renderAnimatedInput('confirmPassword', t('auth.confirmPassword'), 'lock', !showConfirmPassword, true)}
 
-              <View style={styles.inputWrapper}>
-                <View style={styles.inputContainer}>
-                  <MaterialIcons name="email" size={22} color={theme.colors.primary} />
-                  <TextInput
-                    style={styles.input}
-                    placeholder={t('auth.email')}
-                    placeholderTextColor="#999"
-                    value={formData.email}
-                    onChangeText={(text) => setFormData({ ...formData, email: text })}
-                    keyboardType="email-address"
-                    autoCapitalize="none"
-                  />
-                </View>
-              </View>
-
-              <View style={styles.inputWrapper}>
-                <View style={styles.inputContainer}>
-                  <MaterialIcons name="lock" size={22} color={theme.colors.primary} />
-                  <TextInput
-                    style={styles.input}
-                    placeholder={t('auth.password')}
-                    placeholderTextColor="#999"
-                    value={formData.password}
-                    onChangeText={(text) => setFormData({ ...formData, password: text })}
-                    secureTextEntry={!showPassword}
-                  />
-                  <TouchableOpacity
-                    style={styles.eyeIcon}
-                    onPress={() => setShowPassword(!showPassword)}
-                  >
-                    <MaterialIcons 
-                      name={showPassword ? "visibility" : "visibility-off"} 
-                      size={16} 
-                      color={theme.colors.textSecondary} 
-                    />
-                  </TouchableOpacity>
-                </View>
-              </View>
-
-              {!isLogin && (
-                <View style={styles.inputWrapper}>
-                  <View style={styles.inputContainer}>
-                    <MaterialIcons name="lock" size={22} color={theme.colors.primary} />
-                    <TextInput
-                      style={styles.input}
-                      placeholder={t('auth.confirmPassword')}
-                      placeholderTextColor="#999"
-                      value={formData.confirmPassword}
-                      onChangeText={(text) => setFormData({ ...formData, confirmPassword: text })}
-                      secureTextEntry={!showConfirmPassword}
-                    />
-                    <TouchableOpacity
-                      style={styles.eyeIcon}
-                      onPress={() => setShowConfirmPassword(!showConfirmPassword)}
-                    >
-                      <MaterialIcons 
-                        name={showConfirmPassword ? "visibility" : "visibility-off"} 
-                        size={20} 
-                        color={theme.colors.textSecondary} 
-                      />
-                    </TouchableOpacity>
-                  </View>
-                </View>
-              )}
-
-
+              {/* Bouton animé */}
               <TouchableOpacity
-                style={styles.emailButton}
+                style={[styles.emailButton, loading.email && styles.buttonLoading]}
                 onPress={handleEmailAuth}
                 disabled={loading.email}
                 activeOpacity={0.8}
               >
-                {loading.email ? (
-                  <Text style={styles.emailButtonText}>{t('auth.loading')}</Text>
-                ) : (
-                  <Text style={styles.emailButtonText}>
-                    {isLogin ? t('auth.loginButton') : t('auth.signupButton')}
-                  </Text>
-                )}
+                <Animated.View style={styles.buttonContent}>
+                  {loading.email ? (
+                    <Animated.View style={styles.loadingDots}>
+                      <View style={styles.dot} />
+                      <View style={styles.dot} />
+                      <View style={styles.dot} />
+                    </Animated.View>
+                  ) : (
+                    <Text style={styles.emailButtonText}>
+                      {isLogin ? t('auth.loginButton') : t('auth.signupButton')}
+                    </Text>
+                  )}
+                </Animated.View>
               </TouchableOpacity>
             </View>
 
-            {/* Divider */}
-            <View style={styles.divider}>
+            {/* Divider avec animation */}
+            <Animated.View style={styles.divider}>
               <View style={styles.dividerLine} />
               <Text style={styles.dividerText}>{t('auth.or')}</Text>
               <View style={styles.dividerLine} />
-            </View>
+            </Animated.View>
 
-            {/* Social Login Buttons - Disabled on Mobile */}
+            {/* Section Social avec effets visuels */}
             <View style={styles.socialContainer}>
-              {/* Icône d'information cliquable pour mobile */}
               <View style={styles.mobileInfoHeader}>
                 <TouchableOpacity 
                   style={styles.infoIconButton}
@@ -363,53 +378,54 @@ const AuthScreen = () => {
                   />
                 </TouchableOpacity>
                 
-                {/* Message d'information (affiché/masqué) */}
                 {showMobileInfo && (
-                  <View style={styles.mobileInfoContainer}>
+                  <Animated.View 
+                    style={[
+                      styles.mobileInfoContainer,
+                      { opacity: fadeAnim }
+                    ]}
+                  >
                     <Text style={styles.mobileInfoTitle}>{t('auth.mobileOnly.socialLoginDisabled')}</Text>
                     <Text style={styles.mobileInfoMessage}>{t('auth.mobileOnly.webOnlyMessage')}</Text>
                     <Text style={styles.mobileInfoSubMessage}>{t('auth.mobileOnly.useEmailLogin')}</Text>
-                  </View>
+                  </Animated.View>
                 )}
               </View>
 
-              <TouchableOpacity
-                style={[styles.googleButton, styles.disabledSocialButton]}
-                onPress={handleGoogleSignIn}
-                disabled={true}
-                activeOpacity={0.8}
-              >
-                <MaterialIcons name="search" size={20} color="#999999" />
-                <Text style={[styles.googleButtonText, styles.disabledSocialText]}>
-                  {t('auth.googleLogin')}
-                </Text>
-              </TouchableOpacity>
-              
-              <TouchableOpacity
-                style={[styles.facebookButton, styles.disabledSocialButton]}
-                onPress={handleFacebookSignIn}
-                disabled={true}
-                activeOpacity={0.8}
-              >
-                <MaterialIcons name="facebook" size={20} color="#999999" />
-                <Text style={[styles.facebookButtonText, styles.disabledSocialText]}>
-                  {t('auth.facebookLogin')}
-                </Text>
-              </TouchableOpacity>
-
+              {/* Boutons sociaux avec effet de profondeur */}
+              <Animated.View style={styles.socialButtons}>
+                <TouchableOpacity
+                  style={[styles.googleButton, styles.disabledSocialButton]}
+                  disabled={true}
+                  activeOpacity={0.8}
+                >
+                  <MaterialIcons name="search" size={20} color="#999999" />
+                  <Text style={[styles.googleButtonText, styles.disabledSocialText]}>
+                    {t('auth.googleLogin')}
+                  </Text>
+                </TouchableOpacity>
+                
+                <TouchableOpacity
+                  style={[styles.facebookButton, styles.disabledSocialButton]}
+                  disabled={true}
+                  activeOpacity={0.8}
+                >
+                  <MaterialIcons name="facebook" size={20} color="#999999" />
+                  <Text style={[styles.facebookButtonText, styles.disabledSocialText]}>
+                    {t('auth.facebookLogin')}
+                  </Text>
+                </TouchableOpacity>
+              </Animated.View>
             </View>
+          </Animated.View>
 
-  
-          </View>
-
-          {/* Footer */}
-          <Text style={styles.disclaimer}>
+          {/* Footer avec apparition progressive */}
+          <Animated.Text style={[styles.disclaimer, { opacity: fadeAnim }]}>
             {t('auth.disclaimer')}
-          </Text>
+          </Animated.Text>
         </ScrollView>
       </KeyboardAvoidingView>
       
-      {/* Alerte personnalisée */}
       <CustomAlert
         visible={alert.visible}
         onClose={hideAlert}
@@ -418,7 +434,6 @@ const AuthScreen = () => {
         type={alert.type}
       />
       
-      {/* Notification personnalisée */}
       <CustomNotification
         visible={notification.visible}
         onClose={hideNotification}
@@ -453,15 +468,13 @@ const styles = StyleSheet.create({
   logoContainer: {
     width: 90,
     height: 90,
-   // borderRadius: 80,
-   // backgroundColor: 'rgba(255, 255, 255, 0.15)',
     justifyContent: 'center',
     alignItems: 'center',
     marginBottom: 16,
-   // shadowColor: '#000',
+    shadowColor: '#000',
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.1,
-   // shadowRadius: 8,
+    shadowRadius: 8,
     elevation: 5,
   },
   logo: {
@@ -476,12 +489,12 @@ const styles = StyleSheet.create({
     letterSpacing: 0.5,
   },
   moText: {
-    color: '#059669', // Vert foncé
+    color: '#059669',
     fontSize: 32,
     fontWeight: 'bold',
   },
   odText: {
-    color: '#10B981', // Vert clair
+    color: '#10B981',
     fontSize: 32,
     fontWeight: 'bold',
   },
@@ -512,20 +525,28 @@ const styles = StyleSheet.create({
     marginBottom: 24,
     borderWidth: 1,
     borderColor: '#E5E7EB',
+    position: 'relative',
+  },
+  toggleSlider: {
+    position: 'absolute',
+    top: 4,
+    left: 4,
+    width: '50%',
+    height: '80%',
+    backgroundColor: theme.colors.primary,
+    borderRadius: 10,
+    shadowColor: theme.colors.primary,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.3,
+    shadowRadius: 4,
+    elevation: 3,
   },
   toggleButton: {
     paddingVertical: 12,
     borderRadius: 10,
     flex: 1,
     alignItems: 'center',
-  },
-  toggleButtonActive: {
-    backgroundColor: theme.colors.primary,
-    shadowColor: theme.colors.primary,
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.3,
-    shadowRadius: 4,
-    elevation: 3,
+    zIndex: 1,
   },
   toggleText: {
     color: '#666',
@@ -541,21 +562,22 @@ const styles = StyleSheet.create({
   },
   inputWrapper: {
     marginBottom: 16,
-  },
-  inputContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#FFFFFF',
-    borderRadius: 12,
-    paddingHorizontal: 16,
-    height: 56,
     borderWidth: 2,
+    borderRadius: 12,
     borderColor: '#E5E7EB',
+    backgroundColor: '#FFFFFF',
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.05,
     shadowRadius: 2,
     elevation: 1,
+  },
+  inputContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    borderRadius: 12,
+    paddingHorizontal: 16,
+    height: 56,
   },
   input: {
     flex: 1,
@@ -567,8 +589,6 @@ const styles = StyleSheet.create({
   },
   eyeIcon: {
     padding: 4,
-    position: 'absolute',
-    right: 16,
   },
   emailButton: {
     marginTop: 8,
@@ -582,6 +602,25 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.2,
     shadowRadius: 4,
     elevation: 3,
+    overflow: 'hidden',
+  },
+  buttonLoading: {
+    opacity: 0.8,
+  },
+  buttonContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  loadingDots: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  dot: {
+    width: 6,
+    height: 6,
+    borderRadius: 3,
+    backgroundColor: '#FFFFFF',
+    marginHorizontal: 2,
   },
   emailButtonText: {
     color: '#FFFFFF',
@@ -606,99 +645,6 @@ const styles = StyleSheet.create({
   },
   socialContainer: {
     marginBottom: 20,
-  },
-  googleButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: '#FFFFFF',
-    borderRadius: 12,
-    height: 56,
-    marginBottom: 12,
-    borderWidth: 2,
-    borderColor: '#E5E7EB',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.1,
-    shadowRadius: 2,
-    elevation: 2,
-  },
-  googleButtonText: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: '#333333',
-    marginLeft: 12,
-  },
-  facebookButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: '#4267B2',
-    borderRadius: 12,
-    height: 56,
-    marginBottom: 12,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.2,
-    shadowRadius: 4,
-    elevation: 3,
-  },
-  facebookButtonText: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: '#FFFFFF',
-    marginLeft: 12,
-  },
-  phoneButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: '#25D366',
-    borderRadius: 12,
-    height: 56,
-    marginBottom: 12,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.2,
-    shadowRadius: 4,
-    elevation: 3,
-  },
-  phoneButtonText: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: '#FFFFFF',
-    marginLeft: 12,
-  },
-  phoneAuthContainer: {
-    backgroundColor: 'rgba(255, 255, 255, 0.95)',
-    borderRadius: 16,
-    padding: 20,
-    marginBottom: 20,
-    borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.3)',
-  },
-  phoneAuthTitle: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: theme.colors.text,
-    textAlign: 'center',
-    marginBottom: 16,
-  },
-  backButton: {
-    alignSelf: 'flex-start',
-    marginTop: 12,
-  },
-  backButtonText: {
-    fontSize: 14,
-    color: theme.colors.primary,
-    fontWeight: '500',
-  },
-  disabledButton: {
-    backgroundColor: '#E0E0E0',
-    opacity: 0.6,
-  },
-  disabledText: {
-    color: '#999',
   },
   mobileInfoHeader: {
     flexDirection: 'row',
@@ -749,6 +695,9 @@ const styles = StyleSheet.create({
     fontStyle: 'italic',
     textAlign: 'left',
   },
+  socialButtons: {
+    gap: 12,
+  },
   googleButton: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -756,7 +705,8 @@ const styles = StyleSheet.create({
     backgroundColor: '#FFFFFF',
     borderRadius: 12,
     height: 56,
-    marginBottom: 12,
+    borderWidth: 2,
+    borderColor: '#E5E7EB',
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.2,
@@ -769,56 +719,24 @@ const styles = StyleSheet.create({
     color: '#DB4437',
     marginLeft: 12,
   },
-  demoButton: {
+  facebookButton: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: 'transparent',
+    backgroundColor: '#4267B2',
     borderRadius: 12,
     height: 56,
-    marginBottom: 12,
-    borderWidth: 2,
-    borderColor: theme.colors.primary,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.2,
+    shadowRadius: 4,
+    elevation: 3,
   },
-  demoButtonText: {
+  facebookButtonText: {
     fontSize: 16,
     fontWeight: '600',
-    color: theme.colors.primary,
+    color: '#FFFFFF',
     marginLeft: 12,
-  },
-  demoInfo: {
-    backgroundColor: '#F0F8FF',
-    borderRadius: 14,
-    padding: 16,
-    borderWidth: 1,
-    borderColor: '#D0E8FF',
-  },
-  demoTitle: {
-    fontSize: 14,
-    fontWeight: 'bold',
-    color: theme.colors.primary,
-    marginBottom: 12,
-    textAlign: 'center',
-  },
-  demoCredentialsContainer: {
-    gap: 6,
-  },
-  demoCredentials: {
-    fontSize: 13,
-    color: '#555',
-    textAlign: 'center',
-    fontWeight: '500',
-  },
-  disclaimer: {
-    fontSize: 12,
-    color: 'rgba(255, 255, 255, 0.9)',
-    textAlign: 'center',
-    lineHeight: 18,
-    paddingHorizontal: 10,
-  },
-  disclaimerLink: {
-    fontWeight: '600',
-    textDecorationLine: 'underline',
   },
   disabledSocialButton: {
     backgroundColor: '#F5F5F5',
@@ -827,6 +745,13 @@ const styles = StyleSheet.create({
   },
   disabledSocialText: {
     color: '#999999',
+  },
+  disclaimer: {
+    fontSize: 12,
+    color: 'rgba(255, 255, 255, 0.9)',
+    textAlign: 'center',
+    lineHeight: 18,
+    paddingHorizontal: 10,
   },
 });
 

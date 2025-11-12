@@ -138,6 +138,13 @@ const AuthenticatedStackNavigator = () => {
 // --- NAVIGATEUR GLOBAL AUTH ---
 const AppNavigator = () => {
   const { user, loading } = useAuth();
+    // 🔥 LOGS DE DÉBOGAGE
+    useEffect(() => {
+      console.log('🔄 AppNavigator - user:', user ? 'connecté' : 'déconnecté');
+      console.log('🔄 AppNavigator - loading:', loading);
+    }, [user, loading]);
+  
+  
 
   if (loading) {
     return (

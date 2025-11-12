@@ -1,4 +1,3 @@
-// notificationService.js - VERSION CORRIGÉE SANS BOUCLE
 import * as Notifications from 'expo-notifications';
 import * as Device from 'expo-device';
 import { Platform } from 'react-native';
@@ -9,17 +8,9 @@ const NOTIFICATION_TYPE_WATER = 'water';
 const NOTIFICATION_TYPE_MOVE = 'movement';
 const DAILY_TIP_ID = 'daily_tip';
 
-// Intervalles de test (en secondes)
-const TEST_WATER_INTERVAL = 180; // 3 minutes
-const TEST_MOVE_INTERVAL = 120;  // 2 minutes
-
-// 🔥 DÉLAI MINIMAL entre planifications (en ms)
-const MIN_SCHEDULING_DELAY = 5000;
-
-// Drapeaux globaux pour éviter les conflits
-let isInitializing = false;
-let lastWaterSchedule = 0;
-let lastMoveSchedule = 0;
+// Intervalles par défaut (en secondes) - VALEURS DE PRODUCTION
+const DEFAULT_WATER_INTERVAL = 120 * 60; // 120 minutes = 7200 secondes
+const DEFAULT_MOVE_INTERVAL = 60 * 60;   // 60 minutes = 3600 secondes
 
 // Configuration des notifications
 Notifications.setNotificationHandler({
@@ -35,7 +26,7 @@ Notifications.setNotificationHandler({
 
 export const requestPermissions = async () => {
   if (!Device.isDevice) {
-    console.log('Les notifications ne fonctionnent pas sur émulateur');
+    console.log('⚠️  Les notifications ne fonctionnent pas sur émulateur');
     return false;
   }
 
@@ -48,7 +39,7 @@ export const requestPermissions = async () => {
   }
 
   if (finalStatus !== 'granted') {
-    console.log('Permissions de notifications refusées');
+    console.log('❌ Permissions de notifications refusées');
     return false;
   }
 
@@ -81,39 +72,13 @@ const cancelRemindersByType = async (type) => {
     console.log(`🗑️  Annulé ${toCancel.length} notifications de type ${type}`);
     return { success: true, count: toCancel.length };
   } catch (error) {
-    console.error('Error cancelling notifications by type:', error);
+    console.error('❌ Error cancelling notifications by type:', error);
     return { success: false, error: error.message };
   }
 };
 
-// 🔥 FONCTION CORRIGÉE : Vérification anti-boucle
-const canSchedule = (type) => {
-  const now = Date.now();
-  const lastSchedule = type === 'water' ? lastWaterSchedule : lastMoveSchedule;
-  
-  if (now - lastSchedule < MIN_SCHEDULING_DELAY) {
-    console.log(`⏳ ${type} - Attente avant nouvelle planification`);
-    return false;
-  }
-  
-  // Mettre à jour le timestamp
-  if (type === 'water') {
-    lastWaterSchedule = now;
-  } else {
-    lastMoveSchedule = now;
-  }
-  
-  return true;
-};
-
-// 🔥 PLANIFICATION SIMPLIFIÉE sans déclenchement immédiat
 export const scheduleSingleReminder = async (type, intervalSeconds) => {
   try {
-    // Vérifier anti-boucle
-    if (!canSchedule(type)) {
-      return { success: false, error: 'Planification trop rapide' };
-    }
-
     const content = {
       title: type === 'water' ? "💧 Il est temps de s'hydrater !" : "💪 Un petit mouvement s'impose !",
       body: type === 'water' 
@@ -124,7 +89,9 @@ export const scheduleSingleReminder = async (type, intervalSeconds) => {
       data: { 
         type: type,
         timestamp: Date.now(),
-        interval: intervalSeconds
+        interval: intervalSeconds,
+        isRepeating: true,
+        notificationId: `${type}_${Date.now()}`
       },
     };
 
@@ -132,50 +99,66 @@ export const scheduleSingleReminder = async (type, intervalSeconds) => {
       content.data.amount = 250;
     }
 
-    // 🔥 S'assurer que la date est dans le futur
     const triggerDate = new Date(Date.now() + (intervalSeconds * 1000));
     
     const notificationId = await Notifications.scheduleNotificationAsync({
       content,
       trigger: {
         date: triggerDate,
+        repeats: false,
       },
     });
 
-    console.log(`✅ ${type === 'water' ? '💧 Eau' : '💪 Mouvement'} planifié à ${triggerDate.toLocaleTimeString()} - ID: ${notificationId}`);
-    return { success: true, id: notificationId, triggerTime: triggerDate };
+    console.log(`✅ ${type === 'water' ? '💧 Eau' : '💪 Mouvement'} planifié pour ${triggerDate.toLocaleTimeString()}`);
+    console.log(`   ID: ${notificationId}`);
+    
+    return { 
+      success: true, 
+      id: notificationId,
+      triggerTime: triggerDate,
+      interval: intervalSeconds 
+    };
   } catch (error) {
     console.error(`❌ Erreur planification ${type}:`, error);
     return { success: false, error: error.message };
   }
 };
 
-// 🔥 REPROGRAMMATION AVEC PROTECTION ANTI-BOUCLE
 export const rescheduleNotification = async (type) => {
   try {
-    console.log(`🔄 Tentative replanification ${type}...`);
+    console.log(`🔄 Replanification ${type}...`);
     
-    // Vérifier anti-boucle
-    if (!canSchedule(type)) {
-      return { success: false, error: 'Replanification trop rapide' };
-    }
-
-    // Petite pause pour laisser le système se stabiliser
+    // Petite pause pour éviter les conflits
     await new Promise(resolve => setTimeout(resolve, 1000));
     
     // Annuler les anciennes notifications de ce type
     await cancelRemindersByType(type);
     
-    // Déterminer l'intervalle
-    const intervalSeconds = type === 'water' ? TEST_WATER_INTERVAL : TEST_MOVE_INTERVAL;
+    await new Promise(resolve => setTimeout(resolve, 500));
+    
+    // Récupérer les intervalles depuis le profil utilisateur
+    const profileData = await AsyncStorage.getItem('user_profile');
+    let intervalSeconds;
+    
+    if (profileData) {
+      const profile = JSON.parse(profileData);
+      if (type === 'water') {
+        const intervalMinutes = profile.waterReminderFrequency || 120;
+        intervalSeconds = intervalMinutes * 60;
+      } else {
+        const intervalMinutes = profile.moveReminderFrequency || 60;
+        intervalSeconds = intervalMinutes * 60;
+      }
+    } else {
+      // Utiliser les valeurs par défaut si pas de profil
+      intervalSeconds = type === 'water' ? DEFAULT_WATER_INTERVAL : DEFAULT_MOVE_INTERVAL;
+    }
     
     // Programmer la nouvelle notification
     const result = await scheduleSingleReminder(type, intervalSeconds);
     
     if (result.success) {
       console.log(`✅ ${type} replanifié avec succès`);
-    } else {
-      console.log(`⚠️  ${type} non replanifié: ${result.error}`);
     }
     
     return result;
@@ -185,8 +168,6 @@ export const rescheduleNotification = async (type) => {
   }
 };
 
-// 🔥 FONCTION AMÉLIORÉE : Obtenir les prochains temps
-// notificationService.js - Amélioration de la fonction getNextNotificationTimesRealTime
 export const getNextNotificationTimesRealTime = async () => {
   try {
     const scheduled = await Notifications.getAllScheduledNotificationsAsync();
@@ -199,19 +180,29 @@ export const getNextNotificationTimesRealTime = async () => {
       const type = notification.content.data?.type;
       const trigger = notification.trigger;
       
-      if (trigger.type === 'date' && trigger.date) {
-        const triggerDate = new Date(trigger.date);
+      let triggerDate = null;
+      
+      if (trigger.type === 'timeInterval') {
+        const intervalSeconds = trigger.seconds;
+        const nextOccurrence = trigger.nextTriggerDate;
         
-        // S'assurer que la date est dans le futur
-        if (triggerDate > now) {
-          if (type === 'water') {
-            if (!nextWater || triggerDate < nextWater) {
-              nextWater = triggerDate;
-            }
-          } else if (type === 'movement') {
-            if (!nextMove || triggerDate < nextMove) {
-              nextMove = triggerDate;
-            }
+        if (nextOccurrence) {
+          triggerDate = new Date(nextOccurrence * 1000);
+        } else {
+          triggerDate = new Date(now.getTime() + (intervalSeconds * 1000));
+        }
+      } else if (trigger.type === 'date' && trigger.date) {
+        triggerDate = new Date(trigger.date);
+      }
+      
+      if (triggerDate && triggerDate > now) {
+        if (type === 'water') {
+          if (!nextWater || triggerDate < nextWater) {
+            nextWater = triggerDate;
+          }
+        } else if (type === 'movement') {
+          if (!nextMove || triggerDate < nextMove) {
+            nextMove = triggerDate;
           }
         }
       }
@@ -219,25 +210,25 @@ export const getNextNotificationTimesRealTime = async () => {
 
     // Si pas de notification programmée, calculer la suivante
     if (!nextWater) {
-      nextWater = new Date(now.getTime() + (TEST_WATER_INTERVAL * 1000));
+      nextWater = new Date(now.getTime() + (DEFAULT_WATER_INTERVAL * 1000));
     }
     
     if (!nextMove) {
-      nextMove = new Date(now.getTime() + (TEST_MOVE_INTERVAL * 1000));
+      nextMove = new Date(now.getTime() + (DEFAULT_MOVE_INTERVAL * 1000));
     }
 
     return { nextWater, nextMove };
   } catch (error) {
     console.error('❌ Erreur calcul temps réel:', error);
     
-    // Fallback simple
     const now = new Date();
     return {
-      nextWater: new Date(now.getTime() + (TEST_WATER_INTERVAL * 1000)),
-      nextMove: new Date(now.getTime() + (TEST_MOVE_INTERVAL * 1000))
+      nextWater: new Date(now.getTime() + (DEFAULT_WATER_INTERVAL * 1000)),
+      nextMove: new Date(now.getTime() + (DEFAULT_MOVE_INTERVAL * 1000))
     };
   }
 };
+
 export const scheduleDailyTip = async () => {
   try {
     await Notifications.cancelScheduledNotificationAsync(DAILY_TIP_ID);
@@ -254,10 +245,11 @@ export const scheduleDailyTip = async () => {
     
     const randomTip = healthTips[Math.floor(Math.random() * healthTips.length)];
     
-    // 🔥 Planifier pour demain 9h pour éviter le déclenchement immédiat
+    // Calculer le temps jusqu'à demain 9h
     const tomorrow = new Date();
     tomorrow.setDate(tomorrow.getDate() + 1);
     tomorrow.setHours(9, 0, 0, 0);
+    const secondsUntilTomorrow = Math.floor((tomorrow - new Date()) / 1000);
     
     await Notifications.scheduleNotificationAsync({
       identifier: DAILY_TIP_ID,
@@ -268,28 +260,20 @@ export const scheduleDailyTip = async () => {
         priority: Notifications.AndroidNotificationPriority.HIGH,
       },
       trigger: {
-        date: tomorrow,
+        seconds: secondsUntilTomorrow,
         repeats: true,
       },
     });
 
-    console.log('✅ Conseil quotidien planifié pour 9:00 AM (demain)');
+    console.log('✅ Conseil quotidien planifié (répétition quotidienne)');
     return { success: true };
   } catch (error) {
-    console.error('Error scheduling daily tip:', error);
+    console.error('❌ Error scheduling daily tip:', error);
     return { success: false, error: error.message };
   }
 };
 
-// 🔥 INITIALISATION CORRIGÉE avec protection
 export const initializeReminders = async () => {
-  if (isInitializing) {
-    console.log('🚫 Initialisation déjà en cours');
-    return { success: false, error: 'Déjà en cours' };
-  }
-
-  isInitializing = true;
-  
   try {
     console.log('🔔 Début initialisation rappels...');
     
@@ -298,34 +282,49 @@ export const initializeReminders = async () => {
       return { success: false, error: 'Permissions refusées' };
     }
 
-    // Vérifier le profil utilisateur
     const profileData = await AsyncStorage.getItem('user_profile');
+    
     if (!profileData) {
-      console.log('Aucun profil utilisateur trouvé');
-      return { success: false, error: 'Profil non configuré' };
+      console.log('⚠️  Aucun profil utilisateur trouvé');
+      console.log('💡 Conseil: L\'utilisateur doit configurer son profil dans l\'écran Profil');
+      
+      return { 
+        success: true, 
+        warning: 'Profil non configuré - Notifications désactivées',
+        profileMissing: true 
+      };
     }
 
-    // 🔥 VIDER progressivement les notifications existantes
+    const profile = JSON.parse(profileData);
+    console.log('✅ Profil utilisateur trouvé, planification des notifications...');
+    
     console.log('🗑️  Nettoyage des anciennes notifications...');
     await Notifications.cancelAllScheduledNotificationsAsync();
     await new Promise(resolve => setTimeout(resolve, 1000));
 
-    // 🔥 PLANIFIER avec délais entre chaque
     console.log('📅 Planification des nouvelles notifications...');
     
-    // Planifier le conseil quotidien d'abord
+    // Planifier le conseil quotidien
     await scheduleDailyTip();
     await new Promise(resolve => setTimeout(resolve, 500));
 
-    // Planifier eau
-    const waterResult = await scheduleSingleReminder('water', TEST_WATER_INTERVAL);
-    await new Promise(resolve => setTimeout(resolve, 1000));
+    // Récupérer les intervalles depuis le profil (en minutes) et convertir en secondes
+    const waterIntervalMinutes = profile.waterReminderFrequency || 120;
+    const moveIntervalMinutes = profile.moveReminderFrequency || 60;
+    
+    const waterIntervalSeconds = waterIntervalMinutes * 60;
+    const moveIntervalSeconds = moveIntervalMinutes * 60;
 
-    // Planifier mouvement
-    const moveResult = await scheduleSingleReminder('movement', TEST_MOVE_INTERVAL);
+    // Planifier eau
+    const waterResult = await scheduleSingleReminder('water', waterIntervalSeconds);
     await new Promise(resolve => setTimeout(resolve, 500));
 
-    console.log(`✅ Rappels initialisés (Eau: ${waterResult.success}, Mouvement: ${moveResult.success})`);
+    // Planifier mouvement
+    const moveResult = await scheduleSingleReminder('movement', moveIntervalSeconds);
+
+    console.log(`✅ Rappels initialisés avec répétition automatique`);
+    console.log(`   Eau: toutes les ${waterIntervalMinutes}min (${waterIntervalSeconds}s)`);
+    console.log(`   Mouvement: toutes les ${moveIntervalMinutes}min (${moveIntervalSeconds}s)`);
     
     return { 
       success: waterResult.success && moveResult.success,
@@ -335,8 +334,6 @@ export const initializeReminders = async () => {
   } catch (error) {
     console.error('❌ Erreur initialisation rappels:', error);
     return { success: false, error: error.message };
-  } finally {
-    isInitializing = false;
   }
 };
 
@@ -346,16 +343,15 @@ export const cancelAllReminders = async () => {
     console.log('✅ Tous les rappels ont été annulés');
     return { success: true };
   } catch (error) {
-    console.error('Error cancelling all reminders:', error);
+    console.error('❌ Error cancelling all reminders:', error);
     return { success: false, error: error.message };
   }
 };
 
-// 🔥 FONCTION DE DIAGNOSTIC
 export const debugScheduledNotifications = async () => {
   try {
     const scheduled = await Notifications.getAllScheduledNotificationsAsync();
-    console.log(`📋 Notifications planifiées: ${scheduled.length}`);
+    console.log(`\n📋 === DEBUG NOTIFICATIONS (${scheduled.length} planifiées) ===`);
     
     const now = new Date();
     const result = {
@@ -366,31 +362,57 @@ export const debugScheduledNotifications = async () => {
     scheduled.forEach((notif, index) => {
       const type = notif.content.data?.type || 'inconnu';
       const trigger = notif.trigger;
-      let nextTime = null;
       
-      if (trigger.type === 'date' && trigger.date) {
+      let nextTime = null;
+      let triggerInfo = '';
+      
+      if (trigger.type === 'timeInterval') {
+        const intervalSec = trigger.seconds;
+        const intervalMin = Math.round(intervalSec / 60);
+        triggerInfo = `Répétition: ${intervalSec}s (${intervalMin}min)`;
+        
+        if (trigger.nextTriggerDate) {
+          nextTime = new Date(trigger.nextTriggerDate * 1000);
+        } else {
+          nextTime = new Date(now.getTime() + (intervalSec * 1000));
+        }
+      } else if (trigger.type === 'date') {
         nextTime = new Date(trigger.date);
+        triggerInfo = 'Déclenchement unique';
       }
+      
+      const timeUntil = nextTime ? Math.max(0, Math.floor((nextTime - now) / 1000)) : null;
+      const timeUntilMin = timeUntil ? Math.floor(timeUntil / 60) : null;
       
       const notificationInfo = {
         index: index + 1,
         type: type,
         id: notif.identifier,
         title: notif.content.title,
+        triggerType: trigger.type,
+        triggerInfo: triggerInfo,
         nextTime: nextTime ? nextTime.toLocaleTimeString() : 'inconnu',
-        timeUntil: nextTime ? Math.max(0, Math.floor((nextTime - now) / 1000)) : null
+        timeUntilSeconds: timeUntil,
+        timeUntilMinutes: timeUntilMin
       };
       
       result.notifications.push(notificationInfo);
       
-      console.log(`   ${index + 1}. ${notif.content.title}`);
-      console.log(`      Type: ${type}, ID: ${notif.identifier}`);
-      console.log(`      Prochaine: ${nextTime ? nextTime.toLocaleTimeString() : 'inconnu'}`);
+      console.log(`\n${index + 1}. ${notif.content.title}`);
+      console.log(`   Type: ${type}`);
+      console.log(`   ID: ${notif.identifier}`);
+      console.log(`   Trigger: ${triggerInfo}`);
+      console.log(`   Prochaine: ${nextTime ? nextTime.toLocaleTimeString() : 'inconnu'}`);
+      if (timeUntil !== null) {
+        console.log(`   Dans: ${timeUntilMin}min ${timeUntil % 60}s`);
+      }
     });
+    
+    console.log('\n==========================================\n');
     
     return result;
   } catch (error) {
-    console.error('Error debugging notifications:', error);
+    console.error('❌ Error debugging notifications:', error);
     return { error: error.message };
   }
 };
