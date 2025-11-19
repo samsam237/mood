@@ -121,7 +121,7 @@ const MainTabNavigator = () => {
 
 // --- STACK AUTHENTIFIÉ ---
 const AuthenticatedStackNavigator = () => {
-  useNotificationHandler();
+ // useNotificationHandler();
   const { t } = useTranslation();
 
   return (

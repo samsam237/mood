@@ -8,11 +8,14 @@ const NOTIFICATION_TYPE_WATER = 'water';
 const NOTIFICATION_TYPE_MOVE = 'movement';
 const DAILY_TIP_ID = 'daily_tip';
 
-// Intervalles par défaut (en secondes) - VALEURS DE PRODUCTION
+ // APRÈS (production)
 const DEFAULT_WATER_INTERVAL = 120 * 60; // 120 minutes = 7200 secondes
 const DEFAULT_MOVE_INTERVAL = 60 * 60;   // 60 minutes = 3600 secondes
-
-// Configuration des notifications
+ 
+// avant (production)
+/* const DEFAULT_WATER_INTERVAL = 120 ; // 120 minutes = 720v0 secondes
+const DEFAULT_MOVE_INTERVAL = 60;   // 60 minutes = 36003600 secondes  */
+3600
 Notifications.setNotificationHandler({
   handleNotification: async () => ({
     shouldShowAlert: true,
@@ -79,6 +82,12 @@ const cancelRemindersByType = async (type) => {
 
 export const scheduleSingleReminder = async (type, intervalSeconds) => {
   try {
+    // ✅ VÉRIFICATION : S'assurer que l'intervalle est valide
+    if (!intervalSeconds || intervalSeconds < 1) {
+      console.error(`❌ Intervalle invalide: ${intervalSeconds}s`);
+      return { success: false, error: 'Intervalle invalide' };
+    }
+
     const content = {
       title: type === 'water' ? "💧 Il est temps de s'hydrater !" : "💪 Un petit mouvement s'impose !",
       body: type === 'water' 
@@ -99,18 +108,25 @@ export const scheduleSingleReminder = async (type, intervalSeconds) => {
       content.data.amount = 250;
     }
 
-    const triggerDate = new Date(Date.now() + (intervalSeconds * 1000));
+    // ✅ CORRECTION CRITIQUE : Calculer une date FUTURE explicite
+    const now = Date.now();
+    const triggerDate = new Date(now + (intervalSeconds * 1000));
     
+    // ✅ S'assurer que la date est bien dans le futur
+    if (triggerDate <= now) {
+      console.error(`❌ Date de trigger dans le passé!`);
+      return { success: false, error: 'Date invalide' };
+    }
+
     const notificationId = await Notifications.scheduleNotificationAsync({
       content,
-      trigger: {
-        date: triggerDate,
-        repeats: false,
-      },
+      trigger: triggerDate, // ✅ Passer directement l'objet Date
     });
 
     console.log(`✅ ${type === 'water' ? '💧 Eau' : '💪 Mouvement'} planifié pour ${triggerDate.toLocaleTimeString()}`);
     console.log(`   ID: ${notificationId}`);
+    console.log(`   ⏰ Dans ${intervalSeconds}s (${Math.round(intervalSeconds/60)}min)`);
+    console.log(`   📅 Date trigger: ${triggerDate.toISOString()}`);
     
     return { 
       success: true, 
@@ -136,23 +152,8 @@ export const rescheduleNotification = async (type) => {
     
     await new Promise(resolve => setTimeout(resolve, 500));
     
-    // Récupérer les intervalles depuis le profil utilisateur
-    const profileData = await AsyncStorage.getItem('user_profile');
-    let intervalSeconds;
-    
-    if (profileData) {
-      const profile = JSON.parse(profileData);
-      if (type === 'water') {
-        const intervalMinutes = profile.waterReminderFrequency || 120;
-        intervalSeconds = intervalMinutes * 60;
-      } else {
-        const intervalMinutes = profile.moveReminderFrequency || 60;
-        intervalSeconds = intervalMinutes * 60;
-      }
-    } else {
-      // Utiliser les valeurs par défaut si pas de profil
-      intervalSeconds = type === 'water' ? DEFAULT_WATER_INTERVAL : DEFAULT_MOVE_INTERVAL;
-    }
+    // Utiliser directement les valeurs par défaut
+    const intervalSeconds = type === 'water' ? DEFAULT_WATER_INTERVAL : DEFAULT_MOVE_INTERVAL;
     
     // Programmer la nouvelle notification
     const result = await scheduleSingleReminder(type, intervalSeconds);
@@ -308,12 +309,9 @@ export const initializeReminders = async () => {
     await scheduleDailyTip();
     await new Promise(resolve => setTimeout(resolve, 500));
 
-    // Récupérer les intervalles depuis le profil (en minutes) et convertir en secondes
-    const waterIntervalMinutes = profile.waterReminderFrequency || 120;
-    const moveIntervalMinutes = profile.moveReminderFrequency || 60;
-    
-    const waterIntervalSeconds = waterIntervalMinutes * 60;
-    const moveIntervalSeconds = moveIntervalMinutes * 60;
+    // Utiliser directement les valeurs par défaut (en secondes)
+    const waterIntervalSeconds = DEFAULT_WATER_INTERVAL;
+    const moveIntervalSeconds = DEFAULT_MOVE_INTERVAL;
 
     // Planifier eau
     const waterResult = await scheduleSingleReminder('water', waterIntervalSeconds);
@@ -323,8 +321,8 @@ export const initializeReminders = async () => {
     const moveResult = await scheduleSingleReminder('movement', moveIntervalSeconds);
 
     console.log(`✅ Rappels initialisés avec répétition automatique`);
-    console.log(`   Eau: toutes les ${waterIntervalMinutes}min (${waterIntervalSeconds}s)`);
-    console.log(`   Mouvement: toutes les ${moveIntervalMinutes}min (${moveIntervalSeconds}s)`);
+    console.log(`   Eau: toutes les ${waterIntervalSeconds}s (${Math.round(waterIntervalSeconds/60)}min)`);
+    console.log(`   Mouvement: toutes les ${moveIntervalSeconds}s (${Math.round(moveIntervalSeconds/60)}min)`);
     
     return { 
       success: waterResult.success && moveResult.success,

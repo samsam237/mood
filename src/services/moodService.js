@@ -9,10 +9,10 @@ export const moodService = {
       };
     }
 
-    // Calculate average mood
+
     const averageMood = moods.reduce((sum, mood) => sum + mood.value, 0) / moods.length;
 
-    // Generate mood trend for last 30 days
+    
     const thirtyDaysAgo = new Date();
     thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
     

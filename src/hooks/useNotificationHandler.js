@@ -1,3 +1,4 @@
+// hooks/useNotificationHandler.js - VERSION CORRIGÉE
 import { useEffect, useRef } from 'react';
 import * as Notifications from 'expo-notifications';
 import { useHealth } from '../contexts/HealthContext';
@@ -10,18 +11,12 @@ import notificationService from '../services/notificationService';
  */
 export const useNotificationHandler = () => {
   const { addWater, addMovement } = useHealth();
-  const notificationListener = useRef();
   const responseListener = useRef();
 
   useEffect(() => {
-    // Listener pour les notifications reçues (quand l'app est au premier plan)
-    notificationListener.current = Notifications.addNotificationReceivedListener(notification => {
-      console.log('📬 Notification reçue:', notification);
-    });
-
-    // Listener pour les réponses aux notifications (quand l'utilisateur clique)
+    // ✅ UN SEUL LISTENER - Pour les clics utilisateur uniquement
     responseListener.current = Notifications.addNotificationResponseReceivedListener(async response => {
-      console.log('👆 Utilisateur a cliqué sur la notification:', response);
+      console.log('👆 Utilisateur a cliqué sur la notification');
       
       const notificationData = response.notification.request.content.data;
       
@@ -31,9 +26,9 @@ export const useNotificationHandler = () => {
           const amount = notificationData.amount || 250;
           addWater(amount);
           
-          // Replanifier le prochain rappel eau
+          // ✅ Replanifier en utilisant la bonne fonction
           try {
-            await notificationService.rescheduleNextReminder('water');
+            await notificationService.rescheduleNotification('water');
             console.log('✅ Prochain rappel eau replanifié');
           } catch (error) {
             console.error('❌ Erreur replanification eau:', error);
@@ -42,9 +37,9 @@ export const useNotificationHandler = () => {
           console.log('💪 Ajout automatique de mouvement depuis la notification');
           addMovement();
           
-          // Replanifier le prochain rappel mouvement
+          // ✅ Replanifier en utilisant la bonne fonction
           try {
-            await notificationService.rescheduleNextReminder('movement');
+            await notificationService.rescheduleNotification('movement');
             console.log('✅ Prochain rappel mouvement replanifié');
           } catch (error) {
             console.error('❌ Erreur replanification mouvement:', error);
@@ -55,9 +50,6 @@ export const useNotificationHandler = () => {
 
     // Cleanup
     return () => {
-      if (notificationListener.current) {
-        notificationListener.current.remove();
-      }
       if (responseListener.current) {
         responseListener.current.remove();
       }
@@ -66,4 +58,3 @@ export const useNotificationHandler = () => {
 };
 
 export default useNotificationHandler;
-
