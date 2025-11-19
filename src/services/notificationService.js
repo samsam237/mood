@@ -42,7 +42,7 @@ export const requestPermissions = async () => {
   }
 
   if (finalStatus !== 'granted') {
-    console.log('❌ Permissions de notifications refusées');
+    console.log(' Permissions de notifications refusées');
     return false;
   }
 
@@ -75,7 +75,7 @@ const cancelRemindersByType = async (type) => {
     console.log(`🗑️  Annulé ${toCancel.length} notifications de type ${type}`);
     return { success: true, count: toCancel.length };
   } catch (error) {
-    console.error('❌ Error cancelling notifications by type:', error);
+    console.error(' Error cancelling notifications by type:', error);
     return { success: false, error: error.message };
   }
 };
